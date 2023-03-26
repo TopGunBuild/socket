@@ -270,10 +270,17 @@ export class AGServer extends AsyncStreamEmitter<any>
 
         if (isNode())
         {
+            // @ts-ignore
             this.wsServer = new WSServer(wsServerOptions);
 
             this.wsServer.on('error', this._handleServerError.bind(this));
             this.wsServer.on('connection', this._handleSocketConnection.bind(this));
+        }
+        else
+        {
+            this.wsServer = WSServer;
+            this.wsServer.addEventListener('close', this._closeOrErrorHandler.bind(this));
+            this.wsServer.addEventListener('error', this._closeOrErrorHandler.bind(this));
         }
     }
 
@@ -444,6 +451,15 @@ export class AGServer extends AsyncStreamEmitter<any>
     // @ Private methods
     // -----------------------------------------------------------------------------------------------------
 
+    private _closeOrErrorHandler(error?: Error): void
+    {
+        if (error)
+        {
+            this.emitError(error);
+        }
+        this.close();
+    }
+
     private async _processMiddlewareAction(
         middlewareStream,
         action: AGAction,
@@ -528,9 +544,8 @@ export class AGServer extends AsyncStreamEmitter<any>
             wsSocket.upgradeReq = upgradeReq;
         }
 
-        let socketId = this.generateId();
-
-        let agSocket      = new AGServerSocket(socketId, this, wsSocket, this.protocolVersion);
+        const socketId    = this.generateId();
+        const agSocket    = new AGServerSocket(socketId, this, wsSocket, this.protocolVersion);
         agSocket.exchange = this.exchange;
 
         let inboundRawMiddleware = this._middleware[AGServer.MIDDLEWARE_INBOUND_RAW];
