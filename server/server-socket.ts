@@ -605,6 +605,24 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
     // @ Private methods
     // -----------------------------------------------------------------------------------------------------
 
+    private flushBatch(): void
+    {
+        this.isBufferingBatch = false;
+        if (!this._batchBuffer.length)
+        {
+            return;
+        }
+        let serializedBatch = this.serializeObject(this._batchBuffer);
+        this._batchBuffer   = [];
+        this.send(serializedBatch);
+    }
+
+    private cancelBatch(): void
+    {
+        this.isBufferingBatch = false;
+        this._batchBuffer     = [];
+    }
+
     private async _destroy(code?: number, reason?: string): Promise<void>
     {
         clearInterval(this._pingIntervalTicker);
