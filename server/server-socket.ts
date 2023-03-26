@@ -3,7 +3,7 @@ import { AGServer } from './server';
 import { SimpleExchange } from '../ag-simple-broker/simple-exchange';
 import {
     AuthenticateData,
-    AuthState,
+    AuthState, AuthStateChangeData,
     AuthToken, AuthTokenOptions, BadAuthTokenData, CloseData, ConnectAbortData, ConnectData,
     DeauthenticateData, DisconnectData,
     IncomingMessage,
@@ -28,7 +28,6 @@ import { ConsumableStream } from '../consumable-stream';
 import { AGRequest } from '../ag-request';
 import { EventObject } from '../types/transport';
 import { isFunction } from '../utils/is-function';
-import { isNode } from '../utils/is-node';
 import { cloneDeep } from '../utils/clone-deep';
 
 const HANDSHAKE_REJECTION_STATUS_CODE = 4008;
@@ -94,6 +93,8 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
     private _cid: number;
     private readonly _callbackMap: {[key: string]: any};
     private readonly _sendPing: () => void;
+    private readonly _pingIntervalTicker: number;
+    private readonly _handshakeTimeoutRef: number;
     private _pingTimeoutTicker: number;
 
     /**
@@ -125,16 +126,16 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
         this.inboundMessageStream = new WritableConsumableStream();
         this.outboundPacketStream = new WritableConsumableStream();
 
-        this.middlewareHandshakeStream = this.request[this.server.SYMBOL_MIDDLEWARE_HANDSHAKE_STREAM];
+        this.middlewareHandshakeStream = this.request[AGServer.SYMBOL_MIDDLEWARE_HANDSHAKE_STREAM];
 
         this.middlewareInboundRawStream      = new WritableConsumableStream();
-        this.middlewareInboundRawStream.type = this.server.MIDDLEWARE_INBOUND_RAW;
+        this.middlewareInboundRawStream.type = AGServer.MIDDLEWARE_INBOUND_RAW;
 
         this.middlewareInboundStream      = new WritableConsumableStream();
-        this.middlewareInboundStream.type = this.server.MIDDLEWARE_INBOUND;
+        this.middlewareInboundStream.type = AGServer.MIDDLEWARE_INBOUND;
 
         this.middlewareOutboundStream      = new WritableConsumableStream();
-        this.middlewareOutboundStream.type = this.server.MIDDLEWARE_OUTBOUND;
+        this.middlewareOutboundStream.type = AGServer.MIDDLEWARE_OUTBOUND;
 
         if (this.request['connection'])
         {
@@ -174,7 +175,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
 
         this._on('close', async (code, reasonBuffer) =>
         {
-            let reason = reasonBuffer.toString();
+            let reason = reasonBuffer && reasonBuffer.toString();
             this._destroy(code, reason);
         });
 
@@ -235,7 +236,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
                 this._resetPongTimeout();
             }
 
-            if (this.server.hasMiddleware(this.server.MIDDLEWARE_INBOUND_RAW))
+            if (this.server.hasMiddleware(AGServer.MIDDLEWARE_INBOUND_RAW))
             {
                 let action    = new AGAction();
                 action.socket = this;
@@ -244,7 +245,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
 
                 try
                 {
-                    let { data } = await this.server._processMiddlewareAction(this.middlewareInboundRawStream, action, this);
+                    let { data } = await this.server.processMiddlewareAction(this.middlewareInboundRawStream, action, this);
                     message      = data;
                 }
                 catch (error)
@@ -562,15 +563,19 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
 
     terminate(): void
     {
-        if (isFunction(this.socket['terminate']))
+        if (this.server.options.isNode)
         {
             this.socket['terminate']();
+        }
+        else
+        {
+            this.disconnect();
         }
     }
 
     send(data: any, options?: {mask?: boolean; binary?: boolean; compress?: boolean; fin?: boolean}): void
     {
-        if (isNode())
+        if (this.server.options.isNode)
         {
             this.socket.send(data, options, (error) =>
             {
@@ -668,7 +673,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
         }
     }
 
-    async transmit(event: string, data: any, options: any): Promise<void>
+    async transmit(event: string, data: any, options?: any): Promise<void>
     {
         if (this.state !== AGServerSocket.OPEN)
         {
@@ -682,7 +687,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
         this._transmit(event, data, options);
     }
 
-    async invoke(event: string, data: any, options: any): Promise<any>
+    async invoke(event: string, data?: any, options?: any): Promise<any>
     {
         if (this.state !== AGServerSocket.OPEN)
         {
@@ -710,20 +715,20 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
         });
     }
 
-    triggerAuthenticationEvents(oldAuthState: 'authenticated'|'unauthenticated'): void
+    triggerAuthenticationEvents(oldAuthState: AuthState): void
     {
         if (oldAuthState !== AGServerSocket.AUTHENTICATED)
         {
-            let stateChangeData = {
-                oldAuthState,
-                newAuthState: this.authState,
-                authToken   : this.authToken
+            let stateChangeData: StateChangeData = {
+                oldState : oldAuthState,
+                newState : this.authState,
+                authToken: this.authToken,
             };
             this.emit('authStateChange', stateChangeData);
             this.server.emit('authenticationStateChange', {
                 socket: this,
                 ...stateChangeData
-            });
+            } as AuthStateChangeData);
         }
         this.emit('authenticate', { authToken: this.authToken });
         this.server.emit('authentication', {
@@ -764,7 +769,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
             }
         }
 
-        options.mutatePayload      = true;
+        // options.mutatePayload      = true;
         let rejectOnFailedDelivery = options.rejectOnFailedDelivery;
         delete options.rejectOnFailedDelivery;
         let defaultSignatureOptions = this.server.defaultSignatureOptions;
@@ -772,28 +777,28 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
         // We cannot have the exp claim on the token and the expiresIn option
         // set at the same time or else auth.signToken will throw an error.
         let expiresIn;
-        if (options.expiresIn == null)
+        if (data.exp == null)
         {
             expiresIn = defaultSignatureOptions.expiresIn;
         }
         else
         {
-            expiresIn = options.expiresIn;
+            expiresIn = data.exp;
         }
         if (authToken)
         {
             if (authToken.exp == null)
             {
-                options.expiresIn = expiresIn;
+                data.exp = expiresIn;
             }
             else
             {
-                delete options.expiresIn;
+                delete data.exp;
             }
         }
         else
         {
-            options.expiresIn = expiresIn;
+            data.exp = expiresIn;
         }
 
         // Always use the default algorithm since it cannot be changed at runtime.
@@ -861,9 +866,9 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
         this.authState       = AGServerSocket.UNAUTHENTICATED;
         if (oldAuthState !== AGServerSocket.UNAUTHENTICATED)
         {
-            let stateChangeData = {
-                oldAuthState,
-                newAuthState: this.authState
+            let stateChangeData: StateChangeData = {
+                oldState: oldAuthState,
+                newState: this.authState
             };
             this.emit('authStateChange', stateChangeData);
             this.server.emit('authenticationStateChange', {
@@ -976,7 +981,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
 
         try
         {
-            await this.server._processMiddlewareAction(this.middlewareInboundStream, action, this);
+            await this.server.processMiddlewareAction(this.middlewareInboundStream, action, this);
         }
         catch (error)
         {
@@ -1150,7 +1155,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
 
             try
             {
-                let { data, options } = await this.server._processMiddlewareAction(this.middlewareOutboundStream, action, this);
+                let { data, options } = await this.server.processMiddlewareAction(this.middlewareOutboundStream, action, this);
                 newData               = data;
                 useCache              = options == null ? useCache : options.useCache;
             }
@@ -1189,9 +1194,9 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
         }
     }
 
-    private async _transmit(event: string, data: any, options: any): Promise<void>
+    private async _transmit(event: string, data?: any, options?: any): Promise<void>
     {
-        if (this.cloneData)
+        if (this.cloneData && data)
         {
             data = cloneDeep(data);
         }
@@ -1484,7 +1489,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
 
         try
         {
-            await this.server._processMiddlewareAction(this.middlewareHandshakeStream, action);
+            await this.server.processMiddlewareAction(this.middlewareHandshakeStream, action);
         }
         catch (error)
         {
@@ -1937,7 +1942,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
                 let request = new AGRequest(this, packet.cid, eventName, packet.data);
                 try
                 {
-                    let { data } = await this.server._processMiddlewareAction(this.middlewareInboundStream, action, this);
+                    let { data } = await this.server.processMiddlewareAction(this.middlewareInboundStream, action, this);
                     newData      = data;
                 }
                 catch (error)
@@ -1977,7 +1982,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
 
             try
             {
-                let { data } = await this.server._processMiddlewareAction(this.middlewareInboundStream, action, this);
+                let { data } = await this.server.processMiddlewareAction(this.middlewareInboundStream, action, this);
                 newData      = data;
             }
             catch (error)
@@ -2053,7 +2058,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
     private _on(event: 'error', cb: (error: any) => Promise<any>): void
     private _on(event: 'message'|'close'|'error', cb: (arg1: any, arg2?: any) => Promise<any>): void
     {
-        if (isNode())
+        if (this.server.options.isNode)
         {
             this.socket['on'](event, cb);
         }

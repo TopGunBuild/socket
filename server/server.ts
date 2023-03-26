@@ -10,7 +10,18 @@ import {
     outboundMiddlewareFunction,
     inboundMiddlewareFunction,
     inboundRawMiddlewareFunction,
-    handshakeMiddlewareFunction, Middlewares
+    handshakeMiddlewareFunction,
+    Middlewares,
+    AuthStateChangeData,
+    AuthenticationData,
+    DeauthenticationData,
+    BadSocketAuthTokenData,
+    ConnectionData,
+    SubscriptionData,
+    UnsubscriptionData,
+    ConnectionAbortData,
+    DisconnectionData,
+    ClosureData
 } from './types';
 import { AGServerSocket } from './server-socket';
 import { SimpleExchange } from '../ag-simple-broker/simple-exchange';
@@ -29,14 +40,15 @@ import { isNode } from '../utils/is-node';
 import { generateId } from '../utils/generate-id';
 import { AGAction } from './action';
 import { WritableConsumableStream } from '../writable-consumable-stream';
+import { ConsumableStream } from '../consumable-stream';
 
 export class AGServer extends AsyncStreamEmitter<any>
 {
-    static MIDDLEWARE_HANDSHAKE               = MIDDLEWARE_HANDSHAKE;
-    static MIDDLEWARE_INBOUND_RAW             = MIDDLEWARE_INBOUND_RAW;
-    static MIDDLEWARE_INBOUND                 = MIDDLEWARE_INBOUND;
-    static MIDDLEWARE_OUTBOUND                = MIDDLEWARE_OUTBOUND;
-    static SYMBOL_MIDDLEWARE_HANDSHAKE_STREAM = Symbol('handshakeStream');
+    static MIDDLEWARE_HANDSHAKE: Middlewares   = MIDDLEWARE_HANDSHAKE;
+    static MIDDLEWARE_INBOUND_RAW: Middlewares = MIDDLEWARE_INBOUND_RAW;
+    static MIDDLEWARE_INBOUND: Middlewares     = MIDDLEWARE_INBOUND;
+    static MIDDLEWARE_OUTBOUND: Middlewares    = MIDDLEWARE_OUTBOUND;
+    static SYMBOL_MIDDLEWARE_HANDSHAKE_STREAM  = Symbol('handshakeStream');
 
     options: AGServerOptions;
     origins: string;
@@ -75,12 +87,12 @@ export class AGServer extends AsyncStreamEmitter<any>
     };
     pendingClientsCount: number;
 
+    auth: AuthEngineType;
     wsServer: any;
-    private _middleware: {[key: string]: any};
-    private _allowAllOrigins: boolean;
-    private _path: string;
-    private auth: AuthEngineType;
-    private codec: CodecEngine;
+    codec: CodecEngine;
+    private readonly _middleware: {[key: string]: any};
+    private readonly _allowAllOrigins: boolean;
+    private readonly _path: string;
 
     /**
      * Constructor
@@ -102,7 +114,7 @@ export class AGServer extends AsyncStreamEmitter<any>
             pingTimeoutDisabled     : false,
             pingInterval            : 8000,
             origins                 : '*:*',
-            path                    : '/socketcluster/',
+            path                    : '/topgunsocket/',
             protocolVersion         : 2,
             authDefaultExpiry       : 86400,
             batchOnHandshake        : false,
@@ -110,7 +122,8 @@ export class AGServer extends AsyncStreamEmitter<any>
             batchInterval           : 50,
             middlewareEmitFailures  : true,
             socketStreamCleanupMode : 'kill',
-            cloneData               : false
+            cloneData               : false,
+            isNode                  : isNode()
         };
 
         this.options = Object.assign(opts, options);
@@ -268,7 +281,7 @@ export class AGServer extends AsyncStreamEmitter<any>
             wsServerOptions.clientTracking = false;
         }
 
-        if (isNode())
+        if (this.options.isNode)
         {
             // @ts-ignore
             this.wsServer = new WSServer(wsServerOptions);
@@ -297,6 +310,44 @@ export class AGServer extends AsyncStreamEmitter<any>
     {
         this.codec = codecEngine;
         this.brokerEngine.setCodecEngine(codecEngine);
+    }
+
+    emit(eventName: 'error', data: {error: Error}): void;
+    emit(eventName: 'warning', data: {warning: Error}): void;
+    emit(eventName: 'handshake', data: {socket: AGServerSocket}): void;
+    emit(eventName: 'authenticationStateChange', data: AuthStateChangeData): void;
+    emit(eventName: 'authentication', data: AuthenticationData): void;
+    emit(eventName: 'deauthentication', data: DeauthenticationData): void;
+    emit(eventName: 'badSocketAuthToken', data: BadSocketAuthTokenData): void;
+    emit(eventName: 'connection', data: ConnectionData): void;
+    emit(eventName: 'subscription', data: SubscriptionData): void;
+    emit(eventName: 'unsubscription', data: UnsubscriptionData): void;
+    emit(eventName: 'connectionAbort', data: ConnectionAbortData): void;
+    emit(eventName: 'disconnection', data: DisconnectionData): void;
+    emit(eventName: 'closure', data: ClosureData): void;
+    emit(eventName: 'ready', data: any): void;
+    emit(eventName: string, data: any): void
+    {
+        return super.emit(eventName, data);
+    }
+
+    listener(eventName: 'error'): ConsumableStream<{error: Error}>;
+    listener(eventName: 'warning'): ConsumableStream<{warning: Error}>;
+    listener(eventName: 'handshake'): ConsumableStream<{socket: AGServerSocket}>;
+    listener(eventName: 'authenticationStateChange'): ConsumableStream<AuthStateChangeData>;
+    listener(eventName: 'authentication'): ConsumableStream<AuthenticationData>;
+    listener(eventName: 'deauthentication'): ConsumableStream<DeauthenticationData>;
+    listener(eventName: 'badSocketAuthToken'): ConsumableStream<BadSocketAuthTokenData>;
+    listener(eventName: 'connection'): ConsumableStream<ConnectionData>;
+    listener(eventName: 'subscription'): ConsumableStream<SubscriptionData>;
+    listener(eventName: 'unsubscription'): ConsumableStream<UnsubscriptionData>;
+    listener(eventName: 'connectionAbort'): ConsumableStream<ConnectionAbortData>;
+    listener(eventName: 'disconnection'): ConsumableStream<DisconnectionData>;
+    listener(eventName: 'closure'): ConsumableStream<ClosureData>;
+    listener(eventName: 'ready'): ConsumableStream<any>
+    listener(eventName: string): ConsumableStream<any>
+    {
+        return super.listener(eventName);
     }
 
     emitError(error: Error): void
@@ -423,7 +474,7 @@ export class AGServer extends AsyncStreamEmitter<any>
 
         try
         {
-            await this._processMiddlewareAction(middlewareHandshakeStream, action);
+            await this.processMiddlewareAction(middlewareHandshakeStream, action);
         }
         catch (error)
         {
@@ -447,20 +498,7 @@ export class AGServer extends AsyncStreamEmitter<any>
         callback(false, 403, error.message);
     }
 
-    // -----------------------------------------------------------------------------------------------------
-    // @ Private methods
-    // -----------------------------------------------------------------------------------------------------
-
-    private _closeOrErrorHandler(error?: Error): void
-    {
-        if (error)
-        {
-            this.emitError(error);
-        }
-        this.close();
-    }
-
-    private async _processMiddlewareAction(
+    async processMiddlewareAction(
         middlewareStream,
         action: AGAction,
         socket?
@@ -525,6 +563,19 @@ export class AGServer extends AsyncStreamEmitter<any>
         }
 
         return { data: newData, options };
+    }
+
+    // -----------------------------------------------------------------------------------------------------
+    // @ Private methods
+    // -----------------------------------------------------------------------------------------------------
+
+    private _closeOrErrorHandler(error?: Error): void
+    {
+        if (error)
+        {
+            this.emitError(error);
+        }
+        this.close();
     }
 
     private _handleServerError(error: Error): void

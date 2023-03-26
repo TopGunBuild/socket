@@ -1,4 +1,4 @@
-import { JwtSignOptions, Secret } from '../jwt';
+import { JwtPayload, JwtSignOptions, Secret } from '../jwt';
 import { AuthEngine } from '../ag-auth';
 import {
     AGAction, AGActionAuthenticate,
@@ -9,6 +9,7 @@ import {
     AGActionTransmit
 } from './action';
 import { WritableConsumableStream } from '../writable-consumable-stream';
+import { AGServerSocket } from './server-socket';
 
 export interface CodecEngine
 {
@@ -16,7 +17,7 @@ export interface CodecEngine
     encode: (object: any) => any;
 }
 
-export interface AuthToken
+export interface AuthToken extends JwtPayload
 {
     [x: string]: any;
 }
@@ -131,8 +132,61 @@ export type Middlewares =
 
 export type AuthEngineType = Pick<AuthEngine, 'verifyToken'|'signToken'>
 
+export interface AuthStateChangeData extends StateChangeData
+{
+    socket: AGServerSocket;
+}
+
+export interface AuthenticationData extends AuthenticateData
+{
+    socket: AGServerSocket;
+}
+
+export interface DeauthenticationData extends DeauthenticateData
+{
+    socket: AGServerSocket;
+}
+
+export interface BadSocketAuthTokenData extends BadAuthTokenData
+{
+    socket: AGServerSocket;
+}
+
+export interface ConnectionData extends ConnectData
+{
+    socket: AGServerSocket;
+}
+
+export interface SubscriptionData extends SubscribeData
+{
+    socket: AGServerSocket;
+}
+
+export interface UnsubscriptionData extends UnsubscribeData
+{
+    socket: AGServerSocket;
+}
+
+export interface ConnectionAbortData extends ConnectAbortData
+{
+    socket: AGServerSocket;
+}
+
+export interface DisconnectionData extends DisconnectData
+{
+    socket: AGServerSocket;
+}
+
+export interface ClosureData extends CloseData
+{
+    socket: AGServerSocket;
+}
+
 export interface AGServerOptions
 {
+    // NodeJS ot serverless
+    isNode?: boolean;
+
     // An instance of a Node.js HTTP server.
     // https://nodejs.org/api/http.html#http_class_http_server
     // This option should not be set if the server is created
