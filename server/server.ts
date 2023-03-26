@@ -20,13 +20,15 @@ import {
     InvalidActionError,
     InvalidArgumentsError,
     InvalidOptionsError,
-    ServerProtocolError
+    ServerProtocolError, SilentMiddlewareBlockedError
 } from '../sc-errors/errors';
 import { randomBytes } from '../crypto/crypto';
 import { AuthEngine } from '../ag-auth';
 import { formatter } from '../sc-formatter';
 import { isNode } from '../utils/is-node';
 import { generateId } from '../utils/generate-id';
+import { AGAction } from './action';
+import { WritableConsumableStream } from '../writable-consumable-stream';
 
 export class AGServer extends AsyncStreamEmitter<any>
 {
@@ -79,7 +81,6 @@ export class AGServer extends AsyncStreamEmitter<any>
     private _path: string;
     private auth: AuthEngineType;
     private codec: CodecEngine;
-    private verifyHandshake: any;
 
     /**
      * Constructor
@@ -359,9 +360,156 @@ export class AGServer extends AsyncStreamEmitter<any>
         this._middleware[type] = middleware;
     }
 
+    removeMiddleware(type: Middlewares): void
+    {
+        delete this._middleware[type];
+    }
+
+    hasMiddleware(type: Middlewares): boolean
+    {
+        return !!this._middleware[type];
+    }
+
+    async verifyHandshake(info, callback): Promise<any>
+    {
+        let req    = info.req;
+        let origin = info.origin;
+        if (origin === 'null' || origin == null)
+        {
+            origin = '*';
+        }
+        let ok: boolean|number = false;
+
+        if (this._allowAllOrigins)
+        {
+            ok = true;
+        }
+        else
+        {
+            try
+            {
+                const parser = new URL(origin);
+                const port   = parser.port || (parser.protocol === 'https:' ? 443 : 80);
+                ok           = ~this.origins.indexOf(parser.hostname + ':' + port) ||
+                    ~this.origins.indexOf(parser.hostname + ':*') ||
+                    ~this.origins.indexOf('*:' + port);
+            }
+            catch (e)
+            {
+            }
+        }
+
+        let middlewareHandshakeStream  = new WritableConsumableStream();
+        middlewareHandshakeStream.type = AGServer.MIDDLEWARE_HANDSHAKE;
+
+        req[AGServer.SYMBOL_MIDDLEWARE_HANDSHAKE_STREAM] = middlewareHandshakeStream;
+
+        let handshakeMiddleware = this._middleware[AGServer.MIDDLEWARE_HANDSHAKE];
+        if (handshakeMiddleware)
+        {
+            handshakeMiddleware(middlewareHandshakeStream);
+        }
+
+        let action     = new AGAction();
+        action.request = req;
+        action.type    = AGAction.HANDSHAKE_WS;
+
+        try
+        {
+            await this._processMiddlewareAction(middlewareHandshakeStream, action);
+        }
+        catch (error)
+        {
+            middlewareHandshakeStream.close();
+            callback(false, 401, typeof error === 'string' ? error : error.message);
+            return;
+        }
+
+        if (ok)
+        {
+            callback(true);
+            return;
+        }
+
+        let error = new ServerProtocolError(
+            `Failed to authorize socket handshake - Invalid origin: ${origin}`
+        );
+        this.emitWarning(error);
+
+        middlewareHandshakeStream.close();
+        callback(false, 403, error.message);
+    }
+
     // -----------------------------------------------------------------------------------------------------
     // @ Private methods
     // -----------------------------------------------------------------------------------------------------
+
+    private async _processMiddlewareAction(
+        middlewareStream,
+        action: AGAction,
+        socket?
+    ): Promise<{data: any, options: any}>
+    {
+        if (!this.hasMiddleware(middlewareStream.type))
+        {
+            return { data: action.data, options: null };
+        }
+        middlewareStream.write(action);
+
+        let newData;
+        let options = null;
+        try
+        {
+            let result = await action.promise;
+            if (result)
+            {
+                newData = result.data;
+                options = result.options;
+            }
+        }
+        catch (error)
+        {
+            let clientError;
+            if (!error)
+            {
+                error       = new SilentMiddlewareBlockedError(
+                    `The ${action.type} AGAction was blocked by ${middlewareStream.type} middleware`,
+                    middlewareStream.type
+                );
+                clientError = error;
+            }
+            else if (error.silent)
+            {
+                clientError = new SilentMiddlewareBlockedError(
+                    `The ${action.type} AGAction was blocked by ${middlewareStream.type} middleware`,
+                    middlewareStream.type
+                );
+            }
+            else
+            {
+                clientError = error;
+            }
+            if (this.middlewareEmitFailures)
+            {
+                if (socket)
+                {
+                    socket.emitError(error);
+                }
+                else
+                {
+                    this.emitWarning(error);
+                }
+            }
+            throw clientError;
+        }
+
+        if (newData === undefined)
+        {
+            newData = action.data;
+        }
+
+        return { data: newData, options };
+    }
 
     private _handleServerError(error: Error): void
     {
