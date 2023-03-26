@@ -4,7 +4,7 @@ import { SimpleExchange } from '../ag-simple-broker/simple-exchange';
 import {
     AuthenticateData,
     AuthState,
-    AuthToken, BadAuthTokenData, CloseData, ConnectAbortData, ConnectData,
+    AuthToken, AuthTokenOptions, BadAuthTokenData, CloseData, ConnectAbortData, ConnectData,
     DeauthenticateData, DisconnectData,
     IncomingMessage,
     SocketState,
@@ -15,11 +15,12 @@ import { SocketProtocolErrorStatuses, SocketProtocolIgnoreStatuses } from '../sc
 import { StreamDemux } from '../stream-demux';
 import { AGAction } from './action';
 import {
+    AuthError, AuthTokenError, AuthTokenExpiredError, AuthTokenInvalidError, AuthTokenNotBeforeError,
     BadConnectionError,
     BrokerError,
     dehydrateError, InvalidActionError, InvalidArgumentsError, SocketProtocolError,
     socketProtocolErrorStatuses,
-    socketProtocolIgnoreStatuses
+    socketProtocolIgnoreStatuses, TimeoutError
 } from '../sc-errors/errors';
 import { DemuxedConsumableStream } from '../stream-demux/demuxed-consumable-stream';
 import { ConsumerStats } from '../writable-consumable-stream/consumer-stats';
@@ -28,6 +29,7 @@ import { AGRequest } from '../ag-request';
 import { EventObject } from '../types/transport';
 import { isFunction } from '../utils/is-function';
 import { isNode } from '../utils/is-node';
+import { cloneDeep } from '../utils/clone-deep';
 
 const HANDSHAKE_REJECTION_STATUS_CODE = 4008;
 
@@ -88,7 +90,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
     private _receiverDemux: StreamDemux<unknown>;
     private _procedureDemux: StreamDemux<unknown>;
     private _batchBuffer: any[];
-    private _batchingIntervalId: null;
+    private _batchingIntervalId: number = null;
     private _cid: number;
     private readonly _callbackMap: {[key: string]: any};
     private readonly _sendPing: () => void;
@@ -566,7 +568,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
         }
     }
 
-    send(data: any, options: {mask?: boolean; binary?: boolean; compress?: boolean; fin?: boolean}): void
+    send(data: any, options?: {mask?: boolean; binary?: boolean; compress?: boolean; fin?: boolean}): void
     {
         if (isNode())
         {
@@ -601,11 +603,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
         this._batchBuffer     = [];
     }
 
-    // -----------------------------------------------------------------------------------------------------
-    // @ Private methods
-    // -----------------------------------------------------------------------------------------------------
-
-    private flushBatch(): void
+    flushBatch(): void
     {
         this.isBufferingBatch = false;
         if (!this._batchBuffer.length)
@@ -617,10 +615,656 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
         this.send(serializedBatch);
     }
 
-    private cancelBatch(): void
+    cancelBatch(): void
     {
         this.isBufferingBatch = false;
         this._batchBuffer     = [];
+    }
+
+    startBatching(): void
+    {
+        this.isBatching = true;
+        this._startBatching();
+    }
+
+    stopBatching(): void
+    {
+        this.isBatching = false;
+        this._stopBatching();
+    }
+
+    cancelBatching(): void
+    {
+        this.isBatching = false;
+        this._cancelBatching();
+    }
+
+    serializeObject(object: any): any
+    {
+        let str;
+        try
+        {
+            str = this.encode(object);
+        }
+        catch (error)
+        {
+            this.emitError(error);
+            return null;
+        }
+        return str;
+    }
+
+    sendObject(object: any): void
+    {
+        if (this.isBufferingBatch)
+        {
+            this._batchBuffer.push(object);
+            return;
+        }
+        let str = this.serializeObject(object);
+        if (str != null)
+        {
+            this.send(str);
+        }
+    }
+
+    async transmit(event: string, data: any, options: any): Promise<void>
+    {
+        if (this.state !== AGServerSocket.OPEN)
+        {
+            let error = new BadConnectionError(
+                `Socket transmit "${event}" was aborted due to a bad connection`,
+                'connectAbort'
+            );
+            this.emitError(error);
+            return;
+        }
+        this._transmit(event, data, options);
+    }
+
+    async invoke(event: string, data: any, options: any): Promise<any>
+    {
+        if (this.state !== AGServerSocket.OPEN)
+        {
+            let error = new BadConnectionError(
+                `Socket invoke "${event}" was aborted due to a bad connection`,
+                'connectAbort'
+            );
+            this.emitError(error);
+            throw error;
+        }
+        if (this.cloneData)
+        {
+            data = cloneDeep(data);
+        }
+        this.outboundPreparedMessageCount++;
+        return new Promise((resolve, reject) =>
+        {
+            this.outboundPacketStream.write({
+                event,
+                data,
+                options,
+                resolve,
+                reject
+            });
+        });
+    }
+
+    triggerAuthenticationEvents(oldAuthState: 'authenticated'|'unauthenticated'): void
+    {
+        if (oldAuthState !== AGServerSocket.AUTHENTICATED)
+        {
+            let stateChangeData = {
+                oldAuthState,
+                newAuthState: this.authState,
+                authToken   : this.authToken
+            };
+            this.emit('authStateChange', stateChangeData);
+            this.server.emit('authenticationStateChange', {
+                socket: this,
+                ...stateChangeData
+            });
+        }
+        this.emit('authenticate', { authToken: this.authToken });
+        this.server.emit('authentication', {
+            socket   : this,
+            authToken: this.authToken
+        });
+    }
+
+    async setAuthToken(data: AuthToken, options?: AuthTokenOptions): Promise<void>
+    {
+        if (this.state === AGServerSocket.CONNECTING)
+        {
+            let err = new InvalidActionError(
+                'Cannot call setAuthToken before completing the handshake'
+            );
+            this.emitError(err);
+            throw err;
+        }
+
+        let authToken    = cloneDeep(data);
+        let oldAuthState = this.authState;
+        this.authState   = AGServerSocket.AUTHENTICATED;
+
+        if (options == null)
+        {
+            options = {};
+        }
+        else
+        {
+            options = { ...options };
+            if (options.algorithm != null)
+            {
+                delete options.algorithm;
+                let err = new InvalidArgumentsError(
+                    'Cannot change auth token algorithm at runtime - It must be specified as a config option on launch'
+                );
+                this.emitError(err);
+            }
+        }
+
+        options.mutatePayload      = true;
+        let rejectOnFailedDelivery = options.rejectOnFailedDelivery;
+        delete options.rejectOnFailedDelivery;
+        let defaultSignatureOptions = this.server.defaultSignatureOptions;
+
+        // We cannot have the exp claim on the token and the expiresIn option
+        // set at the same time or else auth.signToken will throw an error.
+        let expiresIn;
+        if (options.expiresIn == null)
+        {
+            expiresIn = defaultSignatureOptions.expiresIn;
+        }
+        else
+        {
+            expiresIn = options.expiresIn;
+        }
+        if (authToken)
+        {
+            if (authToken.exp == null)
+            {
+                options.expiresIn = expiresIn;
+            }
+            else
+            {
+                delete options.expiresIn;
+            }
+        }
+        else
+        {
+            options.expiresIn = expiresIn;
+        }
+
+        // Always use the default algorithm since it cannot be changed at runtime.
+        if (defaultSignatureOptions.algorithm != null)
+        {
+            options.algorithm = defaultSignatureOptions.algorithm;
+        }
+
+        this.authToken = authToken;
+
+        let signedAuthToken;
+
+        try
+        {
+            signedAuthToken = await this.server.auth.signToken(authToken, this.server.signatureKey, options);
+        }
+        catch (error)
+        {
+            this.emitError(error);
+            this._destroy(4002, error.toString());
+            this.socket.close(4002);
+            throw error;
+        }
+
+        if (this.authToken === authToken)
+        {
+            this.signedAuthToken = signedAuthToken;
+            this.emit('authTokenSigned', { signedAuthToken });
+        }
+
+        this.triggerAuthenticationEvents(oldAuthState);
+
+        let tokenData = {
+            token: signedAuthToken
+        };
+
+        if (rejectOnFailedDelivery)
+        {
+            try
+            {
+                await this.invoke('#setAuthToken', tokenData);
+            }
+            catch (err)
+            {
+                let error = new AuthError(`Failed to deliver auth token to client - ${err}`);
+                this.emitError(error);
+                throw error;
+            }
+            return;
+        }
+        this.transmit('#setAuthToken', tokenData);
+    }
+
+    getAuthToken(): AuthToken
+    {
+        return this.authToken;
+    }
+
+    deauthenticateSelf(): void
+    {
+        let oldAuthState     = this.authState;
+        let oldAuthToken     = this.authToken;
+        this.signedAuthToken = null;
+        this.authToken       = null;
+        this.authState       = AGServerSocket.UNAUTHENTICATED;
+        if (oldAuthState !== AGServerSocket.UNAUTHENTICATED)
+        {
+            let stateChangeData = {
+                oldAuthState,
+                newAuthState: this.authState
+            };
+            this.emit('authStateChange', stateChangeData);
+            this.server.emit('authenticationStateChange', {
+                socket: this,
+                ...stateChangeData
+            });
+        }
+        this.emit('deauthenticate', { oldAuthToken });
+        this.server.emit('deauthentication', {
+            socket: this,
+            oldAuthToken
+        });
+    }
+
+    async deauthenticate(options?: {rejectOnFailedDelivery: boolean}): Promise<void>
+    {
+        this.deauthenticateSelf();
+        if (options && options.rejectOnFailedDelivery)
+        {
+            try
+            {
+                await this.invoke('#removeAuthToken');
+            }
+            catch (error)
+            {
+                this.emitError(error);
+                if (options && options.rejectOnFailedDelivery)
+                {
+                    throw error;
+                }
+            }
+            return;
+        }
+        this._transmit('#removeAuthToken');
+    }
+
+    kickOut(channel?: string, message?: string): any
+    {
+        let channels: string|string[] = channel;
+        if (!channels)
+        {
+            channels = Object.keys(this.channelSubscriptions);
+        }
+        if (!Array.isArray(channels))
+        {
+            channels = [channel];
+        }
+        return Promise.all(channels.map((channelName) =>
+        {
+            this.transmit('#kickOut', { channel: channelName, message });
+            return this._unsubscribe(channelName);
+        }));
+    }
+
+    subscriptions(): string[]
+    {
+        return Object.keys(this.channelSubscriptions);
+    }
+
+    isSubscribed(channel: string): boolean
+    {
+        return !!this.channelSubscriptions[channel];
+    }
+
+    isAuthTokenExpired(token: AuthToken): boolean
+    {
+        if (token && token.exp != null)
+        {
+            let currentTime        = Date.now();
+            let expiryMilliseconds = token.exp * 1000;
+            return currentTime > expiryMilliseconds;
+        }
+        return false;
+    }
+
+    // -----------------------------------------------------------------------------------------------------
+    // @ Private methods
+    // -----------------------------------------------------------------------------------------------------
+
+    private async _processAuthentication({ signedAuthToken, authTokenError, authToken, authState }): Promise<any>
+    {
+        if (authTokenError)
+        {
+            this.signedAuthToken = null;
+            this.authToken       = null;
+            this.authState       = AGServerSocket.UNAUTHENTICATED;
+
+            // If the error is related to the JWT being badly formatted, then we will
+            // treat the error as a socket error.
+            if (signedAuthToken != null)
+            {
+                this.emitError(authTokenError);
+                if (authTokenError.isBadToken)
+                {
+                    this._emitBadAuthTokenError(authTokenError, signedAuthToken);
+                }
+            }
+            throw authTokenError;
+        }
+
+        this.signedAuthToken = signedAuthToken;
+        this.authToken       = authToken;
+        this.authState       = AGServerSocket.AUTHENTICATED;
+
+        let action             = new AGAction();
+        action.socket          = this;
+        action.type            = AGAction.AUTHENTICATE;
+        action.signedAuthToken = this.signedAuthToken;
+        action.authToken       = this.authToken;
+
+        try
+        {
+            await this.server._processMiddlewareAction(this.middlewareInboundStream, action, this);
+        }
+        catch (error)
+        {
+            this.authToken = null;
+            this.authState = AGServerSocket.UNAUTHENTICATED;
+
+            if (error.isBadToken)
+            {
+                this._emitBadAuthTokenError(error, signedAuthToken);
+            }
+            throw error;
+        }
+    }
+
+    private async _validateAuthToken(signedAuthToken): Promise<any>
+    {
+        let verificationOptions = Object.assign({}, this.server.defaultVerificationOptions, {
+            socket: this
+        });
+
+        let authToken;
+        try
+        {
+            authToken = await this.server.auth.verifyToken(signedAuthToken, this.server.verificationKey, verificationOptions);
+        }
+        catch (error)
+        {
+            let authTokenError = this._processTokenError(error);
+            return {
+                signedAuthToken,
+                authTokenError,
+                authToken: null,
+                authState: AGServerSocket.UNAUTHENTICATED
+            };
+        }
+
+        return {
+            signedAuthToken,
+            authTokenError: null,
+            authToken,
+            authState     : AGServerSocket.AUTHENTICATED
+        };
+    }
+
+    private _emitBadAuthTokenError(error, signedAuthToken): void
+    {
+        this.emit('badAuthToken', {
+            authError: error,
+            signedAuthToken
+        });
+        this.server.emit('badSocketAuthToken', {
+            socket   : this,
+            authError: error,
+            signedAuthToken
+        });
+    }
+
+    private _processTokenError(err: Error): any
+    {
+        if (err)
+        {
+            if (err.name === 'TokenExpiredError')
+            {
+                let authError        = new AuthTokenExpiredError(err.message, err.expiredAt);
+                authError.isBadToken = true;
+                return authError;
+            }
+            if (err.name === 'JsonWebTokenError')
+            {
+                let authError        = new AuthTokenInvalidError(err.message);
+                authError.isBadToken = true;
+                return authError;
+            }
+            if (err.name === 'NotBeforeError')
+            {
+                let authError        = new AuthTokenNotBeforeError(err.message, err.date);
+                // In this case, the token is good; it's just not active yet.
+                authError.isBadToken = false;
+                return authError;
+            }
+            let authError        = new AuthTokenError(err.message);
+            authError.isBadToken = true;
+            return authError;
+        }
+        return null;
+    }
+
+    private _processAuthTokenExpiry(): any
+    {
+        let token = this.getAuthToken();
+        if (this.isAuthTokenExpired(token))
+        {
+            this.deauthenticate();
+
+            return new AuthTokenExpiredError(
+                'The socket auth token has expired',
+                token.exp
+            );
+        }
+        return null;
+    }
+
+    private async _invoke(event: string, data: any, options: any): Promise<any>
+    {
+        options = options || {};
+
+        return new Promise((resolve, reject) =>
+        {
+            let eventObject: any = {
+                event,
+                cid: this._nextCallId()
+            };
+            if (data !== undefined)
+            {
+                eventObject.data = data;
+            }
+
+            let ackTimeout = options.ackTimeout == null ? this.server.ackTimeout : options.ackTimeout;
+
+            let timeout = setTimeout(() =>
+            {
+                let error = new TimeoutError(`Event response for "${event}" timed out`);
+                delete this._callbackMap[eventObject.cid];
+                reject(error);
+            }, ackTimeout);
+
+            this._callbackMap[eventObject.cid] = {
+                event,
+                callback: (err, result) =>
+                {
+                    if (err)
+                    {
+                        reject(err);
+                        return;
+                    }
+                    resolve(result);
+                },
+                timeout
+            };
+
+            if (options.useCache && options.stringifiedData != null && !this.isBufferingBatch)
+            {
+                // Optimized
+                this.send(options.stringifiedData);
+            }
+            else
+            {
+                this.sendObject(eventObject);
+            }
+        });
+    }
+
+    private async _processTransmit(event, data, options): Promise<void>
+    {
+        let newData;
+        let useCache  = options ? options.useCache : false;
+        let packet    = { event, data };
+        let isPublish = event === '#publish';
+        if (isPublish)
+        {
+            let action    = new AGAction();
+            action.socket = this;
+            action.type   = AGAction.PUBLISH_OUT;
+
+            if (data !== undefined)
+            {
+                action.channel = data.channel;
+                action.data    = data.data;
+            }
+            useCache = !this.server.hasMiddleware(this.middlewareOutboundStream.type);
+
+            try
+            {
+                let { data, options } = await this.server._processMiddlewareAction(this.middlewareOutboundStream, action, this);
+                newData               = data;
+                useCache              = options == null ? useCache : options.useCache;
+            }
+            catch (error)
+            {
+
+                return;
+            }
+        }
+        else
+        {
+            newData = packet.data;
+        }
+
+        if (options && useCache && options.stringifiedData != null && !this.isBufferingBatch)
+        {
+            // Optimized
+            this.send(options.stringifiedData);
+        }
+        else
+        {
+            let eventObject: any = {
+                event
+            };
+            if (isPublish)
+            {
+                eventObject.data      = data || {};
+                eventObject.data.data = newData;
+            }
+            else
+            {
+                eventObject.data = newData;
+            }
+
+            this.sendObject(eventObject);
+        }
+    }
+
+    private async _transmit(event: string, data: any, options: any): Promise<void>
+    {
+        if (this.cloneData)
+        {
+            data = cloneDeep(data);
+        }
+        this.outboundPreparedMessageCount++;
+        this.outboundPacketStream.write({
+            event,
+            data,
+            options
+        });
+    }
+
+    private async _handleOutboundPacketStream(): Promise<void>
+    {
+        for await (let packet of this.outboundPacketStream)
+        {
+            if (packet.resolve)
+            {
+                // Invoke has no middleware, so there is no need to await here.
+                (async () =>
+                {
+                    let result;
+                    try
+                    {
+                        result = await this._invoke(packet.event, packet.data, packet.options);
+                    }
+                    catch (error)
+                    {
+                        packet.reject(error);
+                        return;
+                    }
+                    packet.resolve(result);
+                })();
+
+                this.outboundSentMessageCount++;
+                continue;
+            }
+            await this._processTransmit(packet.event, packet.data, packet.options);
+            this.outboundSentMessageCount++;
+        }
+    }
+
+    private _cancelBatching(): void
+    {
+        if (this._batchingIntervalId != null)
+        {
+            clearInterval(this._batchingIntervalId);
+        }
+        this._batchingIntervalId = null;
+        this.cancelBatch();
+    }
+
+    private _stopBatching(): void
+    {
+        if (this._batchingIntervalId != null)
+        {
+            clearInterval(this._batchingIntervalId);
+        }
+        this._batchingIntervalId = null;
+        this.flushBatch();
+    }
+
+    private _startBatching(): void
+    {
+        if (this._batchingIntervalId != null)
+        {
+            return;
+        }
+        this.startBatch();
+        this._batchingIntervalId = setInterval(() =>
+        {
+            this.flushBatch();
+            this.startBatch();
+        }, this.batchInterval);
     }
 
     private async _destroy(code?: number, reason?: string): Promise<void>
