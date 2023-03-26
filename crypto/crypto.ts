@@ -11,7 +11,7 @@ export function randomBytes(randomBytesLength = 9, callback?: (error: Error, byt
         {
             callback(null, randomBytes);
         }
-        return btoa(String.fromCharCode(...randomBytes));
+        return toHEX(randomBytes); // btoa(String.fromCharCode(...randomBytes));
     }
     catch (e)
     {

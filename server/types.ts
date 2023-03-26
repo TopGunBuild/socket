@@ -1,5 +1,14 @@
 import { JwtSignOptions, Secret } from '../jwt';
 import { AuthEngine } from '../ag-auth';
+import {
+    AGAction, AGActionAuthenticate,
+    AGActionHandshakeSC,
+    AGActionHandshakeWS, AGActionInvoke,
+    AGActionMessage, AGActionPublishIn,
+    AGActionPublishOut, AGActionSubscribe,
+    AGActionTransmit
+} from './action';
+import { WritableConsumableStream } from '../writable-consumable-stream';
 
 export interface CodecEngine
 {
@@ -95,6 +104,31 @@ export interface IncomingMessage
     forwardedForAddress?: any;
 }
 
+export type handshakeMiddlewareFunction = (
+    stream: WritableConsumableStream<AGActionHandshakeWS|AGActionHandshakeSC>,
+) => void;
+export type inboundRawMiddlewareFunction = (stream: WritableConsumableStream<AGActionMessage>) => void;
+export type inboundMiddlewareFunction = (
+    stream: WritableConsumableStream<|AGActionTransmit
+        |AGActionInvoke
+        |AGActionSubscribe
+        |AGActionPublishIn
+        |AGActionAuthenticate>,
+) => void;
+export type outboundMiddlewareFunction = (stream: WritableConsumableStream<AGActionPublishOut>) => void;
+
+export const MIDDLEWARE_HANDSHAKE   = 'handshake';
+export const MIDDLEWARE_INBOUND_RAW = 'inboundRaw';
+export const MIDDLEWARE_INBOUND     = 'inbound';
+export const MIDDLEWARE_OUTBOUND    = 'outbound';
+
+export type Middlewares =
+    typeof MIDDLEWARE_HANDSHAKE
+    |typeof MIDDLEWARE_INBOUND_RAW
+    |typeof MIDDLEWARE_INBOUND
+    |typeof MIDDLEWARE_OUTBOUND;
+
+
 export type AuthEngineType = Pick<AuthEngine, 'verifyToken'|'signToken'>
 
 export interface AGServerOptions
@@ -107,7 +141,7 @@ export interface AGServerOptions
 
     // This can be the name of an npm module or a path to a
     // Node.js module to use as the WebSocket server engine.
-    wsEngine?: string|{Server: any};
+    wsEngine?: {Server: any};
 
     // Custom options to pass to the wsEngine when it is being
     // instantiated.

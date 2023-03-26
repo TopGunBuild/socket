@@ -116,3 +116,5 @@ export function encode(rawData)
     }
     return JSON.stringify(rawData, binaryToBase64Replacer);
 }
+
+export const formatter = { encode, decode };

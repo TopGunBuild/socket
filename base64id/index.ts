@@ -1,12 +1,19 @@
 import { randomBytes } from '../crypto/crypto';
+import { toHEX } from '../utils';
 
 export class Base64Id
 {
+    static generateId(): string
+    {
+        return Math.abs(Math.random() * Math.random() * Date.now() | 0).toString()
+            + Math.abs(Math.random() * Math.random() * Date.now() | 0).toString();
+    }
+
     private bytesBufferIndex: number;
     private bytesBuffer: Uint8Array = null;
     private isGeneratingBytes: boolean;
 
-    getRandomBytes(bytes: number)
+    getRandomBytes(bytes: number): string
     {
         const BUFFER_SIZE = 4096;
 
@@ -61,6 +68,6 @@ export class Base64Id
         const result = this.bytesBuffer.slice(bytes * this.bytesBufferIndex, bytes * (this.bytesBufferIndex + 1));
         this.bytesBufferIndex++;
 
-        return result;
+        return toHEX(result);
     }
 }
