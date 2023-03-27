@@ -1,7 +1,7 @@
-import { JwtPayload, JwtSignOptions, Secret } from '../jwt';
+import { JwtAlgorithm, JwtPayload, JwtSignOptions, Secret } from '../jwt';
 import { AuthEngine } from '../ag-auth';
 import {
-    AGAction, AGActionAuthenticate,
+    AGActionAuthenticate,
     AGActionHandshakeSC,
     AGActionHandshakeWS, AGActionInvoke,
     AGActionMessage, AGActionPublishIn,
@@ -295,7 +295,7 @@ export interface AGServerOptions
     // bebfore they are ended.
     socketStreamCleanupMode?: 'kill'|'close';
 
-    authVerifyAlgorithms?: string[];
+    authVerifyAlgorithm?: JwtAlgorithm|string;
     authEngine?: AuthEngineType;
     codecEngine?: CodecEngine;
     cloneData?: boolean;

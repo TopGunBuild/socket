@@ -1,5 +1,5 @@
 import { dehydrateError, InvalidActionError } from '../sc-errors/errors';
-import { AGServerSocket } from '../server/server-socket';
+import { AGServerSocket } from '../socket-server/server-socket';
 
 export class AGRequest
 {

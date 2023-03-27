@@ -18,7 +18,7 @@ import {
     AuthError, AuthTokenError, AuthTokenExpiredError, AuthTokenInvalidError, AuthTokenNotBeforeError,
     BadConnectionError,
     BrokerError,
-    dehydrateError, InvalidActionError, InvalidArgumentsError, SocketProtocolError,
+    dehydrateError, hydrateError, InvalidActionError, InvalidArgumentsError, SocketProtocolError,
     socketProtocolErrorStatuses,
     socketProtocolIgnoreStatuses, TimeoutError
 } from '../sc-errors/errors';
@@ -1504,13 +1504,15 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
             return;
         }
 
-        let clientSocketStatus = {
-            id         : this.id,
-            pingTimeout: this.server.pingTimeout
+        let clientSocketStatus: ConnectData = {
+            id             : this.id,
+            pingTimeout    : this.server.pingTimeout,
+            isAuthenticated: false
         };
-        let serverSocketStatus = {
+        let serverSocketStatus: ConnectData = {
             id         : this.id,
-            pingTimeout: this.server.pingTimeout
+            pingTimeout: this.server.pingTimeout,
+            isAuthenticated: false
         };
 
         let oldAuthState = this.authState;
@@ -1548,7 +1550,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
         this.server.clients[this.id] = this;
         this.server.clientsCount++;
 
-        this.state = this.OPEN;
+        this.state = AGServerSocket.OPEN;
 
         if (clientSocketStatus.isAuthenticated)
         {
@@ -1676,7 +1678,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
         let channelName         = subscriptionOptions.channel;
         delete subscriptionOptions.channel;
 
-        if (this.state === this.OPEN)
+        if (this.state === AGServerSocket.OPEN)
         {
             try
             {
@@ -1835,7 +1837,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
 
                 return;
             }
-            if (this.server.strictHandshake && this.state === this.CONNECTING)
+            if (this.server.strictHandshake && this.state === AGServerSocket.CONNECTING)
             {
                 this._destroy(4009);
                 this.socket.close(4009);
@@ -2024,7 +2026,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
             {
                 clearTimeout(ret.timeout);
                 delete this._callbackMap[packet.rid];
-                let rehydratedError = scErrors.hydrateError(packet.error);
+                let rehydratedError = hydrateError(packet.error);
                 ret.callback(rehydratedError, packet.data);
             }
             return;

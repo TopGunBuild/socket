@@ -209,13 +209,13 @@ export class AGServer extends AsyncStreamEmitter<any>
         }
 
         this.defaultVerificationOptions = {};
-        if (this.options.authVerifyAlgorithms != null)
+        if (this.options.authVerifyAlgorithm != null)
         {
-            this.defaultVerificationOptions.algorithms = this.options.authVerifyAlgorithms;
+            this.defaultVerificationOptions.algorithm = this.options.authVerifyAlgorithm;
         }
         else if (this.options.authAlgorithm != null)
         {
-            this.defaultVerificationOptions.algorithms = [this.options.authAlgorithm];
+            this.defaultVerificationOptions.algorithm = this.options.authAlgorithm;
         }
 
         this.defaultSignatureOptions = {

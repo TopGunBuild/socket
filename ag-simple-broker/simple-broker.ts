@@ -1,6 +1,6 @@
 import { AsyncStreamEmitter } from '../async-stream-emitter';
 import { SimpleExchange } from './simple-exchange';
-import { CodecEngine } from '../server/types';
+import { CodecEngine } from '../socket-server/types';
 
 export class AGSimpleBroker extends AsyncStreamEmitter<any>
 {

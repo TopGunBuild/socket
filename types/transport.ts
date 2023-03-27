@@ -1,4 +1,4 @@
-import { AuthToken } from '../server/types';
+import { AuthToken } from '../socket-server/types';
 
 export interface TransportHandlers {
     onOpen: (value?: OnOpenValue) => void;
@@ -52,6 +52,8 @@ export interface EventObject {
     callback?: EventObjectCallback | undefined;
     cid?: number | undefined;
     timeout?: any;
+    rid?: any;
+    error?: any;
 }
 
 export interface TransmitOptions {

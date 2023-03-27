@@ -1,4 +1,4 @@
-import { encode, toHEX } from '../utils';
+import { toHEX } from '../utils';
 
 export function randomBytes(randomBytesLength = 9, callback?: (error: Error, bytes: Uint8Array) => void): string
 {

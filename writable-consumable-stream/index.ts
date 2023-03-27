@@ -1,7 +1,7 @@
 import { Consumer } from './consumer';
 import { ConsumableStream } from '../consumable-stream';
 import { ConsumerStats } from './consumer-stats';
-import { Middlewares } from '../server/types';
+import { Middlewares } from '../socket-server/types';
 
 export class WritableConsumableStream<T> extends ConsumableStream<T>
 {
