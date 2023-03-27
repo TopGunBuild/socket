@@ -1,7 +1,11 @@
+import { AuthTokenError } from '../sc-errors/errors';
+
 if (typeof crypto === 'undefined' || !crypto.subtle)
 {
     throw new Error('SubtleCrypto not supported!')
 }
+
+
 
 /**
  * @typedef JwtAlgorithm
@@ -178,13 +182,13 @@ function _decodePayload(raw: string): JwtHeader|JwtPayload|null
     switch (raw.length % 4)
     {
         case 0:
-            break
+            break;
         case 2:
-            raw += '=='
-            break
+            raw += '==';
+            break;
         case 3:
-            raw += '='
-            break
+            raw += '=';
+            break;
         default:
             throw new Error('Illegal base64url string!')
     }
@@ -220,7 +224,7 @@ export async function sign(payload: JwtPayload, secret: Secret, options: JwtSign
         options = { algorithm: options, header: { typ: 'JWT' } }
     }
 
-    options = { algorithm: 'HS256', header: { typ: 'JWT' }, ...options }
+    options = { algorithm: 'HS256', header: { typ: 'JWT' }, ...options };
 
     if (payload === null || typeof payload !== 'object')
     {
@@ -237,7 +241,7 @@ export async function sign(payload: JwtPayload, secret: Secret, options: JwtSign
         throw new Error('options.algorithm must be a string')
     }
 
-    const algorithm: SubtleCryptoImportKeyAlgorithm = algorithms[options.algorithm]
+    const algorithm: SubtleCryptoImportKeyAlgorithm = algorithms[options.algorithm];
 
     if (!algorithm)
     {
@@ -249,18 +253,18 @@ export async function sign(payload: JwtPayload, secret: Secret, options: JwtSign
         payload.iat = Math.floor(Date.now() / 1000)
     }
 
-    const payloadAsJSON = JSON.stringify(payload)
+    const payloadAsJSON = JSON.stringify(payload);
     const partialToken  = `${base64UrlStringify(_utf8ToUint8Array(JSON.stringify({
         ...options.header,
         alg: options.algorithm
-    })))}.${base64UrlStringify(_utf8ToUint8Array(payloadAsJSON))}`
+    })))}.${base64UrlStringify(_utf8ToUint8Array(payloadAsJSON))}`;
 
-    let keyFormat = 'raw'
-    let keyData
+    let keyFormat = 'raw';
+    let keyData;
 
     if (typeof secret === 'object')
     {
-        keyFormat = 'jwk'
+        keyFormat = 'jwk';
         keyData   = secret
     }
     else if (typeof secret === 'string' && secret.startsWith('-----BEGIN'))
@@ -299,7 +303,7 @@ export async function verify(token: string, secret: string|JsonWebKey, options: 
         options = { algorithm: options, throwError: false }
     }
 
-    options = { algorithm: 'HS256', throwError: false, ...options }
+    options = { algorithm: 'HS256', throwError: false, ...options };
 
     if (typeof token !== 'string')
     {
@@ -316,27 +320,27 @@ export async function verify(token: string, secret: string|JsonWebKey, options: 
         throw new Error('options.algorithm must be a string')
     }
 
-    const tokenParts = token.split('.')
+    const tokenParts = token.split('.');
 
     if (tokenParts.length !== 3)
     {
         throw new Error('token must consist of 3 parts')
     }
 
-    const algorithm: SubtleCryptoImportKeyAlgorithm = algorithms[options.algorithm]
+    const algorithm: SubtleCryptoImportKeyAlgorithm = algorithms[options.algorithm];
 
     if (!algorithm)
     {
         throw new Error('algorithm not found')
     }
 
-    const { payload } = decode(token)
+    const { payload } = decode(token);
 
     if (!payload)
     {
         if (options.throwError)
         {
-            throw 'PARSE_ERROR'
+            throw new AuthTokenError('ParseError')
         }
 
         return false
@@ -346,7 +350,7 @@ export async function verify(token: string, secret: string|JsonWebKey, options: 
     {
         if (options.throwError)
         {
-            throw 'NOT_YET_VALID'
+            throw new AuthTokenError('NotYetValid')
         }
 
         return false
@@ -356,13 +360,13 @@ export async function verify(token: string, secret: string|JsonWebKey, options: 
     {
         if (options.throwError)
         {
-            throw 'EXPIRED'
+            throw new AuthTokenError('TokenExpiredError')
         }
 
         return false
     }
-    let keyFormat = 'raw'
-    let keyData
+    let keyFormat = 'raw';
+    let keyData;
 
     if (typeof secret === 'object')
     {
@@ -371,7 +375,7 @@ export async function verify(token: string, secret: string|JsonWebKey, options: 
     }
     else if (typeof secret === 'string' && secret.startsWith('-----BEGIN'))
     {
-        keyFormat = 'spki'
+        keyFormat = 'spki';
         keyData   = _str2ab(secret.replace(/-----BEGIN.*?-----/g, '').replace(/-----END.*?-----/g, '')
             .replace(/\s/g, ''))
     }

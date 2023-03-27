@@ -455,6 +455,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
     emit(eventName: 'connectAbort'): ConsumableStream<ConnectAbortData>;
     emit(eventName: 'disconnect'): ConsumableStream<DisconnectData>;
     emit(eventName: 'close'): ConsumableStream<CloseData>;
+    emit(eventName: 'end'): ConsumableStream<CloseData>;
     emit(eventName: string, data?: any): any
     {
         return super.emit(eventName, data);
@@ -996,10 +997,11 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
         }
     }
 
-    private async _validateAuthToken(signedAuthToken): Promise<any>
+    private async _validateAuthToken(signedAuthToken: string): Promise<any>
     {
         let verificationOptions = Object.assign({}, this.server.defaultVerificationOptions, {
-            socket: this
+            socket    : this,
+            throwError: true
         });
 
         let authToken;
@@ -1043,21 +1045,21 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
     {
         if (err)
         {
-            if (err.name === 'TokenExpiredError')
+            if (err.message === 'TokenExpiredError')
             {
-                let authError        = new AuthTokenExpiredError(err.message, err.expiredAt);
+                let authError        = new AuthTokenExpiredError(err.message, (err as AuthTokenError).expiredAt);
                 authError.isBadToken = true;
                 return authError;
             }
-            if (err.name === 'JsonWebTokenError')
+            if (err.message === 'ParseError')
             {
                 let authError        = new AuthTokenInvalidError(err.message);
                 authError.isBadToken = true;
                 return authError;
             }
-            if (err.name === 'NotBeforeError')
+            if (err.message === 'NotYetValid')
             {
-                let authError        = new AuthTokenNotBeforeError(err.message, err.date);
+                let authError        = new AuthTokenNotBeforeError(err.message, (err as AuthTokenError).date);
                 // In this case, the token is good; it's just not active yet.
                 authError.isBadToken = false;
                 return authError;
@@ -1340,7 +1342,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
                 let closeMessage;
                 if (reason)
                 {
-                    let reasonString;
+                    let reasonString: string;
                     if (typeof reason === 'object')
                     {
                         try
@@ -1349,7 +1351,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
                         }
                         catch (error)
                         {
-                            reasonString = reason.toString();
+                            reasonString = (reason as any).toString();
                         }
                     }
                     else
@@ -1445,7 +1447,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
                     error.name = 'InvalidMessageError';
                 }
                 this.emitError(error);
-                if (this.server.strictHandshake && this.state === this.CONNECTING)
+                if (this.server.strictHandshake && this.state === AGServerSocket.CONNECTING)
                 {
                     this._destroy(4009);
                     this.socket.close(4009);
@@ -1515,7 +1517,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
         try
         {
             await this._processAuthentication(authInfo);
-            if (this.state === this.CLOSED)
+            if (this.state === AGServerSocket.CLOSED)
             {
                 return;
             }

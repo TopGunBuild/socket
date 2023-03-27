@@ -1,10 +1,11 @@
 import { Consumer } from './consumer';
 import { ConsumableStream } from '../consumable-stream';
 import { ConsumerStats } from './consumer-stats';
+import { Middlewares } from '../server/types';
 
 export class WritableConsumableStream<T> extends ConsumableStream<T>
 {
-    type: string;
+    type: Middlewares;
     private nextConsumerId: number;
     private _consumers: Map<any, any>;
     private _tailNode: {next: null; data: {value: undefined; done: boolean}};

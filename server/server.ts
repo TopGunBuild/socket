@@ -25,7 +25,7 @@ import {
 } from './types';
 import { AGServerSocket } from './server-socket';
 import { SimpleExchange } from '../ag-simple-broker/simple-exchange';
-import { Secret } from '../jwt';
+import { JwtAlgorithm, JwtVerifyOptions, Secret } from '../jwt';
 import { AGSimpleBroker } from '../ag-simple-broker/simple-broker';
 import {
     InvalidActionError,
@@ -68,9 +68,7 @@ export class AGServer extends AsyncStreamEmitter<any>
     isReady: boolean;
     signatureKey?: Secret;
     verificationKey?: Secret;
-    defaultVerificationOptions: {
-        algorithms?: string[];
-    };
+    defaultVerificationOptions: JwtVerifyOptions|JwtAlgorithm;
     defaultSignatureOptions: {
         expiresIn: number;
         algorithm?: string;

@@ -9,14 +9,15 @@ const isStrict = (function ()
 export class AuthTokenExpiredError extends Error
 {
     expiry: Date;
+    isBadToken: boolean;
 
-    constructor(message: string, expiry: Date)
+    constructor(message: string, expiry?: Date|number)
     {
         super(message);
         Object.setPrototypeOf(this, AuthTokenExpiredError.prototype);
         this.name    = 'AuthTokenExpiredError';
         this.message = message;
-        this.expiry  = expiry;
+        this.expiry  = new Date(expiry);
 
         if (Error['captureStackTrace'] && !isStrict)
         {
@@ -32,6 +33,8 @@ export class AuthTokenExpiredError extends Error
 
 export class AuthTokenInvalidError extends Error
 {
+    isBadToken: boolean;
+
     constructor(message: string)
     {
         super(message);
@@ -54,8 +57,9 @@ export class AuthTokenInvalidError extends Error
 export class AuthTokenNotBeforeError extends Error
 {
     date: Date;
+    isBadToken: boolean;
 
-    constructor(message: string, date: Date)
+    constructor(message: string, date?: Date)
     {
         super(message);
         Object.setPrototypeOf(this, AuthTokenNotBeforeError.prototype);
@@ -78,6 +82,10 @@ export class AuthTokenNotBeforeError extends Error
 // For any other auth token error.
 export class AuthTokenError extends Error
 {
+    expiredAt?: any;
+    date?: any;
+    isBadToken: boolean;
+
     constructor(message: string)
     {
         super(message);
