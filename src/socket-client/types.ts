@@ -23,13 +23,13 @@ export type SignedAuthToken = string;
 
 export interface TransportHandlers
 {
-    onOpen: (value?: OnOpenValue) => void;
-    onOpenAbort: (value: OnOpenAbortValue) => void;
-    onClose: (value: OnCloseValue) => void;
-    onEvent: (value: OnEventValue) => void;
-    onError: (value: OnErrorValue) => void;
-    onInboundInvoke: (value: OnInboundInvokeValue) => void;
-    onInboundTransmit: (value: OnInboundTransmitValue) => void;
+    onOpen?: (value?: OnOpenValue) => void;
+    onOpenAbort?: (value: OnOpenAbortValue) => void;
+    onClose?: (value: OnCloseValue) => void;
+    onEvent?: (value: OnEventValue) => void;
+    onError?: (value: OnErrorValue) => void;
+    onInboundInvoke?: (value: OnInboundInvokeValue) => void;
+    onInboundTransmit?: (value: OnInboundTransmitValue) => void;
 }
 
 export interface OnOpenValue

@@ -2,7 +2,7 @@ import { CodecEngine } from '../socket-server/types';
 import {
     AGAuthEngine,
     CallIdGenerator,
-    ClientOptions,
+    ClientOptions, EventObject, EventObjectCallback, InvokeOptions,
     OnCloseValue,
     OnErrorValue,
     OnEventValue,
@@ -11,10 +11,10 @@ import {
     OnOpenAbortValue,
     OnOpenValue,
     ProtocolVersions,
-    States,
+    States, TransmitOptions,
     TransportHandlers
 } from './types';
-import { BadConnectionError, hydrateError, socketProtocolErrorStatuses } from '../sc-errors/errors';
+import { BadConnectionError, hydrateError, socketProtocolErrorStatuses, TimeoutError } from '../sc-errors/errors';
 import { AGRequest } from '../ag-request';
 
 export class AGTransport
@@ -27,7 +27,7 @@ export class AGTransport
     auth: AGAuthEngine;
     codec: CodecEngine;
     options: ClientOptions;
-    wsOptions?: WebSocket.ClientOptions|undefined;
+    wsOptions?: ClientOptions|undefined;
     protocolVersion: ProtocolVersions;
     connectTimeout: number;
     pingTimeout: number;
@@ -300,9 +300,191 @@ export class AGTransport
         this._batchBuffer     = [];
     }
 
+    flushBatch(): void
+    {
+        this.isBufferingBatch = false;
+        if (!this._batchBuffer.length)
+        {
+            return;
+        }
+        let serializedBatch = this.serializeObject(this._batchBuffer);
+        this._batchBuffer   = [];
+        this.send(serializedBatch);
+    }
+
+    cancelBatch(): void
+    {
+        this.isBufferingBatch = false;
+        this._batchBuffer     = [];
+    }
+
+    getBytesReceived(): any
+    {
+        return this.socket['bytesReceived'];
+    }
+
+    close(code?: number, reason?: string): void
+    {
+        if (this.state === AGTransport.OPEN || this.state === AGTransport.CONNECTING)
+        {
+            code = code || 1000;
+            this._destroy(code, reason);
+            this.socket.close(code, reason);
+        }
+    }
+
+    transmitObject(eventObject: EventObject): number|null
+    {
+        let simpleEventObject: EventObject = {
+            event: eventObject.event,
+            data : eventObject.data
+        };
+
+        if (eventObject.callback)
+        {
+            simpleEventObject.cid              = eventObject.cid = this.callIdGenerator();
+            this._callbackMap[eventObject.cid] = eventObject;
+        }
+
+        this.sendObject(simpleEventObject);
+
+        return eventObject.cid || null;
+    }
+
+    transmit(event: string, data: any, options: TransmitOptions): Promise<void>
+    {
+        let eventObject = {
+            event,
+            data
+        };
+
+        if (this.state === AGTransport.OPEN || options.force)
+        {
+            this.transmitObject(eventObject);
+        }
+        return Promise.resolve();
+    }
+
+    invokeRaw(
+        event: string,
+        data: any,
+        options: InvokeOptions,
+        callback?: EventObjectCallback,
+    ): number|null
+    {
+        let eventObject: EventObject = {
+            event,
+            data,
+            callback
+        };
+
+        if (!options.noTimeout)
+        {
+            eventObject.timeout = setTimeout(() =>
+            {
+                this._handleEventAckTimeout(eventObject);
+            }, this.options.ackTimeout);
+        }
+        let cid = null;
+        if (this.state === AGTransport.OPEN || options.force)
+        {
+            cid = this.transmitObject(eventObject);
+        }
+        return cid;
+    }
+
+    invoke<T extends EventObject>(event: string, data: T, options: InvokeOptions): Promise<T>
+    {
+        return new Promise((resolve, reject) =>
+        {
+            this.invokeRaw(event, data, options, (err, data) =>
+            {
+                if (err)
+                {
+                    reject(err);
+                    return;
+                }
+                resolve(data as T);
+            });
+        });
+    }
+
+    cancelPendingResponse(cid: number): void
+    {
+        delete this._callbackMap[cid];
+    }
+
+    decode(message: any): any
+    {
+        return this.codec.decode(message);
+    }
+
+    encode(object: any): any
+    {
+        return this.codec.encode(object);
+    }
+
+    send(data: any): void
+    {
+        if (this.socket.readyState !== this.socket.OPEN)
+        {
+            this._destroy(1005);
+        }
+        else
+        {
+            this.socket.send(data);
+        }
+    }
+
+    serializeObject(object: any): any
+    {
+        let str;
+        try
+        {
+            str = this.encode(object);
+        }
+        catch (error)
+        {
+            this._onError(error);
+            return null;
+        }
+        return str;
+    }
+
+    sendObject(object: any): void
+    {
+        if (this.isBufferingBatch)
+        {
+            this._batchBuffer.push(object);
+            return;
+        }
+        let str = this.serializeObject(object);
+        if (str != null)
+        {
+            this.send(str);
+        }
+    }
+
     // -----------------------------------------------------------------------------------------------------
     // @ Private methods
     // -----------------------------------------------------------------------------------------------------
+
+    private _handleEventAckTimeout(eventObject: EventObject): void
+    {
+        if (eventObject.cid)
+        {
+            delete this._callbackMap[eventObject.cid];
+        }
+        delete eventObject.timeout;
+
+        let callback = eventObject.callback;
+        if (callback)
+        {
+            delete eventObject.callback;
+            let error = new TimeoutError(`Event response for "${eventObject.event}" timed out`);
+            callback.call(eventObject, error, eventObject);
+        }
+    }
 
     private async _onOpen(): Promise<void>
     {
