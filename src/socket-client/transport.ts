@@ -15,7 +15,7 @@ import {
     TransportHandlers
 } from './types';
 import { BadConnectionError, hydrateError, socketProtocolErrorStatuses, TimeoutError } from '../sc-errors/errors';
-import { AGRequest } from '../ag-request';
+import { AGRequest } from '../ag-request/request';
 
 export class AGTransport
 {
@@ -393,7 +393,7 @@ export class AGTransport
         return cid;
     }
 
-    invoke<T extends EventObject>(event: string, data: T, options: InvokeOptions): Promise<T>
+    invoke<T>(event: string, data: T, options: InvokeOptions): Promise<EventObject>
     {
         return new Promise((resolve, reject) =>
         {
@@ -404,7 +404,7 @@ export class AGTransport
                     reject(err);
                     return;
                 }
-                resolve(data as T);
+                resolve(data);
             });
         });
     }

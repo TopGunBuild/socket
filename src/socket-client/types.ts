@@ -82,6 +82,8 @@ export interface EventObject
     callback?: EventObjectCallback|undefined;
     cid?: number|undefined;
     timeout?: any;
+
+    [key: string]: any;
 }
 
 export interface TransmitOptions

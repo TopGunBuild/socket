@@ -1,15 +1,15 @@
 import { dehydrateError, InvalidActionError } from '../sc-errors/errors';
-import { AGServerSocket } from '../socket-server/server-socket';
+import { AgSocket } from './types';
 
 export class AGRequest
 {
     readonly id: number;
-    socket: AGServerSocket;
+    socket: AgSocket;
     procedure: any;
     data: any;
     sent: boolean;
 
-    constructor(socket: AGServerSocket, id: number, procedureName: string, data: any)
+    constructor(socket: AgSocket, id: number, procedureName: string, data: any)
     {
         this.socket    = socket;
         this.id        = id;
