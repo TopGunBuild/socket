@@ -17,8 +17,9 @@ export class AGChannel<T> extends ConsumableStream<T>
     UNSUBSCRIBED: ChannelState;
     client: AGChannelClient;
 
-    private _eventDemux: StreamDemux<T>;
-    private _dataStream: DemuxedConsumableStream<T>;
+    _eventDemux: StreamDemux<T>;
+    _dataStream: DemuxedConsumableStream<T>;
+    _pendingSubscriptionCid: number;
 
     /**
      * Constructor

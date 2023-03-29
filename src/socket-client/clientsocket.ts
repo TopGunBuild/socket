@@ -1,14 +1,25 @@
 import { AGChannelClient } from '../ag-channel/client';
 import { AsyncStreamEmitter } from '../async-stream-emitter';
 import { SocketProtocolErrorStatuses, SocketProtocolIgnoreStatuses } from '../sc-errors/types';
-import { AGAuthEngine, AuthStates, AuthToken, ClientOptions, ProtocolVersions, SignedAuthToken, States } from './types';
+import {
+    AGAuthEngine,
+    AuthStates,
+    AuthStatus,
+    AuthToken,
+    ClientOptions, EventObject,
+    ProtocolVersions,
+    SignedAuthToken,
+    States, SubscribeOptions
+} from './types';
 import { AGTransport } from './transport';
 import { CodecEngine } from '../socket-server/types';
 import {
+    BadConnectionError,
+    hydrateError,
     InvalidArgumentsError,
-    InvalidMessageError,
+    InvalidMessageError, SocketProtocolError,
     socketProtocolErrorStatuses,
-    socketProtocolIgnoreStatuses
+    socketProtocolIgnoreStatuses, TimeoutError
 } from '../sc-errors/errors';
 import { StreamDemux } from '../stream-demux';
 import { Item, LinkedList } from '../linked-list';
@@ -16,6 +27,8 @@ import { AuthEngine } from './auth';
 import { formatter } from '../sc-formatter';
 import { wait } from './wait';
 import { Buffer } from 'buffer/';
+import { cloneDeep } from '../utils/clone-deep';
+import { AGChannel } from '../ag-channel/channel';
 
 const isBrowser = typeof window !== 'undefined';
 
@@ -78,7 +91,7 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
 
     poolIndex?: number|undefined;
     private _batchingIntervalId: any;
-    private _outboundBuffer: LinkedList<Item>;
+    private _outboundBuffer: LinkedList<any>;
     private _channelMap: {[key: string]: any};
     private _channelEventDemux: StreamDemux<unknown>;
     private _channelDataDemux: StreamDemux<unknown>;
@@ -490,9 +503,603 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
         return Buffer.from(encodedString, 'base64').toString('utf8');
     }
 
+    encodeBase64(decodedString: string): string
+    {
+        return Buffer.from(decodedString, 'utf8').toString('base64');
+    }
+
+    getAuthToken(): AuthToken|null
+    {
+        return this.authToken;
+    }
+
+    getSignedAuthToken(): SignedAuthToken|null
+    {
+        return this.signedAuthToken;
+    }
+
+    /**
+     * Perform client-initiated authentication by providing an encrypted token string.
+     */
+    async authenticate(signedAuthToken: string): Promise<AuthStatus>
+    {
+        let authStatus;
+
+        try
+        {
+            authStatus = await this.invoke('#authenticate', signedAuthToken);
+        }
+        catch (err)
+        {
+            if (err.name !== 'BadConnectionError' && err.name !== 'TimeoutError')
+            {
+                // In case of a bad/closed connection or a timeout, we maintain the last
+                // known auth state since those errors don't mean that the token is invalid.
+                this._changeToUnauthenticatedStateAndClearTokens();
+            }
+            await wait(0);
+            throw err;
+        }
+
+        if (authStatus && authStatus.isAuthenticated != null)
+        {
+            // If authStatus is correctly formatted (has an isAuthenticated property),
+            // then we will rehydrate the authError.
+            if (authStatus.authError)
+            {
+                authStatus.authError = hydrateError(authStatus.authError);
+            }
+        }
+        else
+        {
+            // Some errors like BadConnectionError and TimeoutError will not pass a valid
+            // authStatus object to the current function, so we need to create it ourselves.
+            authStatus = {
+                isAuthenticated: this.authState,
+                authError      : null
+            };
+        }
+
+        if (authStatus.isAuthenticated)
+        {
+            this._changeToAuthenticatedState(signedAuthToken);
+        }
+        else
+        {
+            this._changeToUnauthenticatedStateAndClearTokens();
+        }
+
+        (async () =>
+        {
+            try
+            {
+                await this.auth.saveToken(this.authTokenName, signedAuthToken, {});
+            }
+            catch (err)
+            {
+                this._onError(err);
+            }
+        })();
+
+        await wait(0);
+        return authStatus;
+    }
+
+    decode(message: any): any
+    {
+        return this.transport.decode(message);
+    }
+
+    encode(object: any): any
+    {
+        return this.transport.encode(object);
+    }
+
+    send(data: any): void
+    {
+        this.transport.send(data);
+    }
+
+    transmit(event: string, data: any, options?: {ackTimeout?: number|undefined}): Promise<void>
+    {
+        return this._processOutboundEvent(event, data, options);
+    }
+
+    invoke(event: string, data: any, options?: {ackTimeout?: number|undefined}): Promise<any>
+    {
+        return this._processOutboundEvent(event, data, options, true);
+    }
+
+    transmitPublish(channelName: string, data: any): Promise<void>
+    {
+        let pubData = {
+            channel: this._decorateChannelName(channelName),
+            data
+        };
+        return this.transmit('#publish', pubData);
+    }
+
+    invokePublish(channelName: string, data: any): Promise<{channel: string; data: any}>
+    {
+        let pubData = {
+            channel: this._decorateChannelName(channelName),
+            data
+        };
+        return this.invoke('#publish', pubData);
+    }
+
+    startBatch(): void
+    {
+        this.transport.startBatch();
+    }
+
+    flushBatch(): void
+    {
+        this.transport.flushBatch();
+    }
+
+    cancelBatch(): void
+    {
+        this.transport.cancelBatch();
+    }
+
     // -----------------------------------------------------------------------------------------------------
     // @ Private methods
     // -----------------------------------------------------------------------------------------------------
+
+    private _startBatching(): void
+    {
+        if (this._batchingIntervalId != null)
+        {
+            return;
+        }
+        this.startBatch();
+        this._batchingIntervalId = setInterval(() =>
+        {
+            this.flushBatch();
+            this.startBatch();
+        }, this.options.batchInterval);
+    }
+
+    private _undecorateChannelName(decoratedChannelName: string): string
+    {
+        if (this.channelPrefix && decoratedChannelName.indexOf(this.channelPrefix) === 0)
+        {
+            return decoratedChannelName.replace(this.channelPrefix, '');
+        }
+        return decoratedChannelName;
+    }
+
+    private _decorateChannelName(channelName: string): string
+    {
+        if (this.channelPrefix)
+        {
+            channelName = this.channelPrefix + channelName;
+        }
+        return channelName;
+    }
+
+    private _cancelPendingSubscribeCallback(channel: AGChannel<any>)
+    {
+        if (channel._pendingSubscriptionCid != null)
+        {
+            this.transport.cancelPendingResponse(channel._pendingSubscriptionCid);
+            delete channel._pendingSubscriptionCid;
+        }
+    }
+
+    private _triggerChannelSubscribeFail(err: Error, channel: AGChannel<any>, subscriptionOptions: SubscribeOptions): void
+    {
+        let channelName           = channel.name;
+        let meetsAuthRequirements = !channel.options['waitForAuth'] || this.authState === AGClientSocket.AUTHENTICATED;
+        let hasChannel            = !!this._channelMap[channelName];
+
+        if (hasChannel && meetsAuthRequirements)
+        {
+            delete this._channelMap[channelName];
+
+            this._channelEventDemux.write(`${channelName}/subscribeFail`, {
+                error: err,
+                subscriptionOptions
+            });
+            this.emit('subscribeFail', {
+                error              : err,
+                channel            : channelName,
+                subscriptionOptions: subscriptionOptions
+            });
+        }
+    }
+
+    private _triggerChannelSubscribe(channel: AGChannel<any>, subscriptionOptions: SubscribeOptions): void
+    {
+        let channelName = channel.name;
+
+        if (channel.state !== AGChannel.SUBSCRIBED)
+        {
+            let oldChannelState = channel.state;
+            channel.state       = AGChannel.SUBSCRIBED;
+
+            let stateChangeData = {
+                oldChannelState,
+                newChannelState: channel.state,
+                subscriptionOptions
+            };
+            this._channelEventDemux.write(`${channelName}/subscribeStateChange`, stateChangeData);
+            this._channelEventDemux.write(`${channelName}/subscribe`, {
+                subscriptionOptions
+            });
+            this.emit('subscribeStateChange', {
+                channel: channelName,
+                ...stateChangeData
+            });
+            this.emit('subscribe', {
+                channel: channelName,
+                subscriptionOptions
+            });
+        }
+    }
+
+    private _processOutboundEvent(
+        event: string,
+        data: any,
+        options?: {ackTimeout?: number|undefined},
+        expectResponse?: boolean
+    ): Promise<void>
+    {
+        options = options || {};
+
+        if (this.state === AGClientSocket.CLOSED)
+        {
+            this.connect();
+        }
+        let eventObject: EventObject = {
+            event,
+            data: null
+        };
+
+        let promise;
+
+        if (expectResponse)
+        {
+            promise = new Promise((resolve, reject) =>
+            {
+                eventObject.callback = (err, data) =>
+                {
+                    if (err)
+                    {
+                        reject(err);
+                        return;
+                    }
+                    resolve(data);
+                };
+            });
+        }
+        else
+        {
+            promise = Promise.resolve();
+        }
+
+        let eventNode: any = new Item();
+
+        if (this.options.cloneData)
+        {
+            eventObject.data = cloneDeep(data);
+        }
+        else
+        {
+            eventObject.data = data;
+        }
+        eventNode.data = eventObject;
+
+        let ackTimeout = options.ackTimeout == null ? this.ackTimeout : options.ackTimeout;
+
+        eventObject.timeout = setTimeout(() =>
+        {
+            this._handleEventAckTimeout(eventObject, eventNode);
+        }, ackTimeout);
+
+        this._outboundBuffer.append(eventNode);
+        if (this.state === AGClientSocket.OPEN)
+        {
+            this._flushOutboundBuffer();
+        }
+        return promise;
+    }
+
+    private _handleEventAckTimeout(eventObject: EventObject, eventNode): void
+    {
+        if (eventNode)
+        {
+            eventNode.detach();
+        }
+        delete eventObject.timeout;
+
+        let callback = eventObject.callback;
+        if (callback)
+        {
+            delete eventObject.callback;
+            let error = new TimeoutError(`Event response for "${eventObject.event}" timed out`);
+            callback.call(eventObject, error, eventObject);
+        }
+        // Cleanup any pending response callback in the transport layer too.
+        if (eventObject.cid)
+        {
+            this.transport.cancelPendingResponse(eventObject.cid);
+        }
+    }
+
+    private _flushOutboundBuffer(): void
+    {
+        let currentNode = this._outboundBuffer.head;
+        let nextNode;
+
+        while (currentNode)
+        {
+            nextNode        = currentNode.next;
+            let eventObject = currentNode.data;
+            currentNode.detach();
+            this.transport.transmitObject(eventObject);
+            currentNode = nextNode;
+        }
+    }
+
+    private _onInboundInvoke(request): void
+    {
+        let { procedure, data } = request;
+        let handler             = this._privateRPCHandlerMap[procedure];
+        if (handler)
+        {
+            handler.call(this, data, request);
+        }
+        else
+        {
+            this._procedureDemux.write(procedure, request);
+        }
+    }
+
+    private _onInboundTransmit(event: string, data): void
+    {
+        let handler = this._privateDataHandlerMap[event];
+        if (handler)
+        {
+            handler.call(this, data);
+        }
+        else
+        {
+            this._receiverDemux.write(event, data);
+        }
+    }
+
+    private _destroy(code, reason, openAbort): void
+    {
+        this.id = null;
+        this._cancelBatching();
+
+        if (this.transport)
+        {
+            this.transport.clearAllListeners();
+        }
+
+        this.pendingReconnect        = false;
+        this.pendingReconnectTimeout = null;
+        clearTimeout(this._reconnectTimeoutRef);
+
+        this._suspendSubscriptions();
+
+        if (openAbort)
+        {
+            this.emit('connectAbort', { code, reason });
+        }
+        else
+        {
+            this.emit('disconnect', { code, reason });
+        }
+        this.emit('close', { code, reason });
+
+        if (!AGClientSocket.ignoreStatuses[code])
+        {
+            let closeMessage;
+            if (reason)
+            {
+                closeMessage = 'Socket connection closed with status code ' + code + ' and reason: ' + reason;
+            }
+            else
+            {
+                closeMessage = 'Socket connection closed with status code ' + code;
+            }
+            let err = new SocketProtocolError(AGClientSocket.errorStatuses[code] || closeMessage, code);
+            this._onError(err);
+        }
+
+        this._abortAllPendingEventsDueToBadConnection(openAbort ? 'connectAbort' : 'disconnect');
+
+        // Try to reconnect
+        // on server ping timeout (4000)
+        // or on client pong timeout (4001)
+        // or on close without status (1005)
+        // or on handshake failure (4003)
+        // or on handshake rejection (4008)
+        // or on socket hung up (1006)
+        if (this.options.autoReconnect)
+        {
+            if (code === 4000 || code === 4001 || code === 1005)
+            {
+                // If there is a ping or pong timeout or socket closes without
+                // status, don't wait before trying to reconnect - These could happen
+                // if the client wakes up after a period of inactivity and in this case we
+                // want to re-establish the connection as soon as possible.
+                this._tryReconnect(0);
+
+                // Codes 4500 and above will be treated as permanent disconnects.
+                // Socket will not try to auto-reconnect.
+            }
+            else if (code !== 1000 && code < 4500)
+            {
+                this._tryReconnect();
+            }
+        }
+    }
+
+    private _abortAllPendingEventsDueToBadConnection(failureType: string): void
+    {
+        let currentNode = this._outboundBuffer.head;
+        let nextNode;
+
+        while (currentNode)
+        {
+            nextNode        = currentNode.next;
+            let eventObject = currentNode.data;
+            clearTimeout(eventObject.timeout);
+            delete eventObject.timeout;
+            currentNode.detach();
+            currentNode = nextNode;
+
+            let callback = eventObject.callback;
+
+            if (callback)
+            {
+                delete eventObject.callback;
+                let errorMessage = `Event "${eventObject.event}" was aborted due to a bad connection`;
+                let error        = new BadConnectionError(errorMessage, failureType);
+
+                callback.call(eventObject, error, eventObject);
+            }
+            // Cleanup any pending response callback in the transport layer too.
+            if (eventObject.cid)
+            {
+                this.transport.cancelPendingResponse(eventObject.cid);
+            }
+        }
+    }
+
+    private _suspendSubscriptions(): void
+    {
+        Object.keys(this._channelMap).forEach((channelName) =>
+        {
+            let channel = this._channelMap[channelName];
+            this._triggerChannelUnsubscribe(channel, true);
+        });
+    }
+
+    private _onError(error): void
+    {
+        this.emit('error', { error });
+    }
+
+    private _tryReconnect(initialDelay?: number): void
+    {
+        let exponent         = this.connectAttempts++;
+        let reconnectOptions = this.options.autoReconnectOptions;
+        let timeout;
+
+        if (initialDelay == null || exponent > 0)
+        {
+            let initialTimeout = Math.round(reconnectOptions.initialDelay + (reconnectOptions.randomness || 0) * Math.random());
+
+            timeout = Math.round(initialTimeout * Math.pow(reconnectOptions.multiplier, exponent));
+        }
+        else
+        {
+            timeout = initialDelay;
+        }
+
+        if (timeout > reconnectOptions.maxDelay)
+        {
+            timeout = reconnectOptions.maxDelay;
+        }
+
+        clearTimeout(this._reconnectTimeoutRef);
+
+        this.pendingReconnect        = true;
+        this.pendingReconnectTimeout = timeout;
+        this._reconnectTimeoutRef    = setTimeout(() =>
+        {
+            this.connect();
+        }, timeout);
+    }
+
+    private _onOpen(status): void
+    {
+        if (this.isBatching)
+        {
+            this._startBatching();
+        }
+        else if (this.batchOnHandshake)
+        {
+            this._startBatching();
+            setTimeout(() =>
+            {
+                if (!this.isBatching)
+                {
+                    this._stopBatching();
+                }
+            }, this.batchOnHandshakeDuration);
+        }
+        this.preparingPendingSubscriptions = true;
+
+        if (status)
+        {
+            this.id          = status.id;
+            this.pingTimeout = status.pingTimeout;
+            if (status.isAuthenticated)
+            {
+                this._changeToAuthenticatedState(status.authToken);
+            }
+            else
+            {
+                this._changeToUnauthenticatedStateAndClearTokens();
+            }
+        }
+        else
+        {
+            // This can happen if auth.loadToken (in transport.js) fails with
+            // an error - This means that the signedAuthToken cannot be loaded by
+            // the auth engine and therefore, we need to unauthenticate the client.
+            this._changeToUnauthenticatedStateAndClearTokens();
+        }
+
+        this.connectAttempts = 0;
+
+        if (this.options.autoSubscribeOnConnect)
+        {
+            this.processPendingSubscriptions();
+        }
+
+        // If the user invokes the callback while in autoSubscribeOnConnect mode, it
+        // won't break anything.
+        this.emit('connect', {
+            ...status,
+            processPendingSubscriptions: () =>
+            {
+                this.processPendingSubscriptions();
+            }
+        });
+
+        if (this.state === AGClientSocket.OPEN)
+        {
+            this._flushOutboundBuffer();
+        }
+    }
+
+    private _extractAuthTokenData(signedAuthToken: string): any
+    {
+        let tokenParts       = (signedAuthToken || '').split('.');
+        let encodedTokenData = tokenParts[1];
+        if (encodedTokenData != null)
+        {
+            let tokenData = encodedTokenData;
+            try
+            {
+                tokenData = this.decodeBase64(tokenData);
+                return JSON.parse(tokenData);
+            }
+            catch (e)
+            {
+                return tokenData;
+            }
+        }
+        return null;
+    }
 
     private _changeToAuthenticatedState(signedAuthToken): void
     {
