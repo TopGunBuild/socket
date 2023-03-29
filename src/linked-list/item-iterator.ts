@@ -1,27 +1,25 @@
+import { Item } from './Item';
+
 /**
  * Creates an iterator that iterates over a list (through an item).
  *
  * @template {Item} [T=Item]
  */
-export class ItemIterator<T extends any>
+
+export class ItemIterator<T extends Item>
 {
     item: T|null = null;
 
     /**
      * Create a new iterator.
-     *
-     * @param {T|null} item
      */
     constructor(item: T|null)
     {
-        /** @type {T|null} */
         this.item = item
     }
 
     /**
      * Move to the next item.
-     *
-     * @returns {IteratorResult<T, null>}
      */
     next(): IteratorResult<T|null>
     {
@@ -29,7 +27,7 @@ export class ItemIterator<T extends any>
 
         if (value)
         {
-            this.item = value.next;
+            this.item = value.next as T;
             return { value, done: false }
         }
 

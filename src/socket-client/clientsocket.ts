@@ -4,8 +4,18 @@ import { SocketProtocolErrorStatuses, SocketProtocolIgnoreStatuses } from '../sc
 import { AGAuthEngine, AuthStates, AuthToken, ClientOptions, ProtocolVersions, SignedAuthToken, States } from './types';
 import { AGTransport } from './transport';
 import { CodecEngine } from '../socket-server/types';
-import { InvalidArgumentsError } from '../sc-errors/errors';
+import {
+    InvalidArgumentsError,
+    InvalidMessageError,
+    socketProtocolErrorStatuses,
+    socketProtocolIgnoreStatuses
+} from '../sc-errors/errors';
 import { StreamDemux } from '../stream-demux';
+import { Item, LinkedList } from '../linked-list';
+import { AuthEngine } from './auth';
+import { formatter } from '../sc-formatter';
+import { wait } from './wait';
+import { Buffer } from 'buffer/';
 
 const isBrowser = typeof window !== 'undefined';
 
@@ -22,8 +32,8 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
     static readonly PENDING      = 'pending';
     static readonly UNSUBSCRIBED = 'unsubscribed';
 
-    static readonly ignoreStatuses: SocketProtocolIgnoreStatuses;
-    static readonly errorStatuses: SocketProtocolErrorStatuses;
+    static readonly ignoreStatuses: SocketProtocolIgnoreStatuses = socketProtocolIgnoreStatuses;
+    static readonly errorStatuses: SocketProtocolErrorStatuses   = socketProtocolErrorStatuses;
 
     options: ClientOptions;
 
@@ -58,7 +68,6 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
 
     connectAttempts: number;
 
-    isBufferingBatch: boolean;
     isBatching: boolean;
     batchOnHandshake: boolean;
     batchOnHandshakeDuration: number;
@@ -69,6 +78,72 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
 
     poolIndex?: number|undefined;
     private _batchingIntervalId: any;
+    private _outboundBuffer: LinkedList<Item>;
+    private _channelMap: {[key: string]: any};
+    private _channelEventDemux: StreamDemux<unknown>;
+    private _channelDataDemux: StreamDemux<unknown>;
+    private _receiverDemux: StreamDemux<unknown>;
+    private _procedureDemux: StreamDemux<unknown>;
+    private _cid: number;
+
+    private _privateDataHandlerMap = {
+        '#publish'        : function (data)
+        {
+            let undecoratedChannelName = this._undecorateChannelName(data.channel);
+            let isSubscribed           = this.isSubscribed(undecoratedChannelName, true);
+
+            if (isSubscribed)
+            {
+                this._channelDataDemux.write(undecoratedChannelName, data.data);
+            }
+        },
+        '#kickOut'        : function (data)
+        {
+            let undecoratedChannelName = this._undecorateChannelName(data.channel);
+            let channel                = this._channelMap[undecoratedChannelName];
+            if (channel)
+            {
+                this.emit('kickOut', {
+                    channel: undecoratedChannelName,
+                    message: data.message
+                });
+                this._channelEventDemux.write(`${undecoratedChannelName}/kickOut`, { message: data.message });
+                this._triggerChannelUnsubscribe(channel);
+            }
+        },
+        '#setAuthToken'   : function (data)
+        {
+            if (data)
+            {
+                this._setAuthToken(data);
+            }
+        },
+        '#removeAuthToken': function (data)
+        {
+            this._removeAuthToken(data);
+        }
+    };
+
+    private _privateRPCHandlerMap = {
+        '#setAuthToken'   : function (data, request)
+        {
+            if (data)
+            {
+                this._setAuthToken(data);
+
+                request.end();
+            }
+            else
+            {
+                request.error(new InvalidMessageError('No token data provided by #setAuthToken event'));
+            }
+        },
+        '#removeAuthToken': function (data, request)
+        {
+            this._removeAuthToken(data);
+            request.end();
+        }
+    };
 
     /**
      * Constructor
@@ -218,7 +293,7 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
             this.codec = formatter;
         }
 
-        if (this.options.protocol)
+        if (this.options['protocol'])
         {
             let protocolOptionError = new InvalidArgumentsError(
                 'The "protocol" option does not affect socketcluster-client - ' +
@@ -260,5 +335,294 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
         {
             this.connect();
         }
+    }
+
+    // -----------------------------------------------------------------------------------------------------
+    // @ Accessors
+    // -----------------------------------------------------------------------------------------------------
+
+    get isBufferingBatch(): boolean
+    {
+        return this.transport.isBufferingBatch;
+    }
+
+    // -----------------------------------------------------------------------------------------------------
+    // @ Public methods
+    // -----------------------------------------------------------------------------------------------------
+
+    getBackpressure(): number
+    {
+        return Math.max(
+            this.getAllListenersBackpressure(),
+            this.getAllReceiversBackpressure(),
+            this.getAllProceduresBackpressure(),
+            this.getAllChannelsBackpressure()
+        );
+    }
+
+    getState(): States
+    {
+        return this.state;
+    }
+
+    getBytesReceived(): any
+    {
+        return this.transport.getBytesReceived();
+    }
+
+    async deauthenticate(): Promise<void>
+    {
+        (async () =>
+        {
+            let oldAuthToken;
+            try
+            {
+                oldAuthToken = await this.auth.removeToken(this.authTokenName);
+            }
+            catch (err)
+            {
+                this._onError(err);
+                return;
+            }
+            this.emit('removeAuthToken', { oldAuthToken });
+        })();
+
+        if (this.state !== AGClientSocket.CLOSED)
+        {
+            this.transmit('#removeAuthToken');
+        }
+        this._changeToUnauthenticatedStateAndClearTokens();
+        await wait(0);
+    }
+
+    connect(): void
+    {
+        if (this.state === AGClientSocket.CLOSED)
+        {
+            this.pendingReconnect        = false;
+            this.pendingReconnectTimeout = null;
+            clearTimeout(this._reconnectTimeoutRef);
+
+            this.state = AGClientSocket.CONNECTING;
+            this.emit('connecting', {});
+
+            if (this.transport)
+            {
+                this.transport.clearAllListeners();
+            }
+
+            let transportHandlers = {
+                onOpen           : (value) =>
+                {
+                    this.state = AGClientSocket.OPEN;
+                    this._onOpen(value);
+                },
+                onOpenAbort      : (value) =>
+                {
+                    if (this.state !== AGClientSocket.CLOSED)
+                    {
+                        this.state = AGClientSocket.CLOSED;
+                        this._destroy(value.code, value.reason, true);
+                    }
+                },
+                onClose          : (value) =>
+                {
+                    if (this.state !== AGClientSocket.CLOSED)
+                    {
+                        this.state = AGClientSocket.CLOSED;
+                        this._destroy(value.code, value.reason);
+                    }
+                },
+                onEvent          : (value) =>
+                {
+                    this.emit(value.event, value.data);
+                },
+                onError          : (value) =>
+                {
+                    this._onError(value.error);
+                },
+                onInboundInvoke  : (value) =>
+                {
+                    this._onInboundInvoke(value);
+                },
+                onInboundTransmit: (value) =>
+                {
+                    this._onInboundTransmit(value.event, value.data);
+                }
+            };
+
+            this.transport = new AGTransport(this.auth, this.codec, this.options, this.wsOptions, transportHandlers);
+        }
+    }
+
+    reconnect(code?: number, reason?: string): void
+    {
+        this.disconnect(code, reason);
+        this.connect();
+    }
+
+    disconnect(code?: number, reason?: string): void
+    {
+        code = code || 1000;
+
+        if (typeof code !== 'number')
+        {
+            throw new InvalidArgumentsError('If specified, the code argument must be a number');
+        }
+
+        let isConnecting = this.state === AGClientSocket.CONNECTING;
+        if (isConnecting || this.state === AGClientSocket.OPEN)
+        {
+            this.state = AGClientSocket.CLOSED;
+            this._destroy(code, reason, isConnecting);
+            this.transport.close(code, reason);
+        }
+        else
+        {
+            this.pendingReconnect        = false;
+            this.pendingReconnectTimeout = null;
+            clearTimeout(this._reconnectTimeoutRef);
+        }
+    }
+
+    decodeBase64(encodedString: string): string
+    {
+        return Buffer.from(encodedString, 'base64').toString('utf8');
+    }
+
+    // -----------------------------------------------------------------------------------------------------
+    // @ Private methods
+    // -----------------------------------------------------------------------------------------------------
+
+    private _changeToAuthenticatedState(signedAuthToken): void
+    {
+        this.signedAuthToken = signedAuthToken;
+        this.authToken       = this._extractAuthTokenData(signedAuthToken);
+
+        if (this.authState !== AGClientSocket.AUTHENTICATED)
+        {
+            let oldAuthState    = this.authState;
+            this.authState      = AGClientSocket.AUTHENTICATED;
+            let stateChangeData = {
+                oldAuthState,
+                newAuthState   : this.authState,
+                signedAuthToken: signedAuthToken,
+                authToken      : this.authToken
+            };
+            if (!this.preparingPendingSubscriptions)
+            {
+                this.processPendingSubscriptions();
+            }
+
+            this.emit('authStateChange', stateChangeData);
+        }
+        this.emit('authenticate', { signedAuthToken, authToken: this.authToken });
+    }
+
+    private _changeToUnauthenticatedStateAndClearTokens(): void
+    {
+        if (this.authState !== AGClientSocket.UNAUTHENTICATED)
+        {
+            let oldAuthState       = this.authState;
+            let oldAuthToken       = this.authToken;
+            let oldSignedAuthToken = this.signedAuthToken;
+            this.authState         = AGClientSocket.UNAUTHENTICATED;
+            this.signedAuthToken   = null;
+            this.authToken         = null;
+
+            let stateChangeData = {
+                oldAuthState,
+                newAuthState: this.authState
+            };
+            this.emit('authStateChange', stateChangeData);
+            this.emit('deauthenticate', { oldSignedAuthToken, oldAuthToken });
+        }
+    }
+
+    private async _handleBrowserUnload(): Promise<void>
+    {
+        let unloadHandler           = () =>
+        {
+            this.disconnect();
+        };
+        let isUnloadHandlerAttached = false;
+
+        let attachUnloadHandler = () =>
+        {
+            if (!isUnloadHandlerAttached)
+            {
+                isUnloadHandlerAttached = true;
+                global.addEventListener('beforeunload', unloadHandler, false);
+            }
+        };
+
+        let detachUnloadHandler = () =>
+        {
+            if (isUnloadHandlerAttached)
+            {
+                isUnloadHandlerAttached = false;
+                global.removeEventListener('beforeunload', unloadHandler, false);
+            }
+        };
+
+        (async () =>
+        {
+            let consumer = this.listener('connecting').createConsumer();
+            while (true)
+            {
+                let packet = await consumer.next();
+                if (packet.done) break;
+                attachUnloadHandler();
+            }
+        })();
+
+        (async () =>
+        {
+            let consumer = this.listener('close').createConsumer();
+            while (true)
+            {
+                let packet = await consumer.next();
+                if (packet.done) break;
+                detachUnloadHandler();
+            }
+        })();
+    }
+
+    private _setAuthToken(data)
+    {
+        this._changeToAuthenticatedState(data.token);
+
+        (async () =>
+        {
+            try
+            {
+                await this.auth.saveToken(this.authTokenName, data.token, {});
+            }
+            catch (err)
+            {
+                this._onError(err);
+            }
+        })();
+    }
+
+    private _removeAuthToken(data): void
+    {
+        (async () =>
+        {
+            let oldAuthToken;
+            try
+            {
+                oldAuthToken = await this.auth.removeToken(this.authTokenName);
+            }
+            catch (err)
+            {
+                // Non-fatal error - Do not close the connection
+                this._onError(err);
+                return;
+            }
+            this.emit('removeAuthToken', { oldAuthToken });
+        })();
+
+        this._changeToUnauthenticatedStateAndClearTokens();
     }
 }

@@ -1,25 +1,26 @@
+import { ItemIterator } from './item-iterator';
+import { appendAll } from './append-all';
+import { Item } from './Item';
+
 /**
  * Double linked list.
- *
- * @template {Item} [T=Item]
- * @implements {Iterable<T>}
  */
-import { ItemIterator } from './item-iterator';
+export class LinkedList<T extends Item> implements Iterable<T>
+{
+    size: number;
+    head: T|null;
+    tail: T|null;
 
-export class List {
     /**
      * Create a new `this` from the given array of items.
      *
      * Ignores `null` or `undefined` values.
      * Throws an error when a given item has no `detach`, `append`, or `prepend`
      * methods.
-     *
-     * @template {Item} [T=Item]
-     * @param {Array<T|null|undefined>} [items]
      */
-    static from(items) {
-        /** @type {List<T>} */
-        const list = new this()
+    static from<T extends Item>(items: Array<T|null|undefined>)
+    {
+        const list = new this();
         return appendAll(list, items)
     }
 
@@ -29,15 +30,11 @@ export class List {
      * Ignores `null` or `undefined` values.
      * Throws an error when a given item has no `detach`, `append`, or `prepend`
      * methods.
-     *
-     * @template {Item} [T=Item]
-     * @param {Array<T|null|undefined>} items
-     * @returns {List<T>}
      */
-    static of(...items) {
-        /** @type {List<T>} */
-        const list = new this()
-        return appendAll(list, items)
+    static of<T extends Item>(...items: Array<T|null|undefined>): LinkedList<T>
+    {
+        const list = new this() as LinkedList<T>;
+        return appendAll<T>(list, items);
     }
 
     /**
@@ -46,36 +43,13 @@ export class List {
      * Ignores `null` or `undefined` values.
      * Throws an error when a given item has no `detach`, `append`, or `prepend`
      * methods.
-     *
-     * @param {Array<T|null|undefined>} items
      */
-    constructor(...items) {
-        /* eslint-disable no-unused-expressions */
-        /**
-         * The number of items in the list.
-         *
-         * @type {number}
-         */
-        this.size
-
-        /**
-         * The first item in a list or `null` otherwise.
-         *
-         * @type {T|null}
-         */
-        this.head
-
-        /**
-         * The last item in a list and `null` otherwise.
-         *
-         * > 👉 **Note**: a list with only one item has **no tail**, only a head.
-         *
-         * @type {T|null}
-         */
-        this.tail
-        /* eslint-enable no-unused-expressions */
-
-        appendAll(this, items)
+    constructor(...items: Array<T|null|undefined>)
+    {
+        this.size = 0;
+        this.tail = null;
+        this.head = null;
+        appendAll(this, items);
     }
 
     /**
@@ -84,16 +58,16 @@ export class List {
      * Throws an error when the given item has no `detach`, `append`, or `prepend`
      * methods.
      * Returns the given item.
-     *
-     * @param {T|null|undefined} [item]
-     * @returns {T|false}
      */
-    append(item) {
-        if (!item) {
+    append(item: T|null|undefined): T|false
+    {
+        if (!item)
+        {
             return false
         }
 
-        if (!item.append || !item.prepend || !item.detach) {
+        if (!item.append || !item.prepend || !item.detach)
+        {
             throw new Error(
                 'An argument without append, prepend, or detach methods was given to `List#append`.'
             )
@@ -101,21 +75,23 @@ export class List {
 
         // If self has a last item, defer appending to the last items append method,
         // and return the result.
-        if (this.tail) {
-            return this.tail.append(item)
+        if (this.tail)
+        {
+            return this.tail.append(item) as T;
         }
 
         // If self has a first item, defer appending to the first items append method,
         // and return the result.
-        if (this.head) {
-            return this.head.append(item)
+        if (this.head)
+        {
+            return this.head.append(item) as T;
         }
 
         // …otherwise, there is no `tail` or `head` item yet.
-        item.detach()
-        item.list = this
-        this.head = item
-        this.size++
+        item.detach();
+        item.list = this;
+        this.head = item;
+        this.size++;
 
         return item
     }
@@ -126,29 +102,30 @@ export class List {
      * Throws an error when the given item has no `detach`, `append`, or `prepend`
      * methods.
      * Returns the given item.
-     *
-     * @param {T|null|undefined} [item]
-     * @returns {T|false}
      */
-    prepend(item) {
-        if (!item) {
+    prepend(item: T|null|undefined): T|false
+    {
+        if (!item)
+        {
             return false
         }
 
-        if (!item.append || !item.prepend || !item.detach) {
+        if (!item.append || !item.prepend || !item.detach)
+        {
             throw new Error(
                 'An argument without append, prepend, or detach methods was given to `List#prepend`.'
             )
         }
 
-        if (this.head) {
-            return this.head.prepend(item)
+        if (this.head)
+        {
+            return this.head.prepend(item) as T;
         }
 
-        item.detach()
-        item.list = this
-        this.head = item
-        this.size++
+        item.detach();
+        item.list = this;
+        this.head = item;
+        this.size++;
 
         return item
     }
@@ -161,14 +138,15 @@ export class List {
      * > **Note**: `List` also implements an iterator.
      * > That means you can also do `[...list]` to get an array.
      */
-    toArray() {
-        let item = this.head
-        /** @type {Array<T>} */
-        const result = []
+    toArray(): Array<T>
+    {
+        let item               = this.head;
+        const result: Array<T> = [];
 
-        while (item) {
-            result.push(item)
-            item = item.next
+        while (item)
+        {
+            result.push(item);
+            item = item.next as T;
         }
 
         return result
@@ -179,7 +157,8 @@ export class List {
      *
      * @returns {ItemIterator<T>}
      */
-    [Symbol.iterator]() {
+    [Symbol.iterator]()
+    {
         return new ItemIterator(this.head)
     }
 }

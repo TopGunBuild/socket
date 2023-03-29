@@ -1,35 +1,22 @@
+import { LinkedList } from './list';
+
 /**
  * Double linked list item.
  */
 export class Item
 {
+    next: Item|null;
+    prev: Item|null;
+    list: LinkedList<Item>|null;
+
     /**
      * Create a new linked list item.
      */
     constructor()
     {
-        /* eslint-disable no-unused-expressions */
-        /**
-         * The following item or `null` otherwise.
-         *
-         * @type {this|null}
-         */
-        this.next;
-
-        /**
-         * The preceding item or `null` otherwise.
-         *
-         * @type {this|null}
-         */
-        this.prev;
-
-        /**
-         * The list this item belongs to or `null` otherwise.
-         *
-         * @type {List<this>|null}
-         */
-        this.list;
-        /* eslint-enable no-unused-expressions */
+        this.next = null;
+        this.prev = null;
+        this.list = null;
     }
 
     /**
@@ -39,13 +26,10 @@ export class Item
      * `prepend` methods.
      * Returns `false` when the operated on item is not attached to a list,
      * otherwise the given item.
-     *
-     * @param {this} item
-     * @returns {this|false}
      */
-    append(item)
+    append(item: Item): Item|false
     {
-        const list = this.list
+        const list = this.list;
 
         if (!item || !item.append || !item.prepend || !item.detach)
         {
@@ -61,21 +45,21 @@ export class Item
         }
 
         // Detach the appendee.
-        item.detach()
+        item.detach();
 
         // If self has a next item…
         if (this.next)
         {
-            item.next      = this.next
-            this.next.prev = item
+            item.next      = this.next;
+            this.next.prev = item;
         }
 
         // Connect the appendee.
-        item.prev = this
-        item.list = list
+        item.prev = this;
+        item.list = list;
 
         // Set the next item of self to the appendee.
-        this.next = item
+        this.next = item;
 
         // If the the parent list has no last item or if self is the parent lists last
         // item, link the lists last item to the appendee.
@@ -84,7 +68,7 @@ export class Item
             list.tail = item
         }
 
-        list.size++
+        list.size++;
 
         return item
     }
@@ -96,13 +80,10 @@ export class Item
      * methods.
      * Returns `false` when the operated on item is not attached to a list,
      * otherwise the given item.
-     *
-     * @param {this} item
-     * @returns {this|false}
      */
-    prepend(item)
+    prepend(item: Item): Item|false
     {
-        const list = this.list
+        const list = this.list;
 
         if (!item || !item.append || !item.prepend || !item.detach)
         {
@@ -118,21 +99,21 @@ export class Item
         }
 
         // Detach the prependee.
-        item.detach()
+        item.detach();
 
         // If self has a previous item...
         if (this.prev)
         {
-            item.prev      = this.prev
-            this.prev.next = item
+            item.prev      = this.prev;
+            this.prev.next = item;
         }
 
         // Connect the prependee.
-        item.next = this
-        item.list = list
+        item.next = this;
+        item.list = list;
 
         // Set the previous item of self to the prependee.
-        this.prev = item
+        this.prev = item;
 
         // If self is the first item in the parent list, link the lists first item to
         // the prependee.
@@ -147,7 +128,7 @@ export class Item
             list.tail = this
         }
 
-        list.size++
+        list.size++;
 
         return item
     }
@@ -160,12 +141,10 @@ export class Item
      * Relinks all references.
      * Returns the operated on item.
      * Even when it was already detached.
-     *
-     * @returns {this}
      */
-    detach()
+    detach(): Item
     {
-        const list = this.list
+        const list = this.list;
 
         if (!list)
         {
@@ -207,11 +186,11 @@ export class Item
 
         // Remove links from self to both the next and previous items, and to the
         // parent list.
-        this.prev = null
-        this.next = null
-        this.list = null
+        this.prev = null;
+        this.next = null;
+        this.list = null;
 
-        list.size--
+        list.size--;
 
         return this
     }
