@@ -6,10 +6,10 @@ import {
     AuthStates,
     AuthStatus,
     AuthToken,
-    ClientOptions, EventObject,
+    ClientOptions, EventObject, KickOutData,
     ProtocolVersions,
     SignedAuthToken,
-    States, SubscribeOptions
+    States, SubscribeFailData, SubscribeOptions, TransmitOptions, UnsubscribeData
 } from './types';
 import { AGTransport } from './transport';
 import { CodecEngine } from '../socket-server/types';
@@ -32,8 +32,10 @@ import { AGChannel } from '../ag-channel/channel';
 import { DemuxedConsumableStream } from '../stream-demux/demuxed-consumable-stream';
 import { ConsumerStats } from '../writable-consumable-stream/consumer-stats';
 import { ChannelState } from '../ag-channel/channel-state';
+import { getGlobal } from '../utils/global';
 
 const isBrowser = typeof window !== 'undefined';
+const global    = getGlobal();
 
 export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannelClient
 {
@@ -101,9 +103,10 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
     private _receiverDemux: StreamDemux<unknown>;
     private _procedureDemux: StreamDemux<unknown>;
     private _cid: number;
+    private _reconnectTimeoutRef: number;
 
     private _privateDataHandlerMap = {
-        '#publish'        : function (data)
+        '#publish'        : (data) =>
         {
             let undecoratedChannelName = this._undecorateChannelName(data.channel);
             let isSubscribed           = this.isSubscribed(undecoratedChannelName, true);
@@ -113,7 +116,7 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
                 this._channelDataDemux.write(undecoratedChannelName, data.data);
             }
         },
-        '#kickOut'        : function (data)
+        '#kickOut'        : (data) =>
         {
             let undecoratedChannelName = this._undecorateChannelName(data.channel);
             let channel                = this._channelMap[undecoratedChannelName];
@@ -122,26 +125,26 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
                 this.emit('kickOut', {
                     channel: undecoratedChannelName,
                     message: data.message
-                });
+                } as KickOutData);
                 this._channelEventDemux.write(`${undecoratedChannelName}/kickOut`, { message: data.message });
                 this._triggerChannelUnsubscribe(channel);
             }
         },
-        '#setAuthToken'   : function (data)
+        '#setAuthToken'   : (data) =>
         {
             if (data)
             {
                 this._setAuthToken(data);
             }
         },
-        '#removeAuthToken': function (data)
+        '#removeAuthToken': (data) =>
         {
             this._removeAuthToken(data);
         }
     };
 
     private _privateRPCHandlerMap = {
-        '#setAuthToken'   : function (data, request)
+        '#setAuthToken'   : (data, request) =>
         {
             if (data)
             {
@@ -154,7 +157,7 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
                 request.error(new InvalidMessageError('No token data provided by #setAuthToken event'));
             }
         },
-        '#removeAuthToken': function (data, request)
+        '#removeAuthToken': (data, request) =>
         {
             this._removeAuthToken(data);
             request.end();
@@ -323,7 +326,8 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
         {
             let searchParams = new URLSearchParams(this.options.query);
             let queryObject  = {};
-            for (let [key, value] of searchParams.entries())
+
+            searchParams.forEach((value, key) =>
             {
                 let currentValue = queryObject[key];
                 if (currentValue == null)
@@ -338,7 +342,8 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
                     }
                     queryObject[key].push(value);
                 }
-            }
+            });
+
             this.options.query = queryObject;
         }
 
@@ -603,7 +608,7 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
         this.transport.send(data);
     }
 
-    transmit(event: string, data: any, options?: {ackTimeout?: number|undefined}): Promise<void>
+    transmit(event: string, data?: any, options?: {ackTimeout?: number|undefined}): Promise<void>
     {
         return this._processOutboundEvent(event, data, options);
     }
@@ -1122,6 +1127,64 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
             });
     }
 
+    subscriptions(includePending?: boolean): string[]
+    {
+        let subs = [];
+        Object.keys(this._channelMap).forEach((channelName) =>
+        {
+            if (includePending || this._channelMap[channelName].state === AGChannel.SUBSCRIBED)
+            {
+                subs.push(channelName);
+            }
+        });
+        return subs;
+    }
+
+    isSubscribed(channelName: string, includePending?: boolean): boolean
+    {
+        let channel = this._channelMap[channelName];
+        if (includePending)
+        {
+            return !!channel;
+        }
+        return !!channel && channel.state === AGChannel.SUBSCRIBED;
+    }
+
+    processPendingSubscriptions(): void
+    {
+        this.preparingPendingSubscriptions = false;
+        let pendingChannels                = [];
+
+        Object.keys(this._channelMap).forEach((channelName) =>
+        {
+            let channel = this._channelMap[channelName];
+            if (channel.state === AGChannel.PENDING)
+            {
+                pendingChannels.push(channel);
+            }
+        });
+
+        pendingChannels.sort((a, b) =>
+        {
+            let ap = a.options.priority || 0;
+            let bp = b.options.priority || 0;
+            if (ap > bp)
+            {
+                return -1;
+            }
+            if (ap < bp)
+            {
+                return 1;
+            }
+            return 0;
+        });
+
+        pendingChannels.forEach((channel) =>
+        {
+            this._trySubscribe(channel);
+        });
+    }
+
     // -----------------------------------------------------------------------------------------------------
     // @ Private methods
     // -----------------------------------------------------------------------------------------------------
@@ -1145,7 +1208,7 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
     {
         if (this.state === AGClientSocket.OPEN)
         {
-            let options = {
+            let options: TransmitOptions = {
                 noTimeout: true
             };
             // If there is a pending subscribe action, cancel the callback
@@ -1178,7 +1241,7 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
                 channel: channelName,
                 ...stateChangeData
             });
-            this.emit('unsubscribe', { channel: channelName });
+            this.emit('unsubscribe', { channel: channelName } as UnsubscribeData);
         }
 
         if (setAsPending)
@@ -1332,7 +1395,7 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
                 error              : err,
                 channel            : channelName,
                 subscriptionOptions: subscriptionOptions
-            });
+            } as SubscribeFailData);
         }
     }
 
@@ -1496,7 +1559,7 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
         }
     }
 
-    private _destroy(code, reason, openAbort): void
+    private _destroy(code: number, reason?: string, openAbort?: boolean): void
     {
         this.id = null;
         this._cancelBatching();

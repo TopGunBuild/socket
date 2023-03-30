@@ -89,6 +89,8 @@ export interface EventObject
 export interface TransmitOptions
 {
     force?: boolean|undefined;
+    noTimeout?: boolean|undefined;
+    ackTimeout?: number | undefined;
 }
 
 export interface InvokeOptions

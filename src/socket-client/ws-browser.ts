@@ -1,16 +1,6 @@
-let global;
-if (typeof WorkerGlobalScope !== 'undefined')
-{
-    global = self;
-}
-else
-{
-    global = typeof window !== 'undefined' && window || (function ()
-    {
-        return this;
-    })();
-}
+import { getGlobal } from '../utils/global';
 
+const global    = getGlobal();
 const WebSocket = global.WebSocket || global.MozWebSocket;
 
 /**

@@ -16,6 +16,24 @@ import {
 } from './types';
 import { BadConnectionError, hydrateError, socketProtocolErrorStatuses, TimeoutError } from '../sc-errors/errors';
 import { AGRequest } from '../ag-request/request';
+import { getGlobal } from '../utils/global';
+import ws from 'ws';
+
+const global    = getGlobal();
+let WebSocket;
+let createWebSocket;
+
+if (global.WebSocket) {
+    WebSocket = global.WebSocket;
+    createWebSocket = function (uri, options) {
+        return new WebSocket(uri);
+    };
+} else {
+    WebSocket = ws;
+    createWebSocket = function (uri, options) {
+        return new WebSocket(uri, [], options);
+    };
+}
 
 export class AGTransport
 {

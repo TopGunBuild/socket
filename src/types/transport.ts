@@ -56,14 +56,4 @@ export interface EventObject {
     error?: any;
 }
 
-export interface TransmitOptions {
-    force?: boolean | undefined;
-}
-
-export interface InvokeOptions {
-    force?: boolean | undefined;
-    noTimeout?: boolean | undefined;
-    ackTimeout?: number | undefined;
-}
-
 export type EventObjectCallback = (error: Error, eventObject: EventObject) => void;
