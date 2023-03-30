@@ -29,6 +29,9 @@ import { wait } from './wait';
 import { Buffer } from 'buffer/';
 import { cloneDeep } from '../utils/clone-deep';
 import { AGChannel } from '../ag-channel/channel';
+import { DemuxedConsumableStream } from '../stream-demux/demuxed-consumable-stream';
+import { ConsumerStats } from '../writable-consumable-stream/consumer-stats';
+import { ChannelState } from '../ag-channel/channel-state';
 
 const isBrowser = typeof window !== 'undefined';
 
@@ -643,9 +646,632 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
         this.transport.cancelBatch();
     }
 
+    startBatching(): void
+    {
+        this.isBatching = true;
+        this._startBatching();
+    }
+
+    stopBatching(): void
+    {
+        this.isBatching = false;
+        this._stopBatching();
+    }
+
+    cancelBatching(): void
+    {
+        this.isBatching = false;
+        this._cancelBatching();
+    }
+
+    subscribe(channelName: string, options?: SubscribeOptions): AGChannel<any>
+    {
+        options     = options || {};
+        let channel = this._channelMap[channelName];
+
+        let sanitizedOptions: SubscribeOptions = {
+            waitForAuth: !!options.waitForAuth
+        };
+
+        if (options.priority != null)
+        {
+            sanitizedOptions.priority = options.priority;
+        }
+        if (options.data !== undefined)
+        {
+            sanitizedOptions.data = options.data;
+        }
+
+        if (!channel)
+        {
+            channel                       = {
+                name   : channelName,
+                state  : AGChannel.PENDING,
+                options: sanitizedOptions
+            };
+            this._channelMap[channelName] = channel;
+            this._trySubscribe(channel);
+        }
+        else if (options)
+        {
+            channel.options = sanitizedOptions;
+        }
+
+        let channelIterable = new AGChannel(
+            channelName,
+            this,
+            this._channelEventDemux,
+            this._channelDataDemux
+        );
+
+        return channelIterable;
+    }
+
+    async unsubscribe(channelName): Promise<void>
+    {
+        let channel = this._channelMap[channelName];
+
+        if (channel)
+        {
+            this._triggerChannelUnsubscribe(channel);
+            this._tryUnsubscribe(channel);
+        }
+    }
+
+    // ---- Receiver logic ----
+
+    receiver(receiverName: string): DemuxedConsumableStream<any>
+    {
+        return this._receiverDemux.stream(receiverName);
+    }
+
+    closeReceiver(receiverName: string): void
+    {
+        this._receiverDemux.close(receiverName);
+    }
+
+    closeAllReceivers(): void
+    {
+        this._receiverDemux.closeAll();
+    }
+
+    killReceiver(receiverName: string): void
+    {
+        this._receiverDemux.kill(receiverName);
+    }
+
+    killAllReceivers(): void
+    {
+        this._receiverDemux.killAll();
+    }
+
+    killReceiverConsumer(consumerId: number): void
+    {
+        this._receiverDemux.killConsumer(consumerId);
+    }
+
+    getReceiverConsumerStats(consumerId: number): ConsumerStats
+    {
+        return this._receiverDemux.getConsumerStats(consumerId);
+    }
+
+    getReceiverConsumerStatsList(receiverName: string): ConsumerStats[]
+    {
+        return this._receiverDemux.getConsumerStatsList(receiverName);
+    }
+
+    getAllReceiversConsumerStatsList(): ConsumerStats[]
+    {
+        return this._receiverDemux.getConsumerStatsListAll();
+    }
+
+    getReceiverBackpressure(receiverName: string): number
+    {
+        return this._receiverDemux.getBackpressure(receiverName);
+    }
+
+    getAllReceiversBackpressure(): number
+    {
+        return this._receiverDemux.getBackpressureAll();
+    }
+
+    getReceiverConsumerBackpressure(consumerId: number): number
+    {
+        return this._receiverDemux.getConsumerBackpressure(consumerId);
+    }
+
+    hasReceiverConsumer(receiverName: string, consumerId: number): boolean
+    {
+        return this._receiverDemux.hasConsumer(receiverName, consumerId);
+    }
+
+    hasAnyReceiverConsumer(consumerId: number): boolean
+    {
+        return this._receiverDemux.hasConsumerAll(consumerId);
+    }
+
+    // ---- Procedure logic ----
+
+    procedure(procedureName: string): DemuxedConsumableStream<any>
+    {
+        return this._procedureDemux.stream(procedureName);
+    }
+
+    closeProcedure(procedureName: string): void
+    {
+        this._procedureDemux.close(procedureName);
+    }
+
+    closeAllProcedures(): void
+    {
+        this._procedureDemux.closeAll();
+    }
+
+    killProcedure(procedureName: string): void
+    {
+        this._procedureDemux.kill(procedureName);
+    }
+
+    killAllProcedures(): void
+    {
+        this._procedureDemux.killAll();
+    }
+
+    killProcedureConsumer(consumerId: number): void
+    {
+        this._procedureDemux.killConsumer(consumerId);
+    }
+
+    getProcedureConsumerStats(consumerId: number): ConsumerStats
+    {
+        return this._procedureDemux.getConsumerStats(consumerId);
+    }
+
+    getProcedureConsumerStatsList(procedureName: string): ConsumerStats[]
+    {
+        return this._procedureDemux.getConsumerStatsList(procedureName);
+    }
+
+    getAllProceduresConsumerStatsList(): ConsumerStats[]
+    {
+        return this._procedureDemux.getConsumerStatsListAll();
+    }
+
+    getProcedureBackpressure(procedureName: string): number
+    {
+        return this._procedureDemux.getBackpressure(procedureName);
+    }
+
+    getAllProceduresBackpressure(): number
+    {
+        return this._procedureDemux.getBackpressureAll();
+    }
+
+    getProcedureConsumerBackpressure(consumerId: number): number
+    {
+        return this._procedureDemux.getConsumerBackpressure(consumerId);
+    }
+
+    hasProcedureConsumer(procedureName: string, consumerId: number): boolean
+    {
+        return this._procedureDemux.hasConsumer(procedureName, consumerId);
+    }
+
+    hasAnyProcedureConsumer(consumerId: number): boolean
+    {
+        return this._procedureDemux.hasConsumerAll(consumerId);
+    }
+
+    // ---- Channel logic ----
+
+    channel(channelName: string): AGChannel<any>
+    {
+        let currentChannel = this._channelMap[channelName];
+
+        let channelIterable = new AGChannel(
+            channelName,
+            this,
+            this._channelEventDemux,
+            this._channelDataDemux
+        );
+
+        return channelIterable;
+    }
+
+    closeChannel(channelName: string): void
+    {
+        this.channelCloseOutput(channelName);
+        this.channelCloseAllListeners(channelName);
+    }
+
+    closeAllChannelOutputs(): void
+    {
+        this._channelDataDemux.closeAll();
+    }
+
+    closeAllChannelListeners(): void
+    {
+        this._channelEventDemux.closeAll();
+    }
+
+    closeAllChannels(): void
+    {
+        this.closeAllChannelOutputs();
+        this.closeAllChannelListeners();
+    }
+
+    killChannel(channelName: string): void
+    {
+        this.channelKillOutput(channelName);
+        this.channelKillAllListeners(channelName);
+    }
+
+    killAllChannelOutputs(): void
+    {
+        this._channelDataDemux.killAll();
+    }
+
+    killAllChannelListeners(): void
+    {
+        this._channelEventDemux.killAll();
+    }
+
+    killAllChannels(): void
+    {
+        this.killAllChannelOutputs();
+        this.killAllChannelListeners();
+    }
+
+    killChannelOutputConsumer(consumerId: number): void
+    {
+        this._channelDataDemux.killConsumer(consumerId);
+    }
+
+    killChannelListenerConsumer(consumerId: number): void
+    {
+        this._channelEventDemux.killConsumer(consumerId);
+    }
+
+    getChannelOutputConsumerStats(consumerId: number): ConsumerStats
+    {
+        return this._channelDataDemux.getConsumerStats(consumerId);
+    }
+
+    getChannelListenerConsumerStats(consumerId: number): ConsumerStats
+    {
+        return this._channelEventDemux.getConsumerStats(consumerId);
+    }
+
+    getAllChannelOutputsConsumerStatsList(): any[]
+    {
+        return this._channelDataDemux.getConsumerStatsListAll();
+    }
+
+    getAllChannelListenersConsumerStatsList(): any[]
+    {
+        return this._channelEventDemux.getConsumerStatsListAll();
+    }
+
+    getChannelBackpressure(channelName: string): number
+    {
+        return Math.max(
+            this.channelGetOutputBackpressure(channelName),
+            this.channelGetAllListenersBackpressure(channelName)
+        );
+    }
+
+    getAllChannelOutputsBackpressure(): number
+    {
+        return this._channelDataDemux.getBackpressureAll();
+    }
+
+    getAllChannelListenersBackpressure(): number
+    {
+        return this._channelEventDemux.getBackpressureAll();
+    }
+
+    getAllChannelsBackpressure(): number
+    {
+        return Math.max(
+            this.getAllChannelOutputsBackpressure(),
+            this.getAllChannelListenersBackpressure()
+        );
+    }
+
+    getChannelListenerConsumerBackpressure(consumerId: number): number
+    {
+        return this._channelEventDemux.getConsumerBackpressure(consumerId);
+    }
+
+    getChannelOutputConsumerBackpressure(consumerId: number): number
+    {
+        return this._channelDataDemux.getConsumerBackpressure(consumerId);
+    }
+
+    hasAnyChannelOutputConsumer(consumerId: any): boolean
+    {
+        return this._channelDataDemux.hasConsumerAll(consumerId);
+    }
+
+    hasAnyChannelListenerConsumer(consumerId: any): boolean
+    {
+        return this._channelEventDemux.hasConsumerAll(consumerId);
+    }
+
+    getChannelState(channelName: string): ChannelState
+    {
+        let channel = this._channelMap[channelName];
+        if (channel)
+        {
+            return channel.state;
+        }
+        return AGChannel.UNSUBSCRIBED;
+    }
+
+    getChannelOptions(channelName: string): object
+    {
+        let channel = this._channelMap[channelName];
+        if (channel)
+        {
+            return { ...channel.options };
+        }
+        return {};
+    }
+
+    channelCloseOutput(channelName: string): void
+    {
+        this._channelDataDemux.close(channelName);
+    }
+
+    channelCloseListener(channelName: string, eventName: string): void
+    {
+        this._channelEventDemux.close(`${channelName}/${eventName}`);
+    }
+
+    channelCloseAllListeners(channelName: string): void
+    {
+        let listenerStreams = this._getAllChannelStreamNames(channelName)
+            .forEach((streamName) =>
+            {
+                this._channelEventDemux.close(streamName);
+            });
+    }
+
+    channelKillOutput(channelName: string): void
+    {
+        this._channelDataDemux.kill(channelName);
+    }
+
+    channelKillListener(channelName: string, eventName: string): void
+    {
+        this._channelEventDemux.kill(`${channelName}/${eventName}`);
+    }
+
+    channelKillAllListeners(channelName: string): void
+    {
+        let listenerStreams = this._getAllChannelStreamNames(channelName)
+            .forEach((streamName) =>
+            {
+                this._channelEventDemux.kill(streamName);
+            });
+    }
+
+    channelGetOutputConsumerStatsList(channelName: string): ConsumerStats[]
+    {
+        return this._channelDataDemux.getConsumerStatsList(channelName);
+    }
+
+    channelGetListenerConsumerStatsList(channelName: string, eventName: string): ConsumerStats[]
+    {
+        return this._channelEventDemux.getConsumerStatsList(`${channelName}/${eventName}`);
+    }
+
+    channelGetAllListenersConsumerStatsList(channelName: string): ConsumerStats[]
+    {
+        return this._getAllChannelStreamNames(channelName)
+            .map((streamName) =>
+            {
+                return this._channelEventDemux.getConsumerStatsList(streamName);
+            })
+            .reduce((accumulator, statsList) =>
+            {
+                statsList.forEach((stats) =>
+                {
+                    accumulator.push(stats);
+                });
+                return accumulator;
+            }, []);
+    }
+
+    channelGetOutputBackpressure(channelName: string): number
+    {
+        return this._channelDataDemux.getBackpressure(channelName);
+    }
+
+    channelGetListenerBackpressure(channelName: string, eventName: string): number
+    {
+        return this._channelEventDemux.getBackpressure(`${channelName}/${eventName}`);
+    }
+
+    channelGetAllListenersBackpressure(channelName: string): number
+    {
+        let listenerStreamBackpressures = this._getAllChannelStreamNames(channelName)
+            .map((streamName) =>
+            {
+                return this._channelEventDemux.getBackpressure(streamName);
+            });
+        return Math.max(...listenerStreamBackpressures.concat(0));
+    }
+
+    channelHasOutputConsumer(channelName: string, consumerId: number): boolean
+    {
+        return this._channelDataDemux.hasConsumer(channelName, consumerId);
+    }
+
+    channelHasListenerConsumer(channelName: string, eventName: string, consumerId: number): boolean
+    {
+        return this._channelEventDemux.hasConsumer(`${channelName}/${eventName}`, consumerId);
+    }
+
+    channelHasAnyListenerConsumer(channelName: string, consumerId: number): boolean
+    {
+        return this._getAllChannelStreamNames(channelName)
+            .some((streamName) =>
+            {
+                return this._channelEventDemux.hasConsumer(streamName, consumerId);
+            });
+    }
+
     // -----------------------------------------------------------------------------------------------------
     // @ Private methods
     // -----------------------------------------------------------------------------------------------------
+
+    private _getAllChannelStreamNames(channelName: string): string[]
+    {
+        let streamNamesLookup = this._channelEventDemux.getConsumerStatsListAll()
+            .filter((stats) =>
+            {
+                return stats.stream.indexOf(`${channelName}/`) === 0;
+            })
+            .reduce((accumulator, stats) =>
+            {
+                accumulator[stats.stream] = true;
+                return accumulator;
+            }, {});
+        return Object.keys(streamNamesLookup);
+    }
+
+    private _tryUnsubscribe(channel): void
+    {
+        if (this.state === AGClientSocket.OPEN)
+        {
+            let options = {
+                noTimeout: true
+            };
+            // If there is a pending subscribe action, cancel the callback
+            this._cancelPendingSubscribeCallback(channel);
+
+            // This operation cannot fail because the TCP protocol guarantees delivery
+            // so long as the connection remains open. If the connection closes,
+            // the server will automatically unsubscribe the client and thus complete
+            // the operation on the server side.
+            let decoratedChannelName = this._decorateChannelName(channel.name);
+            this.transport.transmit('#unsubscribe', decoratedChannelName, options);
+        }
+    }
+
+    private _triggerChannelUnsubscribe(channel: AGChannel<any>, setAsPending?: boolean): void
+    {
+        let channelName = channel.name;
+
+        this._cancelPendingSubscribeCallback(channel);
+
+        if (channel.state === AGChannel.SUBSCRIBED)
+        {
+            let stateChangeData = {
+                oldChannelState: channel.state,
+                newChannelState: setAsPending ? AGChannel.PENDING : AGChannel.UNSUBSCRIBED
+            };
+            this._channelEventDemux.write(`${channelName}/subscribeStateChange`, stateChangeData);
+            this._channelEventDemux.write(`${channelName}/unsubscribe`, {});
+            this.emit('subscribeStateChange', {
+                channel: channelName,
+                ...stateChangeData
+            });
+            this.emit('unsubscribe', { channel: channelName });
+        }
+
+        if (setAsPending)
+        {
+            channel.state = AGChannel.PENDING;
+        }
+        else
+        {
+            delete this._channelMap[channelName];
+        }
+    }
+
+    private _trySubscribe(channel: AGChannel<any>): void
+    {
+        let meetsAuthRequirements = !channel.options['waitForAuth'] || this.authState === AGClientSocket.AUTHENTICATED;
+
+        // We can only ever have one pending subscribe action at any given time on a channel
+        if (
+            this.state === AGClientSocket.OPEN &&
+            !this.preparingPendingSubscriptions &&
+            channel._pendingSubscriptionCid == null &&
+            meetsAuthRequirements
+        )
+        {
+
+            let options = {
+                noTimeout: true
+            };
+
+            let subscriptionOptions = {};
+            if (channel.options['waitForAuth'])
+            {
+                options['waitForAuth']             = true;
+                subscriptionOptions['waitForAuth'] = options['waitForAuth'];
+            }
+            if (channel.options['data'])
+            {
+                subscriptionOptions['data'] = channel.options['data'];
+            }
+
+            channel._pendingSubscriptionCid = this.transport.invokeRaw(
+                '#subscribe',
+                {
+                    channel: this._decorateChannelName(channel.name),
+                    ...subscriptionOptions
+                },
+                options,
+                (err) =>
+                {
+                    if (err)
+                    {
+                        if (err.name === 'BadConnectionError')
+                        {
+                            // In case of a failed connection, keep the subscription
+                            // as pending; it will try again on reconnect.
+                            return;
+                        }
+                        delete channel._pendingSubscriptionCid;
+                        this._triggerChannelSubscribeFail(err, channel, subscriptionOptions);
+                    }
+                    else
+                    {
+                        delete channel._pendingSubscriptionCid;
+                        this._triggerChannelSubscribe(channel, subscriptionOptions);
+                    }
+                }
+            );
+            this.emit('subscribeRequest', {
+                channel: channel.name,
+                subscriptionOptions
+            });
+        }
+    }
+
+    private _cancelBatching(): void
+    {
+        if (this._batchingIntervalId != null)
+        {
+            clearInterval(this._batchingIntervalId);
+        }
+        this._batchingIntervalId = null;
+        this.cancelBatch();
+    }
+
+    private _stopBatching(): void
+    {
+        if (this._batchingIntervalId != null)
+        {
+            clearInterval(this._batchingIntervalId);
+        }
+        this._batchingIntervalId = null;
+        this.flushBatch();
+    }
 
     private _startBatching(): void
     {
