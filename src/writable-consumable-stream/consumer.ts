@@ -1,23 +1,24 @@
 import { ConsumableStreamConsumer } from '../consumable-stream';
 import { ConsumerStats } from './consumer-stats';
 import { WritableConsumableStream } from './index';
+import { ConsumerNode } from './consumer-node';
 
 export class Consumer<T> implements ConsumableStreamConsumer<T>
 {
-    private readonly id: number;
-    private readonly timeout: any;
+    readonly id: number;
+    readonly timeout: number;
+    stream: WritableConsumableStream<T>;
+    currentNode: ConsumerNode<T>;
+    isAlive: boolean;
     private _backpressure: number;
-    private stream: WritableConsumableStream<T>;
-    currentNode: any;
-    private isAlive: boolean;
-    private _timeoutId: undefined;
+    private _timeoutId: any;
     private _resolve: any;
     private _killPacket: {value: any; done: boolean};
 
     /**
      * Constructor
      */
-    constructor(stream, id, startNode, timeout)
+    constructor(stream: WritableConsumableStream<T>, id: number, startNode: ConsumerNode<T>, timeout: number)
     {
         this.id            = id;
         this._backpressure = 0;
@@ -45,22 +46,22 @@ export class Consumer<T> implements ConsumableStreamConsumer<T>
         return stats;
     }
 
-    applyBackpressure(packet)
+    applyBackpressure(packet: any): void
     {
         this._backpressure++;
     }
 
-    releaseBackpressure(packet)
+    releaseBackpressure(packet: any): void
     {
         this._backpressure--;
     }
 
-    getBackpressure()
+    getBackpressure(): number
     {
         return this._backpressure;
     }
 
-    write(packet)
+    write(packet: any): void
     {
         if (this._timeoutId !== undefined)
         {
@@ -75,7 +76,7 @@ export class Consumer<T> implements ConsumableStreamConsumer<T>
         }
     }
 
-    kill(value)
+    kill(value?: any): void
     {
         if (this._timeoutId !== undefined)
         {
@@ -92,7 +93,7 @@ export class Consumer<T> implements ConsumableStreamConsumer<T>
         }
     }
 
-    async next()
+    async next(): Promise<IteratorResult<T>>
     {
         this.stream.setConsumer(this.id, this);
 
@@ -136,7 +137,7 @@ export class Consumer<T> implements ConsumableStreamConsumer<T>
         }
     }
 
-    return()
+    return(): {}
     {
         delete this.currentNode;
         this._destroy();
@@ -147,19 +148,19 @@ export class Consumer<T> implements ConsumableStreamConsumer<T>
     // @ Private methods
     // -----------------------------------------------------------------------------------------------------
 
-    private _resetBackpressure()
+    private _resetBackpressure(): void
     {
         this._backpressure = 0;
     }
 
-    private _destroy()
+    private _destroy(): void
     {
         this.isAlive = false;
         this._resetBackpressure();
         this.stream.removeConsumer(this.id);
     }
 
-    private async _waitForNextItem(timeout)
+    private async _waitForNextItem(timeout: number): Promise<any>
     {
         return new Promise((resolve, reject) =>
         {
@@ -190,7 +191,7 @@ export class Consumer<T> implements ConsumableStreamConsumer<T>
     }
 }
 
-function wait(timeout): { timeoutId: any, promise: Promise<any> }
+function wait(timeout: number): {timeoutId: any, promise: Promise<any>}
 {
     let timeoutId;
     let promise = new Promise((resolve) =>

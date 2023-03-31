@@ -1,8 +1,8 @@
 import { ConsumerStats } from '../writable-consumable-stream/consumer-stats';
-import { AGChannel } from './channel';
+import { TGChannel } from './channel';
 import { ChannelState } from './channel-state';
 
-export interface AGChannelClient
+export interface TGChannelClient
 {
     closeChannel(channelName: string): void;
 
@@ -42,7 +42,7 @@ export interface AGChannelClient
     getChannelState(channelName: string): ChannelState;
     getChannelOptions(channelName: string): object;
 
-    subscribe(channelName: string, options?: object): AGChannel<any>;
+    subscribe(channelName: string, options?: object): TGChannel<any>;
     unsubscribe(channelName: string): Promise<void>;
     isSubscribed(channelName: string, includePending?: boolean): boolean;
 

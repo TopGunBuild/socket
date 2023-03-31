@@ -1,6 +1,6 @@
 import { AsyncStreamEmitter } from '../async-stream-emitter';
-import { AGServer } from './server';
-import { SimpleExchange } from '../ag-simple-broker/simple-exchange';
+import { TGServer } from './server';
+import { SimpleExchange } from '../simple-broker/simple-exchange';
 import {
     AuthenticateData,
     AuthState, AuthStateChangeData,
@@ -11,9 +11,9 @@ import {
     StateChangeData, SubscribeData, SubscriptionOptions, UnsubscribeData
 } from './types';
 import { WritableConsumableStream } from '../writable-consumable-stream';
-import { SocketProtocolErrorStatuses, SocketProtocolIgnoreStatuses } from '../sc-errors/types';
+import { SocketProtocolErrorStatuses, SocketProtocolIgnoreStatuses } from '../errors/types';
 import { StreamDemux } from '../stream-demux';
-import { AGAction } from './action';
+import { TGAction } from './action';
 import {
     AuthError, AuthTokenError, AuthTokenExpiredError, AuthTokenInvalidError, AuthTokenNotBeforeError,
     BadConnectionError,
@@ -21,18 +21,17 @@ import {
     dehydrateError, hydrateError, InvalidActionError, InvalidArgumentsError, SocketProtocolError,
     socketProtocolErrorStatuses,
     socketProtocolIgnoreStatuses, TimeoutError
-} from '../sc-errors/errors';
+} from '../errors/errors';
 import { DemuxedConsumableStream } from '../stream-demux/demuxed-consumable-stream';
 import { ConsumerStats } from '../writable-consumable-stream/consumer-stats';
 import { ConsumableStream } from '../consumable-stream';
-import { AGRequest } from '../ag-request/request';
+import { TGRequest } from '../request/request';
 import { EventObject } from '../types/transport';
-import { isFunction } from '../utils/is-function';
 import { cloneDeep } from '../utils/clone-deep';
 
 const HANDSHAKE_REJECTION_STATUS_CODE = 4008;
 
-export class AGServerSocket extends AsyncStreamEmitter<any>
+export class TGServerSocket extends AsyncStreamEmitter<any>
 {
     static CONNECTING: SocketState    = 'connecting';
     static OPEN: SocketState          = 'open';
@@ -44,7 +43,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
     static errorStatuses: SocketProtocolErrorStatuses   = socketProtocolErrorStatuses;
 
     id: string;
-    server: AGServer;
+    server: TGServer;
     socket: any;
     protocolVersion: number;
 
@@ -100,14 +99,14 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
     /**
      * Constructor
      */
-    constructor(id: string, server: AGServer, socket: WebSocket, protocolVersion: number)
+    constructor(id: string, server: TGServer, socket: WebSocket, protocolVersion: number)
     {
         super();
         this.id              = id;
         this.server          = server;
         this.socket          = socket;
-        this.state           = AGServerSocket.CONNECTING;
-        this.authState       = AGServerSocket.UNAUTHENTICATED;
+        this.state           = TGServerSocket.CONNECTING;
+        this.authState       = TGServerSocket.UNAUTHENTICATED;
         this.protocolVersion = protocolVersion;
 
         this._receiverDemux  = new StreamDemux();
@@ -126,16 +125,16 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
         this.inboundMessageStream = new WritableConsumableStream();
         this.outboundPacketStream = new WritableConsumableStream();
 
-        this.middlewareHandshakeStream = this.request[AGServer.SYMBOL_MIDDLEWARE_HANDSHAKE_STREAM];
+        this.middlewareHandshakeStream = this.request[TGServer.SYMBOL_MIDDLEWARE_HANDSHAKE_STREAM];
 
         this.middlewareInboundRawStream      = new WritableConsumableStream();
-        this.middlewareInboundRawStream.type = AGServer.MIDDLEWARE_INBOUND_RAW;
+        this.middlewareInboundRawStream.type = TGServer.MIDDLEWARE_INBOUND_RAW;
 
         this.middlewareInboundStream      = new WritableConsumableStream();
-        this.middlewareInboundStream.type = AGServer.MIDDLEWARE_INBOUND;
+        this.middlewareInboundStream.type = TGServer.MIDDLEWARE_INBOUND;
 
         this.middlewareOutboundStream      = new WritableConsumableStream();
-        this.middlewareOutboundStream.type = AGServer.MIDDLEWARE_OUTBOUND;
+        this.middlewareOutboundStream.type = TGServer.MIDDLEWARE_OUTBOUND;
 
         if (this.request['connection'])
         {
@@ -185,7 +184,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
             pongMessage    = '#2';
             this._sendPing = () =>
             {
-                if (this.state !== AGServerSocket.CLOSED)
+                if (this.state !== TGServerSocket.CLOSED)
                 {
                     this.send('#1');
                 }
@@ -196,7 +195,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
             pongMessage    = '';
             this._sendPing = () =>
             {
-                if (this.state !== AGServerSocket.CLOSED)
+                if (this.state !== TGServerSocket.CLOSED)
                 {
                     this.send('');
                 }
@@ -236,11 +235,11 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
                 this._resetPongTimeout();
             }
 
-            if (this.server.hasMiddleware(AGServer.MIDDLEWARE_INBOUND_RAW))
+            if (this.server.hasMiddleware(TGServer.MIDDLEWARE_INBOUND_RAW))
             {
-                let action    = new AGAction();
+                let action    = new TGAction();
                 action.socket = this;
-                action.type   = AGAction.MESSAGE;
+                action.type   = TGAction.MESSAGE;
                 action.data   = message;
 
                 try
@@ -555,7 +554,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
             this.emitError(err);
         }
 
-        if (this.state !== AGServerSocket.CLOSED)
+        if (this.state !== TGServerSocket.CLOSED)
         {
             await this._destroy(code, reason);
             this.socket.close(code, reason);
@@ -676,7 +675,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
 
     async transmit(event: string, data: any, options?: any): Promise<void>
     {
-        if (this.state !== AGServerSocket.OPEN)
+        if (this.state !== TGServerSocket.OPEN)
         {
             let error = new BadConnectionError(
                 `Socket transmit "${event}" was aborted due to a bad connection`,
@@ -690,7 +689,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
 
     async invoke(event: string, data?: any, options?: any): Promise<any>
     {
-        if (this.state !== AGServerSocket.OPEN)
+        if (this.state !== TGServerSocket.OPEN)
         {
             let error = new BadConnectionError(
                 `Socket invoke "${event}" was aborted due to a bad connection`,
@@ -718,7 +717,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
 
     triggerAuthenticationEvents(oldAuthState: AuthState): void
     {
-        if (oldAuthState !== AGServerSocket.AUTHENTICATED)
+        if (oldAuthState !== TGServerSocket.AUTHENTICATED)
         {
             let stateChangeData: StateChangeData = {
                 oldState : oldAuthState,
@@ -740,7 +739,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
 
     async setAuthToken(data: AuthToken, options?: AuthTokenOptions): Promise<void>
     {
-        if (this.state === AGServerSocket.CONNECTING)
+        if (this.state === TGServerSocket.CONNECTING)
         {
             let err = new InvalidActionError(
                 'Cannot call setAuthToken before completing the handshake'
@@ -751,7 +750,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
 
         let authToken    = cloneDeep(data);
         let oldAuthState = this.authState;
-        this.authState   = AGServerSocket.AUTHENTICATED;
+        this.authState   = TGServerSocket.AUTHENTICATED;
 
         if (options == null)
         {
@@ -864,8 +863,8 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
         let oldAuthToken     = this.authToken;
         this.signedAuthToken = null;
         this.authToken       = null;
-        this.authState       = AGServerSocket.UNAUTHENTICATED;
-        if (oldAuthState !== AGServerSocket.UNAUTHENTICATED)
+        this.authState       = TGServerSocket.UNAUTHENTICATED;
+        if (oldAuthState !== TGServerSocket.UNAUTHENTICATED)
         {
             let stateChangeData: StateChangeData = {
                 oldState: oldAuthState,
@@ -955,7 +954,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
         {
             this.signedAuthToken = null;
             this.authToken       = null;
-            this.authState       = AGServerSocket.UNAUTHENTICATED;
+            this.authState       = TGServerSocket.UNAUTHENTICATED;
 
             // If the error is related to the JWT being badly formatted, then we will
             // treat the error as a socket error.
@@ -972,11 +971,11 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
 
         this.signedAuthToken = signedAuthToken;
         this.authToken       = authToken;
-        this.authState       = AGServerSocket.AUTHENTICATED;
+        this.authState       = TGServerSocket.AUTHENTICATED;
 
-        let action             = new AGAction();
+        let action             = new TGAction();
         action.socket          = this;
-        action.type            = AGAction.AUTHENTICATE;
+        action.type            = TGAction.AUTHENTICATE;
         action.signedAuthToken = this.signedAuthToken;
         action.authToken       = this.authToken;
 
@@ -987,7 +986,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
         catch (error)
         {
             this.authToken = null;
-            this.authState = AGServerSocket.UNAUTHENTICATED;
+            this.authState = TGServerSocket.UNAUTHENTICATED;
 
             if (error.isBadToken)
             {
@@ -1016,7 +1015,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
                 signedAuthToken,
                 authTokenError,
                 authToken: null,
-                authState: AGServerSocket.UNAUTHENTICATED
+                authState: TGServerSocket.UNAUTHENTICATED
             };
         }
 
@@ -1024,7 +1023,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
             signedAuthToken,
             authTokenError: null,
             authToken,
-            authState     : AGServerSocket.AUTHENTICATED
+            authState     : TGServerSocket.AUTHENTICATED
         };
     }
 
@@ -1144,9 +1143,9 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
         let isPublish = event === '#publish';
         if (isPublish)
         {
-            let action    = new AGAction();
+            let action    = new TGAction();
             action.socket = this;
-            action.type   = AGAction.PUBLISH_OUT;
+            action.type   = TGAction.PUBLISH_OUT;
 
             if (data !== undefined)
             {
@@ -1281,19 +1280,19 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
 
         this._cancelBatching();
 
-        if (this.state === AGServerSocket.CLOSED)
+        if (this.state === TGServerSocket.CLOSED)
         {
             this._abortAllPendingEventsDueToBadConnection('connectAbort');
         }
         else
         {
-            if (!reason && AGServerSocket.errorStatuses[code])
+            if (!reason && TGServerSocket.errorStatuses[code])
             {
-                reason = AGServerSocket.errorStatuses[code];
+                reason = TGServerSocket.errorStatuses[code];
             }
             let prevState = this.state;
-            this.state    = AGServerSocket.CLOSED;
-            if (prevState === AGServerSocket.CONNECTING)
+            this.state    = TGServerSocket.CLOSED;
+            if (prevState === TGServerSocket.CONNECTING)
             {
                 this._abortAllPendingEventsDueToBadConnection('connectAbort');
                 this.emit('connectAbort', { code, reason });
@@ -1337,7 +1336,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
                 this.server.pendingClientsCount--;
             }
 
-            if (!AGServerSocket.ignoreStatuses[code])
+            if (!TGServerSocket.ignoreStatuses[code])
             {
                 let closeMessage;
                 if (reason)
@@ -1364,7 +1363,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
                 {
                     closeMessage = `Socket connection closed with status code ${code}`;
                 }
-                let err = new SocketProtocolError(AGServerSocket.errorStatuses[code] || closeMessage, code);
+                let err = new SocketProtocolError(TGServerSocket.errorStatuses[code] || closeMessage, code);
                 this.emitError(err);
             }
 
@@ -1421,7 +1420,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
 
             if (isPong)
             {
-                if (this.server.strictHandshake && this.state === AGServerSocket.CONNECTING)
+                if (this.server.strictHandshake && this.state === TGServerSocket.CONNECTING)
                 {
                     this._destroy(4009);
                     this.socket.close(4009);
@@ -1447,7 +1446,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
                     error.name = 'InvalidMessageError';
                 }
                 this.emitError(error);
-                if (this.server.strictHandshake && this.state === AGServerSocket.CONNECTING)
+                if (this.server.strictHandshake && this.state === TGServerSocket.CONNECTING)
                 {
                     this._destroy(4009);
                     this.socket.close(4009);
@@ -1475,7 +1474,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
         this.disconnect(4005);
     }
 
-    private async _processHandshakeRequest(request: AGRequest): Promise<void>
+    private async _processHandshakeRequest(request: TGRequest): Promise<void>
     {
         let data            = request.data || {};
         let signedAuthToken = data.authToken || null;
@@ -1483,10 +1482,10 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
 
         let authInfo = await this._validateAuthToken(signedAuthToken);
 
-        let action     = new AGAction();
+        let action     = new TGAction();
         action.request = this.request;
         action.socket  = this;
-        action.type    = AGAction.HANDSHAKE_SC;
+        action.type    = TGAction.HANDSHAKE_SC;
         action.data    = authInfo;
 
         try
@@ -1519,7 +1518,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
         try
         {
             await this._processAuthentication(authInfo);
-            if (this.state === AGServerSocket.CLOSED)
+            if (this.state === TGServerSocket.CLOSED)
             {
                 return;
             }
@@ -1550,7 +1549,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
         this.server.clients[this.id] = this;
         this.server.clientsCount++;
 
-        this.state = AGServerSocket.OPEN;
+        this.state = TGServerSocket.OPEN;
 
         if (clientSocketStatus.isAuthenticated)
         {
@@ -1589,7 +1588,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
         }, this.batchOnHandshakeDuration);
     }
 
-    private async _processAuthenticateRequest(request: AGRequest): Promise<void>
+    private async _processAuthenticateRequest(request: TGRequest): Promise<void>
     {
         let signedAuthToken = request.data;
         let oldAuthState    = this.authState;
@@ -1672,13 +1671,13 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
         });
     }
 
-    private async _processSubscribeRequest(request: AGRequest): Promise<void>
+    private async _processSubscribeRequest(request: TGRequest): Promise<void>
     {
         let subscriptionOptions = Object.assign({}, request.data);
         let channelName         = subscriptionOptions.channel;
         delete subscriptionOptions.channel;
 
-        if (this.state === AGServerSocket.OPEN)
+        if (this.state === TGServerSocket.OPEN)
         {
             try
             {
@@ -1761,7 +1760,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
         }
     }
 
-    private async _processUnsubscribeRequest(request: AGRequest): Promise<void>
+    private async _processUnsubscribeRequest(request: TGRequest): Promise<void>
     {
         let channel = request.data;
         try
@@ -1799,7 +1798,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
         }
     }
 
-    private async _processInboundPublishRequest(request: AGRequest): Promise<void>
+    private async _processInboundPublishRequest(request: TGRequest): Promise<void>
     {
         let data = request.data || {};
         if (typeof data.channel !== 'string')
@@ -1831,13 +1830,13 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
 
             if (eventName === '#handshake')
             {
-                let request = new AGRequest(this, packet.cid, eventName, packet.data);
+                let request = new TGRequest(this, packet.cid, eventName, packet.data);
                 await this._processHandshakeRequest(request);
                 this._procedureDemux.write(eventName, request);
 
                 return;
             }
-            if (this.server.strictHandshake && this.state === AGServerSocket.CONNECTING)
+            if (this.server.strictHandshake && this.state === TGServerSocket.CONNECTING)
             {
                 this._destroy(4009);
                 this.socket.close(4009);
@@ -1847,7 +1846,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
             if (eventName === '#authenticate')
             {
                 // Let AGServer handle these events.
-                let request = new AGRequest(this, packet.cid, eventName, packet.data);
+                let request = new TGRequest(this, packet.cid, eventName, packet.data);
                 await this._processAuthenticateRequest(request);
                 this._procedureDemux.write(eventName, request);
 
@@ -1861,7 +1860,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
                 return;
             }
 
-            let action    = new AGAction();
+            let action    = new TGAction();
             action.socket = this;
 
             let tokenExpiredError = this._processAuthTokenExpiry();
@@ -1883,12 +1882,12 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
 
                     if (isRPC)
                     {
-                        let request = new AGRequest(this, packet.cid, eventName, packet.data);
+                        let request = new TGRequest(this, packet.cid, eventName, packet.data);
                         request.error(error);
                     }
                     return;
                 }
-                action.type = AGAction.PUBLISH_IN;
+                action.type = TGAction.PUBLISH_IN;
                 if (packet.data)
                 {
                     action.channel = packet.data.channel;
@@ -1897,7 +1896,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
             }
             else if (isSubscribe)
             {
-                action.type = AGAction.SUBSCRIBE;
+                action.type = TGAction.SUBSCRIBE;
                 if (packet.data)
                 {
                     action.channel = packet.data.channel;
@@ -1908,7 +1907,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
             {
                 if (isRPC)
                 {
-                    let request = new AGRequest(this, packet.cid, eventName, packet.data);
+                    let request = new TGRequest(this, packet.cid, eventName, packet.data);
                     await this._processUnsubscribeRequest(request);
                     this._procedureDemux.write(eventName, request);
                     return;
@@ -1921,7 +1920,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
             {
                 if (isRPC)
                 {
-                    action.type      = AGAction.INVOKE;
+                    action.type      = TGAction.INVOKE;
                     action.procedure = packet.event;
                     if (packet.data !== undefined)
                     {
@@ -1930,7 +1929,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
                 }
                 else
                 {
-                    action.type     = AGAction.TRANSMIT;
+                    action.type     = TGAction.TRANSMIT;
                     action.receiver = packet.event;
                     if (packet.data !== undefined)
                     {
@@ -1943,7 +1942,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
 
             if (isRPC)
             {
-                let request = new AGRequest(this, packet.cid, eventName, packet.data);
+                let request = new TGRequest(this, packet.cid, eventName, packet.data);
                 try
                 {
                     let { data } = await this.server.processMiddlewareAction(this.middlewareInboundStream, action, this);
@@ -2010,7 +2009,7 @@ export class AGServerSocket extends AsyncStreamEmitter<any>
             return;
         }
 
-        if (this.server.strictHandshake && this.state === AGServerSocket.CONNECTING)
+        if (this.server.strictHandshake && this.state === TGServerSocket.CONNECTING)
         {
             this._destroy(4009);
             this.socket.close(4009);

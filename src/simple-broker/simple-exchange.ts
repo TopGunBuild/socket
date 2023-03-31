@@ -1,15 +1,15 @@
 import { AsyncStreamEmitter } from '../async-stream-emitter';
 import { StreamDemux } from '../stream-demux';
-import { AGChannelClient } from '../ag-channel/client';
-import { AGSimpleBroker } from './simple-broker';
-import { AGChannel } from '../ag-channel/channel';
+import { TGChannelClient } from '../channel/client';
+import { TGSimpleBroker } from './simple-broker';
+import { TGChannel } from '../channel/channel';
 import { ConsumerStats } from '../writable-consumable-stream/consumer-stats';
-import { ChannelState } from '../ag-channel/channel-state';
+import { ChannelState } from '../channel/channel-state';
 
-export class SimpleExchange extends AsyncStreamEmitter<any> implements AGChannelClient
+export class SimpleExchange extends AsyncStreamEmitter<any> implements TGChannelClient
 {
     id: string;
-    private _broker: AGSimpleBroker;
+    private _broker: TGSimpleBroker;
     private readonly _channelMap: {[key: string]: any};
     private readonly _channelEventDemux: StreamDemux<unknown>;
     private readonly _channelDataDemux: StreamDemux<unknown>;
@@ -17,7 +17,7 @@ export class SimpleExchange extends AsyncStreamEmitter<any> implements AGChannel
     /**
      * Constructor
      */
-    constructor(broker: AGSimpleBroker)
+    constructor(broker: TGSimpleBroker)
     {
         super();
         this.id                 = 'exchange';
@@ -62,7 +62,7 @@ export class SimpleExchange extends AsyncStreamEmitter<any> implements AGChannel
         return this._broker.invokePublish(channelName, data);
     }
 
-    subscribe(channelName: string): AGChannel<any>
+    subscribe(channelName: string): TGChannel<any>
     {
         let channel = this._channelMap[channelName];
 
@@ -70,13 +70,13 @@ export class SimpleExchange extends AsyncStreamEmitter<any> implements AGChannel
         {
             channel                       = {
                 name : channelName,
-                state: AGChannel.PENDING
+                state: TGChannel.PENDING
             };
             this._channelMap[channelName] = channel;
             this._triggerChannelSubscribe(channel);
         }
 
-        let channelIterable = new AGChannel(
+        let channelIterable = new TGChannel(
             channelName,
             this,
             this._channelEventDemux,
@@ -96,11 +96,11 @@ export class SimpleExchange extends AsyncStreamEmitter<any> implements AGChannel
         }
     }
 
-    channel(channelName: string): AGChannel<any>
+    channel(channelName: string): TGChannel<any>
     {
         let currentChannel = this._channelMap[channelName];
 
-        let channelIterable = new AGChannel(
+        let channelIterable = new TGChannel(
             channelName,
             this,
             this._channelEventDemux,
@@ -237,7 +237,7 @@ export class SimpleExchange extends AsyncStreamEmitter<any> implements AGChannel
         {
             return channel.state;
         }
-        return AGChannel.UNSUBSCRIBED;
+        return TGChannel.UNSUBSCRIBED;
     }
 
     getChannelOptions(channelName: string): object
@@ -354,7 +354,7 @@ export class SimpleExchange extends AsyncStreamEmitter<any> implements AGChannel
         let subs = [];
         Object.keys(this._channelMap).forEach((channelName) =>
         {
-            if (includePending || this._channelMap[channelName].state === AGChannel.SUBSCRIBED)
+            if (includePending || this._channelMap[channelName].state === TGChannel.SUBSCRIBED)
             {
                 subs.push(channelName);
             }
@@ -369,7 +369,7 @@ export class SimpleExchange extends AsyncStreamEmitter<any> implements AGChannel
         {
             return !!channel;
         }
-        return !!channel && channel.state === AGChannel.SUBSCRIBED;
+        return !!channel && channel.state === TGChannel.SUBSCRIBED;
     }
 
     // -----------------------------------------------------------------------------------------------------
@@ -380,7 +380,7 @@ export class SimpleExchange extends AsyncStreamEmitter<any> implements AGChannel
     {
         let channelName = channel.name;
 
-        channel.state = AGChannel.SUBSCRIBED;
+        channel.state = TGChannel.SUBSCRIBED;
 
         this._channelEventDemux.write(`${channelName}/subscribe`, {});
         this._broker.subscribeClient(this, channelName);
@@ -392,7 +392,7 @@ export class SimpleExchange extends AsyncStreamEmitter<any> implements AGChannel
         let channelName = channel.name;
 
         delete this._channelMap[channelName];
-        if (channel.state === AGChannel.SUBSCRIBED)
+        if (channel.state === TGChannel.SUBSCRIBED)
         {
             this._channelEventDemux.write(`${channelName}/unsubscribe`, {});
             this._broker.unsubscribeClient(this, channelName);

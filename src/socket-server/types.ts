@@ -1,15 +1,15 @@
 import { JwtAlgorithm, JwtPayload, JwtSignOptions, Secret } from '../jwt';
-import { AuthEngine } from '../ag-auth';
+import { AuthEngine } from '../auth';
 import {
-    AGActionAuthenticate,
-    AGActionHandshakeSC,
-    AGActionHandshakeWS, AGActionInvoke,
-    AGActionMessage, AGActionPublishIn,
-    AGActionPublishOut, AGActionSubscribe,
-    AGActionTransmit
+    TGActionAuthenticate,
+    TGActionHandshakeSC,
+    TGActionHandshakeWS, TGActionInvoke,
+    TGActionMessage, TGActionPublishIn,
+    TGActionPublishOut, TGActionSubscribe,
+    TGActionTransmit
 } from './action';
 import { WritableConsumableStream } from '../writable-consumable-stream';
-import { AGServerSocket } from './server-socket';
+import { TGServerSocket } from './server-socket';
 
 export interface CodecEngine
 {
@@ -106,17 +106,17 @@ export interface IncomingMessage
 }
 
 export type handshakeMiddlewareFunction = (
-    stream: WritableConsumableStream<AGActionHandshakeWS|AGActionHandshakeSC>,
+    stream: WritableConsumableStream<TGActionHandshakeWS|TGActionHandshakeSC>,
 ) => void;
-export type inboundRawMiddlewareFunction = (stream: WritableConsumableStream<AGActionMessage>) => void;
+export type inboundRawMiddlewareFunction = (stream: WritableConsumableStream<TGActionMessage>) => void;
 export type inboundMiddlewareFunction = (
-    stream: WritableConsumableStream<|AGActionTransmit
-        |AGActionInvoke
-        |AGActionSubscribe
-        |AGActionPublishIn
-        |AGActionAuthenticate>,
+    stream: WritableConsumableStream<|TGActionTransmit
+        |TGActionInvoke
+        |TGActionSubscribe
+        |TGActionPublishIn
+        |TGActionAuthenticate>,
 ) => void;
-export type outboundMiddlewareFunction = (stream: WritableConsumableStream<AGActionPublishOut>) => void;
+export type outboundMiddlewareFunction = (stream: WritableConsumableStream<TGActionPublishOut>) => void;
 
 export const MIDDLEWARE_HANDSHAKE   = 'handshake';
 export const MIDDLEWARE_INBOUND_RAW = 'inboundRaw';
@@ -134,55 +134,55 @@ export type AuthEngineType = Pick<AuthEngine, 'verifyToken'|'signToken'>
 
 export interface AuthStateChangeData extends StateChangeData
 {
-    socket: AGServerSocket;
+    socket: TGServerSocket;
 }
 
 export interface AuthenticationData extends AuthenticateData
 {
-    socket: AGServerSocket;
+    socket: TGServerSocket;
 }
 
 export interface DeauthenticationData extends DeauthenticateData
 {
-    socket: AGServerSocket;
+    socket: TGServerSocket;
 }
 
 export interface BadSocketAuthTokenData extends BadAuthTokenData
 {
-    socket: AGServerSocket;
+    socket: TGServerSocket;
 }
 
 export interface ConnectionData extends ConnectData
 {
-    socket: AGServerSocket;
+    socket: TGServerSocket;
 }
 
 export interface SubscriptionData extends SubscribeData
 {
-    socket: AGServerSocket;
+    socket: TGServerSocket;
 }
 
 export interface UnsubscriptionData extends UnsubscribeData
 {
-    socket: AGServerSocket;
+    socket: TGServerSocket;
 }
 
 export interface ConnectionAbortData extends ConnectAbortData
 {
-    socket: AGServerSocket;
+    socket: TGServerSocket;
 }
 
 export interface DisconnectionData extends DisconnectData
 {
-    socket: AGServerSocket;
+    socket: TGServerSocket;
 }
 
 export interface ClosureData extends CloseData
 {
-    socket: AGServerSocket;
+    socket: TGServerSocket;
 }
 
-export interface AGServerOptions
+export interface TGServerOptions
 {
     // NodeJS ot serverless
     isNode?: boolean;

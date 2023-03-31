@@ -1,6 +1,6 @@
 import { AsyncStreamEmitter } from '../async-stream-emitter';
 import {
-    AGServerOptions,
+    TGServerOptions,
     AuthEngineType,
     CodecEngine,
     MIDDLEWARE_HANDSHAKE,
@@ -23,26 +23,26 @@ import {
     DisconnectionData,
     ClosureData
 } from './types';
-import { AGServerSocket } from './server-socket';
-import { SimpleExchange } from '../ag-simple-broker/simple-exchange';
+import { TGServerSocket } from './server-socket';
+import { SimpleExchange } from '../simple-broker/simple-exchange';
 import { JwtAlgorithm, JwtVerifyOptions, Secret } from '../jwt';
-import { AGSimpleBroker } from '../ag-simple-broker/simple-broker';
+import { TGSimpleBroker } from '../simple-broker/simple-broker';
 import {
     InvalidActionError,
     InvalidArgumentsError,
     InvalidOptionsError,
     ServerProtocolError, SilentMiddlewareBlockedError
-} from '../sc-errors/errors';
-import { randomBytes } from '../crypto/crypto';
-import { AuthEngine } from '../ag-auth';
-import { formatter } from '../sc-formatter';
+} from '../errors/errors';
+import { randomBytes } from '../crypto';
+import { AuthEngine } from '../auth';
+import { formatter } from '../formatter';
 import { isNode } from '../utils/is-node';
 import { generateId } from '../utils/generate-id';
-import { AGAction } from './action';
+import { TGAction } from './action';
 import { WritableConsumableStream } from '../writable-consumable-stream';
 import { ConsumableStream } from '../consumable-stream';
 
-export class AGServer extends AsyncStreamEmitter<any>
+export class TGServer extends AsyncStreamEmitter<any>
 {
     static MIDDLEWARE_HANDSHAKE: Middlewares   = MIDDLEWARE_HANDSHAKE;
     static MIDDLEWARE_INBOUND_RAW: Middlewares = MIDDLEWARE_INBOUND_RAW;
@@ -50,7 +50,7 @@ export class AGServer extends AsyncStreamEmitter<any>
     static MIDDLEWARE_OUTBOUND: Middlewares    = MIDDLEWARE_OUTBOUND;
     static SYMBOL_MIDDLEWARE_HANDSHAKE_STREAM  = Symbol('handshakeStream');
 
-    options: AGServerOptions;
+    options: TGServerOptions;
     origins: string;
     ackTimeout: number;
     handshakeTimeout: number;
@@ -58,12 +58,12 @@ export class AGServer extends AsyncStreamEmitter<any>
     pingTimeout: number;
     pingTimeoutDisabled: boolean;
     allowClientPublish: boolean;
-    perMessageDeflate?: boolean|{};
+    perMessageDeflate?: boolean|any;
     httpServer: any;
     socketChannelLimit?: number;
     protocolVersion: 1|2;
     strictHandshake: boolean;
-    brokerEngine: AGSimpleBroker;
+    brokerEngine: TGSimpleBroker;
     middlewareEmitFailures: boolean;
     isReady: boolean;
     signatureKey?: Secret;
@@ -76,12 +76,12 @@ export class AGServer extends AsyncStreamEmitter<any>
     exchange: SimpleExchange;
 
     clients: {
-        [id: string]: AGServerSocket;
+        [id: string]: TGServerSocket;
     };
     clientsCount: number;
 
     pendingClients: {
-        [id: string]: AGServerSocket;
+        [id: string]: TGServerSocket;
     };
     pendingClientsCount: number;
 
@@ -95,12 +95,12 @@ export class AGServer extends AsyncStreamEmitter<any>
     /**
      * Constructor
      */
-    constructor(options?: AGServerOptions)
+    constructor(options?: TGServerOptions)
     {
         super();
 
         let opts = {
-            brokerEngine            : new AGSimpleBroker(),
+            brokerEngine            : new TGSimpleBroker(),
             wsEngine                : 'ws',
             wsEngineServerOptions   : {},
             maxPayload              : null,
@@ -312,7 +312,7 @@ export class AGServer extends AsyncStreamEmitter<any>
 
     emit(eventName: 'error', data: {error: Error}): void;
     emit(eventName: 'warning', data: {warning: Error}): void;
-    emit(eventName: 'handshake', data: {socket: AGServerSocket}): void;
+    emit(eventName: 'handshake', data: {socket: TGServerSocket}): void;
     emit(eventName: 'authenticationStateChange', data: AuthStateChangeData): void;
     emit(eventName: 'authentication', data: AuthenticationData): void;
     emit(eventName: 'deauthentication', data: DeauthenticationData): void;
@@ -331,7 +331,7 @@ export class AGServer extends AsyncStreamEmitter<any>
 
     listener(eventName: 'error'): ConsumableStream<{error: Error}>;
     listener(eventName: 'warning'): ConsumableStream<{warning: Error}>;
-    listener(eventName: 'handshake'): ConsumableStream<{socket: AGServerSocket}>;
+    listener(eventName: 'handshake'): ConsumableStream<{socket: TGServerSocket}>;
     listener(eventName: 'authenticationStateChange'): ConsumableStream<AuthStateChangeData>;
     listener(eventName: 'authentication'): ConsumableStream<AuthenticationData>;
     listener(eventName: 'deauthentication'): ConsumableStream<DeauthenticationData>;
@@ -399,10 +399,10 @@ export class AGServer extends AsyncStreamEmitter<any>
     setMiddleware(type: Middlewares, middleware: any)
     {
         if (
-            type !== AGServer.MIDDLEWARE_HANDSHAKE &&
-            type !== AGServer.MIDDLEWARE_INBOUND_RAW &&
-            type !== AGServer.MIDDLEWARE_INBOUND &&
-            type !== AGServer.MIDDLEWARE_OUTBOUND
+            type !== TGServer.MIDDLEWARE_HANDSHAKE &&
+            type !== TGServer.MIDDLEWARE_INBOUND_RAW &&
+            type !== TGServer.MIDDLEWARE_INBOUND &&
+            type !== TGServer.MIDDLEWARE_OUTBOUND
         )
         {
             throw new InvalidArgumentsError(
@@ -456,19 +456,19 @@ export class AGServer extends AsyncStreamEmitter<any>
         }
 
         let middlewareHandshakeStream  = new WritableConsumableStream();
-        middlewareHandshakeStream.type = AGServer.MIDDLEWARE_HANDSHAKE;
+        middlewareHandshakeStream.type = TGServer.MIDDLEWARE_HANDSHAKE;
 
-        req[AGServer.SYMBOL_MIDDLEWARE_HANDSHAKE_STREAM] = middlewareHandshakeStream;
+        req[TGServer.SYMBOL_MIDDLEWARE_HANDSHAKE_STREAM] = middlewareHandshakeStream;
 
-        let handshakeMiddleware = this._middleware[AGServer.MIDDLEWARE_HANDSHAKE];
+        let handshakeMiddleware = this._middleware[TGServer.MIDDLEWARE_HANDSHAKE];
         if (handshakeMiddleware)
         {
             handshakeMiddleware(middlewareHandshakeStream);
         }
 
-        let action     = new AGAction();
+        let action     = new TGAction();
         action.request = req;
-        action.type    = AGAction.HANDSHAKE_WS;
+        action.type    = TGAction.HANDSHAKE_WS;
 
         try
         {
@@ -498,7 +498,7 @@ export class AGServer extends AsyncStreamEmitter<any>
 
     async processMiddlewareAction(
         middlewareStream,
-        action: AGAction,
+        action: TGAction,
         socket?
     ): Promise<{data: any, options: any}>
     {
@@ -594,22 +594,22 @@ export class AGServer extends AsyncStreamEmitter<any>
         }
 
         const socketId    = this.generateId();
-        const agSocket    = new AGServerSocket(socketId, this, wsSocket, this.protocolVersion);
+        const agSocket    = new TGServerSocket(socketId, this, wsSocket, this.protocolVersion);
         agSocket.exchange = this.exchange;
 
-        let inboundRawMiddleware = this._middleware[AGServer.MIDDLEWARE_INBOUND_RAW];
+        let inboundRawMiddleware = this._middleware[TGServer.MIDDLEWARE_INBOUND_RAW];
         if (inboundRawMiddleware)
         {
             inboundRawMiddleware(agSocket.middlewareInboundRawStream);
         }
 
-        let inboundMiddleware = this._middleware[AGServer.MIDDLEWARE_INBOUND];
+        let inboundMiddleware = this._middleware[TGServer.MIDDLEWARE_INBOUND];
         if (inboundMiddleware)
         {
             inboundMiddleware(agSocket.middlewareInboundStream);
         }
 
-        let outboundMiddleware = this._middleware[AGServer.MIDDLEWARE_OUTBOUND];
+        let outboundMiddleware = this._middleware[TGServer.MIDDLEWARE_OUTBOUND];
         if (outboundMiddleware)
         {
             outboundMiddleware(agSocket.middlewareOutboundStream);

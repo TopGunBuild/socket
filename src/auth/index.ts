@@ -1,4 +1,4 @@
-import { AuthTokenError, InvalidArgumentsError } from '../sc-errors/errors';
+import { AuthTokenError, InvalidArgumentsError } from '../errors/errors';
 import { JwtAlgorithm, JwtPayload, JwtSignOptions, JwtVerifyOptions, sign, verify } from '../jwt';
 
 export class AuthEngine

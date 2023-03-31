@@ -1,5 +1,9 @@
+import { getGlobal } from '../utils/global';
+
 const base64Chars         = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 const validJSONStartRegex = /^[ \n\r\t]*[{\[]/;
+
+const global = getGlobal();
 
 let arrayBufferToBase64 = function (arraybuffer)
 {
@@ -97,7 +101,7 @@ export function decode(encodedMessage)
     {
     }
     return message;
-};
+}
 
 // Encode raw data (which is in the SC protocol format) into a format for
 // transfering it over the wire. In this case, we just convert it into a simple JSON string.
@@ -107,7 +111,7 @@ export function decode(encodedMessage)
 // (which adheres to the SC protocol).
 // See https://github.com/SocketCluster/socketcluster/blob/master/socketcluster-protocol.md
 // for details about the SC protocol.
-export function encode(rawData)
+export function encode(rawData): string
 {
     // Leave ping or pong message as is
     if (rawData === '#1' || rawData === '#2')

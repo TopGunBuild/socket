@@ -1,8 +1,8 @@
-import { AGChannelClient } from '../ag-channel/client';
+import { TGChannelClient } from '../channel/client';
 import { AsyncStreamEmitter } from '../async-stream-emitter';
-import { SocketProtocolErrorStatuses, SocketProtocolIgnoreStatuses } from '../sc-errors/types';
+import { SocketProtocolErrorStatuses, SocketProtocolIgnoreStatuses } from '../errors/types';
 import {
-    AGAuthEngine,
+    TGAuthEngine,
     AuthStates,
     AuthStatus,
     AuthToken,
@@ -11,7 +11,7 @@ import {
     SignedAuthToken,
     States, SubscribeFailData, SubscribeOptions, TransmitOptions, UnsubscribeData
 } from './types';
-import { AGTransport } from './transport';
+import { TGTransport } from './transport';
 import { CodecEngine } from '../socket-server/types';
 import {
     BadConnectionError,
@@ -20,24 +20,24 @@ import {
     InvalidMessageError, SocketProtocolError,
     socketProtocolErrorStatuses,
     socketProtocolIgnoreStatuses, TimeoutError
-} from '../sc-errors/errors';
+} from '../errors/errors';
 import { StreamDemux } from '../stream-demux';
 import { Item, LinkedList } from '../linked-list';
 import { AuthEngine } from './auth';
-import { formatter } from '../sc-formatter';
-import { wait } from './wait';
+import { formatter } from '../formatter';
+import { wait } from '../utils/wait';
 import { Buffer } from 'buffer/';
 import { cloneDeep } from '../utils/clone-deep';
-import { AGChannel } from '../ag-channel/channel';
+import { TGChannel } from '../channel/channel';
 import { DemuxedConsumableStream } from '../stream-demux/demuxed-consumable-stream';
 import { ConsumerStats } from '../writable-consumable-stream/consumer-stats';
-import { ChannelState } from '../ag-channel/channel-state';
+import { ChannelState } from '../channel/channel-state';
 import { getGlobal } from '../utils/global';
 
 const isBrowser = typeof window !== 'undefined';
 const global    = getGlobal();
 
-export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannelClient
+export class TGClientSocket extends AsyncStreamEmitter<any> implements TGChannelClient
 {
     static readonly CONNECTING: States = 'connecting';
     static readonly OPEN: States       = 'open';
@@ -90,9 +90,9 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
     batchOnHandshake: boolean;
     batchOnHandshakeDuration: number;
 
-    auth: AGAuthEngine;
+    auth: TGAuthEngine;
     codec: CodecEngine;
-    transport?: AGTransport|undefined;
+    transport?: TGTransport|undefined;
 
     poolIndex?: number|undefined;
     private _batchingIntervalId: any;
@@ -197,8 +197,8 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
         this.id                            = null;
         this.version                       = opts.version || null;
         this.protocolVersion               = opts.protocolVersion;
-        this.state                         = AGClientSocket.CLOSED;
-        this.authState                     = AGClientSocket.UNAUTHENTICATED;
+        this.state                         = TGClientSocket.CLOSED;
+        this.authState                     = TGClientSocket.UNAUTHENTICATED;
         this.signedAuthToken               = null;
         this.authToken                     = null;
         this.pendingReconnect              = false;
@@ -408,7 +408,7 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
             this.emit('removeAuthToken', { oldAuthToken });
         })();
 
-        if (this.state !== AGClientSocket.CLOSED)
+        if (this.state !== TGClientSocket.CLOSED)
         {
             this.transmit('#removeAuthToken');
         }
@@ -418,13 +418,13 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
 
     connect(): void
     {
-        if (this.state === AGClientSocket.CLOSED)
+        if (this.state === TGClientSocket.CLOSED)
         {
             this.pendingReconnect        = false;
             this.pendingReconnectTimeout = null;
             clearTimeout(this._reconnectTimeoutRef);
 
-            this.state = AGClientSocket.CONNECTING;
+            this.state = TGClientSocket.CONNECTING;
             this.emit('connecting', {});
 
             if (this.transport)
@@ -435,22 +435,22 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
             let transportHandlers = {
                 onOpen           : (value) =>
                 {
-                    this.state = AGClientSocket.OPEN;
+                    this.state = TGClientSocket.OPEN;
                     this._onOpen(value);
                 },
                 onOpenAbort      : (value) =>
                 {
-                    if (this.state !== AGClientSocket.CLOSED)
+                    if (this.state !== TGClientSocket.CLOSED)
                     {
-                        this.state = AGClientSocket.CLOSED;
+                        this.state = TGClientSocket.CLOSED;
                         this._destroy(value.code, value.reason, true);
                     }
                 },
                 onClose          : (value) =>
                 {
-                    if (this.state !== AGClientSocket.CLOSED)
+                    if (this.state !== TGClientSocket.CLOSED)
                     {
-                        this.state = AGClientSocket.CLOSED;
+                        this.state = TGClientSocket.CLOSED;
                         this._destroy(value.code, value.reason);
                     }
                 },
@@ -472,7 +472,7 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
                 }
             };
 
-            this.transport = new AGTransport(this.auth, this.codec, this.options, this.wsOptions, transportHandlers);
+            this.transport = new TGTransport(this.auth, this.codec, this.options, this.wsOptions, transportHandlers);
         }
     }
 
@@ -491,10 +491,10 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
             throw new InvalidArgumentsError('If specified, the code argument must be a number');
         }
 
-        let isConnecting = this.state === AGClientSocket.CONNECTING;
-        if (isConnecting || this.state === AGClientSocket.OPEN)
+        let isConnecting = this.state === TGClientSocket.CONNECTING;
+        if (isConnecting || this.state === TGClientSocket.OPEN)
         {
-            this.state = AGClientSocket.CLOSED;
+            this.state = TGClientSocket.CLOSED;
             this._destroy(code, reason, isConnecting);
             this.transport.close(code, reason);
         }
@@ -669,7 +669,7 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
         this._cancelBatching();
     }
 
-    subscribe(channelName: string, options?: SubscribeOptions): AGChannel<any>
+    subscribe(channelName: string, options?: SubscribeOptions): TGChannel<any>
     {
         options     = options || {};
         let channel = this._channelMap[channelName];
@@ -691,7 +691,7 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
         {
             channel                       = {
                 name   : channelName,
-                state  : AGChannel.PENDING,
+                state  : TGChannel.PENDING,
                 options: sanitizedOptions
             };
             this._channelMap[channelName] = channel;
@@ -702,7 +702,7 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
             channel.options = sanitizedOptions;
         }
 
-        let channelIterable = new AGChannel(
+        let channelIterable = new TGChannel(
             channelName,
             this,
             this._channelEventDemux,
@@ -869,11 +869,11 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
 
     // ---- Channel logic ----
 
-    channel(channelName: string): AGChannel<any>
+    channel(channelName: string): TGChannel<any>
     {
         let currentChannel = this._channelMap[channelName];
 
-        let channelIterable = new AGChannel(
+        let channelIterable = new TGChannel(
             channelName,
             this,
             this._channelEventDemux,
@@ -1010,7 +1010,7 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
         {
             return channel.state;
         }
-        return AGChannel.UNSUBSCRIBED;
+        return TGChannel.UNSUBSCRIBED;
     }
 
     getChannelOptions(channelName: string): object
@@ -1132,7 +1132,7 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
         let subs = [];
         Object.keys(this._channelMap).forEach((channelName) =>
         {
-            if (includePending || this._channelMap[channelName].state === AGChannel.SUBSCRIBED)
+            if (includePending || this._channelMap[channelName].state === TGChannel.SUBSCRIBED)
             {
                 subs.push(channelName);
             }
@@ -1147,7 +1147,7 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
         {
             return !!channel;
         }
-        return !!channel && channel.state === AGChannel.SUBSCRIBED;
+        return !!channel && channel.state === TGChannel.SUBSCRIBED;
     }
 
     processPendingSubscriptions(): void
@@ -1158,7 +1158,7 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
         Object.keys(this._channelMap).forEach((channelName) =>
         {
             let channel = this._channelMap[channelName];
-            if (channel.state === AGChannel.PENDING)
+            if (channel.state === TGChannel.PENDING)
             {
                 pendingChannels.push(channel);
             }
@@ -1206,7 +1206,7 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
 
     private _tryUnsubscribe(channel): void
     {
-        if (this.state === AGClientSocket.OPEN)
+        if (this.state === TGClientSocket.OPEN)
         {
             let options: TransmitOptions = {
                 noTimeout: true
@@ -1223,17 +1223,17 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
         }
     }
 
-    private _triggerChannelUnsubscribe(channel: AGChannel<any>, setAsPending?: boolean): void
+    private _triggerChannelUnsubscribe(channel: TGChannel<any>, setAsPending?: boolean): void
     {
         let channelName = channel.name;
 
         this._cancelPendingSubscribeCallback(channel);
 
-        if (channel.state === AGChannel.SUBSCRIBED)
+        if (channel.state === TGChannel.SUBSCRIBED)
         {
             let stateChangeData = {
                 oldChannelState: channel.state,
-                newChannelState: setAsPending ? AGChannel.PENDING : AGChannel.UNSUBSCRIBED
+                newChannelState: setAsPending ? TGChannel.PENDING : TGChannel.UNSUBSCRIBED
             };
             this._channelEventDemux.write(`${channelName}/subscribeStateChange`, stateChangeData);
             this._channelEventDemux.write(`${channelName}/unsubscribe`, {});
@@ -1246,7 +1246,7 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
 
         if (setAsPending)
         {
-            channel.state = AGChannel.PENDING;
+            channel.state = TGChannel.PENDING;
         }
         else
         {
@@ -1254,13 +1254,13 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
         }
     }
 
-    private _trySubscribe(channel: AGChannel<any>): void
+    private _trySubscribe(channel: TGChannel<any>): void
     {
-        let meetsAuthRequirements = !channel.options['waitForAuth'] || this.authState === AGClientSocket.AUTHENTICATED;
+        let meetsAuthRequirements = !channel.options['waitForAuth'] || this.authState === TGClientSocket.AUTHENTICATED;
 
         // We can only ever have one pending subscribe action at any given time on a channel
         if (
-            this.state === AGClientSocket.OPEN &&
+            this.state === TGClientSocket.OPEN &&
             !this.preparingPendingSubscriptions &&
             channel._pendingSubscriptionCid == null &&
             meetsAuthRequirements
@@ -1368,7 +1368,7 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
         return channelName;
     }
 
-    private _cancelPendingSubscribeCallback(channel: AGChannel<any>)
+    private _cancelPendingSubscribeCallback(channel: TGChannel<any>)
     {
         if (channel._pendingSubscriptionCid != null)
         {
@@ -1377,10 +1377,10 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
         }
     }
 
-    private _triggerChannelSubscribeFail(err: Error, channel: AGChannel<any>, subscriptionOptions: SubscribeOptions): void
+    private _triggerChannelSubscribeFail(err: Error, channel: TGChannel<any>, subscriptionOptions: SubscribeOptions): void
     {
         let channelName           = channel.name;
-        let meetsAuthRequirements = !channel.options['waitForAuth'] || this.authState === AGClientSocket.AUTHENTICATED;
+        let meetsAuthRequirements = !channel.options['waitForAuth'] || this.authState === TGClientSocket.AUTHENTICATED;
         let hasChannel            = !!this._channelMap[channelName];
 
         if (hasChannel && meetsAuthRequirements)
@@ -1399,14 +1399,14 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
         }
     }
 
-    private _triggerChannelSubscribe(channel: AGChannel<any>, subscriptionOptions: SubscribeOptions): void
+    private _triggerChannelSubscribe(channel: TGChannel<any>, subscriptionOptions: SubscribeOptions): void
     {
         let channelName = channel.name;
 
-        if (channel.state !== AGChannel.SUBSCRIBED)
+        if (channel.state !== TGChannel.SUBSCRIBED)
         {
             let oldChannelState = channel.state;
-            channel.state       = AGChannel.SUBSCRIBED;
+            channel.state       = TGChannel.SUBSCRIBED;
 
             let stateChangeData = {
                 oldChannelState,
@@ -1437,7 +1437,7 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
     {
         options = options || {};
 
-        if (this.state === AGClientSocket.CLOSED)
+        if (this.state === TGClientSocket.CLOSED)
         {
             this.connect();
         }
@@ -1488,7 +1488,7 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
         }, ackTimeout);
 
         this._outboundBuffer.append(eventNode);
-        if (this.state === AGClientSocket.OPEN)
+        if (this.state === TGClientSocket.OPEN)
         {
             this._flushOutboundBuffer();
         }
@@ -1585,7 +1585,7 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
         }
         this.emit('close', { code, reason });
 
-        if (!AGClientSocket.ignoreStatuses[code])
+        if (!TGClientSocket.ignoreStatuses[code])
         {
             let closeMessage;
             if (reason)
@@ -1596,7 +1596,7 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
             {
                 closeMessage = 'Socket connection closed with status code ' + code;
             }
-            let err = new SocketProtocolError(AGClientSocket.errorStatuses[code] || closeMessage, code);
+            let err = new SocketProtocolError(TGClientSocket.errorStatuses[code] || closeMessage, code);
             this._onError(err);
         }
 
@@ -1764,7 +1764,7 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
             }
         });
 
-        if (this.state === AGClientSocket.OPEN)
+        if (this.state === TGClientSocket.OPEN)
         {
             this._flushOutboundBuffer();
         }
@@ -1795,10 +1795,10 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
         this.signedAuthToken = signedAuthToken;
         this.authToken       = this._extractAuthTokenData(signedAuthToken);
 
-        if (this.authState !== AGClientSocket.AUTHENTICATED)
+        if (this.authState !== TGClientSocket.AUTHENTICATED)
         {
             let oldAuthState    = this.authState;
-            this.authState      = AGClientSocket.AUTHENTICATED;
+            this.authState      = TGClientSocket.AUTHENTICATED;
             let stateChangeData = {
                 oldAuthState,
                 newAuthState   : this.authState,
@@ -1817,12 +1817,12 @@ export class AGClientSocket extends AsyncStreamEmitter<any> implements AGChannel
 
     private _changeToUnauthenticatedStateAndClearTokens(): void
     {
-        if (this.authState !== AGClientSocket.UNAUTHENTICATED)
+        if (this.authState !== TGClientSocket.UNAUTHENTICATED)
         {
             let oldAuthState       = this.authState;
             let oldAuthToken       = this.authToken;
             let oldSignedAuthToken = this.signedAuthToken;
-            this.authState         = AGClientSocket.UNAUTHENTICATED;
+            this.authState         = TGClientSocket.UNAUTHENTICATED;
             this.signedAuthToken   = null;
             this.authToken         = null;
 

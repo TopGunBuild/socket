@@ -1,11 +1,11 @@
 import { ConsumableStream, ConsumableStreamConsumer } from '../consumable-stream';
-import { AGChannelClient } from './client';
+import { TGChannelClient } from './client';
 import { StreamDemux } from '../stream-demux';
 import { DemuxedConsumableStream } from '../stream-demux/demuxed-consumable-stream';
 import { ConsumerStats } from '../writable-consumable-stream/consumer-stats';
 import { ChannelState } from './channel-state';
 
-export class AGChannel<T> extends ConsumableStream<T>
+export class TGChannel<T> extends ConsumableStream<T>
 {
     static PENDING: ChannelState = 'pending';
     static SUBSCRIBED: ChannelState = 'subscribed';
@@ -15,7 +15,7 @@ export class AGChannel<T> extends ConsumableStream<T>
     PENDING: ChannelState;
     SUBSCRIBED: ChannelState;
     UNSUBSCRIBED: ChannelState;
-    client: AGChannelClient;
+    client: TGChannelClient;
 
     _eventDemux: StreamDemux<T>;
     _dataStream: DemuxedConsumableStream<T>;
@@ -24,12 +24,12 @@ export class AGChannel<T> extends ConsumableStream<T>
     /**
      * Constructor
      */
-    constructor(name: string, client: AGChannelClient, eventDemux: StreamDemux<T>, dataDemux: StreamDemux<T>)
+    constructor(name: string, client: TGChannelClient, eventDemux: StreamDemux<T>, dataDemux: StreamDemux<T>)
     {
         super();
-        this.PENDING      = AGChannel.PENDING;
-        this.SUBSCRIBED   = AGChannel.SUBSCRIBED;
-        this.UNSUBSCRIBED = AGChannel.UNSUBSCRIBED;
+        this.PENDING      = TGChannel.PENDING;
+        this.SUBSCRIBED   = TGChannel.SUBSCRIBED;
+        this.UNSUBSCRIBED = TGChannel.UNSUBSCRIBED;
 
         this.name   = name;
         this.client = client;

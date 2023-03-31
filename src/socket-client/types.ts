@@ -1,7 +1,7 @@
-import { ChannelState } from '../ag-channel/channel-state';
+import { ChannelState } from '../channel/channel-state';
 import { CodecEngine } from '../socket-server/types';
 
-export interface AGAuthEngine
+export interface TGAuthEngine
 {
     saveToken(
         name: string,
@@ -154,7 +154,7 @@ export interface ClientOptions
     timestampParam?: string|undefined;
 
     // A custom engine to use for storing and loading JWT auth tokens on the client side.
-    authEngine?: AGAuthEngine|null|undefined;
+    authEngine?: TGAuthEngine|null|undefined;
 
     // The name of the JWT auth token (provided to the authEngine - By default this is the localStorage variable name); defaults to 'socketcluster.authToken'.
     authTokenName?: string|undefined;

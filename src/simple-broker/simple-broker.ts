@@ -2,7 +2,7 @@ import { AsyncStreamEmitter } from '../async-stream-emitter';
 import { SimpleExchange } from './simple-exchange';
 import { CodecEngine } from '../socket-server/types';
 
-export class AGSimpleBroker extends AsyncStreamEmitter<any>
+export class TGSimpleBroker extends AsyncStreamEmitter<any>
 {
     isReady: boolean;
     private _codec: CodecEngine;

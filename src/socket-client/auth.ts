@@ -1,7 +1,9 @@
-import { AGAuthEngine, AuthToken, SignedAuthToken } from './types';
+import { TGAuthEngine, AuthToken, SignedAuthToken } from './types';
+import { getGlobal } from '../utils/global';
 
+const global = getGlobal();
 
-export class AuthEngine implements AGAuthEngine
+export class AuthEngine implements TGAuthEngine
 {
     private readonly _internalStorage: {[k: string]: any};
     private readonly isLocalStorageEnabled: boolean;

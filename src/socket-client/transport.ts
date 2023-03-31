@@ -1,6 +1,6 @@
 import { CodecEngine } from '../socket-server/types';
 import {
-    AGAuthEngine,
+    TGAuthEngine,
     CallIdGenerator,
     ClientOptions, EventObject, EventObjectCallback, InvokeOptions,
     OnCloseValue,
@@ -14,8 +14,8 @@ import {
     States, TransmitOptions,
     TransportHandlers
 } from './types';
-import { BadConnectionError, hydrateError, socketProtocolErrorStatuses, TimeoutError } from '../sc-errors/errors';
-import { AGRequest } from '../ag-request/request';
+import { BadConnectionError, hydrateError, socketProtocolErrorStatuses, TimeoutError } from '../errors/errors';
+import { TGRequest } from '../request/request';
 import { getGlobal } from '../utils/global';
 import ws from 'ws';
 
@@ -35,14 +35,14 @@ if (global.WebSocket) {
     };
 }
 
-export class AGTransport
+export class TGTransport
 {
     static CONNECTING: States = 'connecting';
     static OPEN: States       = 'open';
     static CLOSED: States     = 'closed';
 
     state: States;
-    auth: AGAuthEngine;
+    auth: TGAuthEngine;
     codec: CodecEngine;
     options: ClientOptions;
     wsOptions?: ClientOptions|undefined;
@@ -71,14 +71,14 @@ export class AGTransport
      * Constructor
      */
     constructor(
-        authEngine: AGAuthEngine,
+        authEngine: TGAuthEngine,
         codecEngine: CodecEngine,
         options: ClientOptions,
         wsOptions?: ClientOptions,
         handlers?: TransportHandlers,
     )
     {
-        this.state               = AGTransport.CLOSED;
+        this.state               = TGTransport.CLOSED;
         this.auth                = authEngine;
         this.codec               = codecEngine;
         this.options             = options;
@@ -124,7 +124,7 @@ export class AGTransport
 
         // Open the connection.
 
-        this.state = AGTransport.CONNECTING;
+        this.state = TGTransport.CONNECTING;
         let uri    = this.uri();
 
         let wsSocket        = createWebSocket(uri, wsOptions);
@@ -167,7 +167,7 @@ export class AGTransport
             // connecting, we want to close it manually with a 1006 - This is necessary
             // to prevent inconsistent behavior when running the client in Node.js
             // vs in a browser.
-            if (this.state === AGTransport.CONNECTING)
+            if (this.state === TGTransport.CONNECTING)
             {
                 this._destroy(1006);
             }
@@ -343,7 +343,7 @@ export class AGTransport
 
     close(code?: number, reason?: string): void
     {
-        if (this.state === AGTransport.OPEN || this.state === AGTransport.CONNECTING)
+        if (this.state === TGTransport.OPEN || this.state === TGTransport.CONNECTING)
         {
             code = code || 1000;
             this._destroy(code, reason);
@@ -376,7 +376,7 @@ export class AGTransport
             data
         };
 
-        if (this.state === AGTransport.OPEN || options.force)
+        if (this.state === TGTransport.OPEN || options.force)
         {
             this.transmitObject(eventObject);
         }
@@ -404,7 +404,7 @@ export class AGTransport
             }, this.options.ackTimeout);
         }
         let cid = null;
-        if (this.state === AGTransport.OPEN || options.force)
+        if (this.state === TGTransport.OPEN || options.force)
         {
             cid = this.transmitObject(eventObject);
         }
@@ -527,7 +527,7 @@ export class AGTransport
             return;
         }
 
-        this.state = AGTransport.OPEN;
+        this.state = TGTransport.OPEN;
         if (status)
         {
             this.pingTimeout = status.pingTimeout;
@@ -596,19 +596,19 @@ export class AGTransport
         clearTimeout(this._connectTimeoutRef);
         clearTimeout(this._pingTimeoutTicker);
 
-        if (this.state === AGTransport.OPEN)
+        if (this.state === TGTransport.OPEN)
         {
-            this.state = AGTransport.CLOSED;
+            this.state = TGTransport.CLOSED;
             this._abortAllPendingEventsDueToBadConnection('disconnect');
             this._onCloseHandler({ code, reason });
         }
-        else if (this.state === AGTransport.CONNECTING)
+        else if (this.state === TGTransport.CONNECTING)
         {
-            this.state = AGTransport.CLOSED;
+            this.state = TGTransport.CLOSED;
             this._abortAllPendingEventsDueToBadConnection('connectAbort');
             this._onOpenAbortHandler({ code, reason });
         }
-        else if (this.state === AGTransport.CLOSED)
+        else if (this.state === TGTransport.CLOSED)
         {
             this._abortAllPendingEventsDueToBadConnection('connectAbort');
         }
@@ -624,7 +624,7 @@ export class AGTransport
             }
             else
             {
-                let request = new AGRequest(this, packet.cid, packet.event, packet.data);
+                let request = new TGRequest(this, packet.cid, packet.event, packet.data);
                 this._onInboundInvokeHandler(request);
             }
         }

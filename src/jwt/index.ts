@@ -1,11 +1,9 @@
-import { AuthTokenError } from '../sc-errors/errors';
+import { AuthTokenError } from '../errors/errors';
 
 if (typeof crypto === 'undefined' || !crypto.subtle)
 {
     throw new Error('SubtleCrypto not supported!')
 }
-
-
 
 /**
  * @typedef JwtAlgorithm

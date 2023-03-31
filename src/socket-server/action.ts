@@ -1,6 +1,6 @@
-import { AuthTokenExpiredError, InvalidActionError } from '../sc-errors/errors';
+import { AuthTokenExpiredError, InvalidActionError } from '../errors/errors';
 import { IncomingMessage, AuthToken } from './types';
-import { AGServerSocket } from './server-socket';
+import { TGServerSocket } from './server-socket';
 
 const HANDSHAKE_WS = 'handshakeWS';
 const HANDSHAKE_SC = 'handshakeSC';
@@ -12,7 +12,7 @@ const PUBLISH_IN   = 'publishIn';
 const PUBLISH_OUT  = 'publishOut';
 const AUTHENTICATE = 'authenticate';
 
-export class AGAction
+export class TGAction
 {
     static HANDSHAKE_WS: ActionType = HANDSHAKE_WS;
     static HANDSHAKE_SC: ActionType = HANDSHAKE_SC;
@@ -26,7 +26,7 @@ export class AGAction
 
     type: ActionType;
     request?: IncomingMessage;
-    socket?: AGServerSocket;
+    socket?: TGServerSocket;
     authTokenExpiredError?: AuthTokenExpiredError;
     receiver?: string;
     procedure?: string;
@@ -110,7 +110,7 @@ export type ActionType =
     |typeof PUBLISH_OUT
     |typeof AUTHENTICATE;
 
-export interface AGActionBase
+export interface TGActionBase
 {
     readonly HANDSHAKE_WS: typeof HANDSHAKE_WS;
     readonly HANDSHAKE_SC: typeof HANDSHAKE_SC;
@@ -130,73 +130,73 @@ export interface AGActionBase
     block(error?: Error): void;
 }
 
-export interface AGActionHandshakeWS extends AGActionBase
+export interface TGActionHandshakeWS extends TGActionBase
 {
     type: typeof HANDSHAKE_WS;
 }
 
-export interface AGActionHandshakeSC extends AGActionBase
+export interface TGActionHandshakeSC extends TGActionBase
 {
     type: typeof HANDSHAKE_SC;
     request: IncomingMessage;
-    socket: AGServerSocket;
+    socket: TGServerSocket;
 }
 
-export interface AGActionMessage extends AGActionBase
+export interface TGActionMessage extends TGActionBase
 {
     type: typeof MESSAGE;
-    socket: AGServerSocket;
+    socket: TGServerSocket;
     data: any;
 }
 
-export interface AGActionTransmit extends AGActionBase
+export interface TGActionTransmit extends TGActionBase
 {
     type: typeof TRANSMIT;
-    socket: AGServerSocket;
+    socket: TGServerSocket;
     authTokenExpiredError?: AuthTokenExpiredError;
     receiver: string;
     data?: any;
 }
 
-export interface AGActionInvoke extends AGActionBase
+export interface TGActionInvoke extends TGActionBase
 {
     type: typeof INVOKE;
-    socket: AGServerSocket;
+    socket: TGServerSocket;
     authTokenExpiredError?: AuthTokenExpiredError;
     procedure: string;
     data?: any;
 }
 
-export interface AGActionSubscribe extends AGActionBase
+export interface TGActionSubscribe extends TGActionBase
 {
     type: typeof SUBSCRIBE;
-    socket: AGServerSocket;
+    socket: TGServerSocket;
     authTokenExpiredError?: AuthTokenExpiredError;
     channel?: string;
     data?: any;
 }
 
-export interface AGActionPublishIn extends AGActionBase
+export interface TGActionPublishIn extends TGActionBase
 {
     type: typeof PUBLISH_IN;
-    socket: AGServerSocket;
+    socket: TGServerSocket;
     authTokenExpiredError?: AuthTokenExpiredError;
     channel?: string;
     data?: any;
 }
 
-export interface AGActionPublishOut extends AGActionBase
+export interface TGActionPublishOut extends TGActionBase
 {
     type: typeof PUBLISH_OUT;
-    socket: AGServerSocket;
+    socket: TGServerSocket;
     channel?: string;
     data?: any;
 }
 
-export interface AGActionAuthenticate extends AGActionBase
+export interface TGActionAuthenticate extends TGActionBase
 {
     type: typeof AUTHENTICATE;
-    socket: AGServerSocket;
+    socket: TGServerSocket;
     authToken?: AuthToken;
     signedAuthToken?: string;
 }
