@@ -10,6 +10,18 @@ import {
 } from './action';
 import { WritableConsumableStream } from '../writable-consumable-stream';
 import { TGServerSocket } from './server-socket';
+import { EventObjectCallback } from '../socket-client';
+
+export interface EventObject
+{
+    event: string;
+    data: any;
+    callback?: EventObjectCallback|undefined;
+    cid?: number|undefined;
+    timeout?: any;
+    rid?: any;
+    error?: any;
+}
 
 export interface CodecEngine
 {

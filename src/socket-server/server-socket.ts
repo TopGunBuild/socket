@@ -5,7 +5,7 @@ import {
     AuthenticateData,
     AuthState, AuthStateChangeData,
     AuthToken, AuthTokenOptions, BadAuthTokenData, CloseData, ConnectAbortData, ConnectData,
-    DeauthenticateData, DisconnectData,
+    DeauthenticateData, DisconnectData, EventObject,
     IncomingMessage,
     SocketState,
     StateChangeData, SubscribeData, SubscriptionOptions, UnsubscribeData
@@ -26,7 +26,6 @@ import { DemuxedConsumableStream } from '../stream-demux/demuxed-consumable-stre
 import { ConsumerStats } from '../writable-consumable-stream/consumer-stats';
 import { ConsumableStream } from '../consumable-stream';
 import { TGRequest } from '../request/request';
-import { EventObject } from '../types/transport';
 import { cloneDeep } from '../utils/clone-deep';
 
 const HANDSHAKE_REJECTION_STATUS_CODE = 4008;

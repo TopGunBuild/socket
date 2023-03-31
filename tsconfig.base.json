@@ -20,7 +20,8 @@
         "pretty": true,
         "lib": ["es2017", "dom"],
         "types": [],
-        "typeRoots": ["node_modules/@types",
+        "typeRoots": [
+            "node_modules/@types",
             "src/types"
         ]
     },
