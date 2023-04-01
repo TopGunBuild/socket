@@ -15,7 +15,7 @@ npm install topgun-socket
 The socket-client script is called `socket-client.js` (located in the dist directory).
 Embed it in your HTML page like this:
 ```html
-<script type="text/javascript" src="/dist/socket-client.js"></script>
+<script type="text/javascript" src="https://unpkg.com/topgun-socket@0.0.2/dist/socket-client.js"></script>
 ```
 \* Note that the src attribute may be different depending on how you setup your HTTP server.
 
@@ -184,7 +184,7 @@ let socket = topGunSocketClient.create({
 You need to attach it to an existing Node.js http or https server (example) and pass wsEngine:
 ```js
 const http = require('http');
-const topGunSocketServer = require('topgun-socket/socket-server');
+const topGunSocketServer = require('topgun-socket/server');
 const ws = require('ws');
 
 let httpServer = http.createServer();
