@@ -2,7 +2,7 @@
  * Creates a new list from the items passed in.
  */
 import { LinkedList } from './list';
-import { Item } from './Item';
+import { Item } from './item';
 
 export function appendAll<T extends Item>(list: LinkedList<T>, items: Array<T|null|undefined>|undefined): LinkedList<T>
 {

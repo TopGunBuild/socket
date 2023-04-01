@@ -1,3 +1,4 @@
+import crypto from 'isomorphic-webcrypto';
 import { AuthTokenError } from '../errors/errors';
 
 if (typeof crypto === 'undefined' || !crypto.subtle)
@@ -257,7 +258,7 @@ export async function sign(payload: JwtPayload, secret: Secret, options: JwtSign
         alg: options.algorithm
     })))}.${base64UrlStringify(_utf8ToUint8Array(payloadAsJSON))}`;
 
-    let keyFormat = 'raw';
+    let keyFormat: any = 'raw';
     let keyData;
 
     if (typeof secret === 'object')
@@ -363,7 +364,7 @@ export async function verify(token: string, secret: string|JsonWebKey, options: 
 
         return false
     }
-    let keyFormat = 'raw';
+    let keyFormat: any = 'raw';
     let keyData;
 
     if (typeof secret === 'object')

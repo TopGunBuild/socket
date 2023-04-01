@@ -1,12 +1,12 @@
 (async () => {
     const esbuild = require('esbuild');
     const fs = require('fs');
-    const metafile = false;
+    const metafile = true;
 
     let result = await esbuild.build({
         globalName: 'topGunSocketClient',
         entryPoints: ['src/socket-client/index.ts'],
-        outfile: 'dist/browser/client.js',
+        outfile: 'dist/socket-client.js',
         bundle: true,
         sourcemap: true,
         minify: true,

@@ -1,3 +1,4 @@
+import crypto from 'isomorphic-webcrypto';
 import { toHEX } from '../utils';
 
 export function randomBytes(randomBytesLength = 9, callback?: (error: Error, bytes: Uint8Array) => void): string
@@ -15,7 +16,10 @@ export function randomBytes(randomBytesLength = 9, callback?: (error: Error, byt
     }
     catch (e)
     {
-        callback(e, randomBytes);
+        if (callback)
+        {
+            callback(e, randomBytes);
+        }
         return null;
     }
 }

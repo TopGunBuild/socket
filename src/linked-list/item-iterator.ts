@@ -1,4 +1,4 @@
-import { Item } from './Item';
+import { Item } from './item';
 
 /**
  * Creates an iterator that iterates over a list (through an item).

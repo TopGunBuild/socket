@@ -1,6 +1,6 @@
 import { ItemIterator } from './item-iterator';
 import { appendAll } from './append-all';
-import { Item } from './Item';
+import { Item } from './item';
 
 /**
  * Double linked list.

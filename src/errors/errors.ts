@@ -1,10 +1,14 @@
 import { decycle } from './decycle';
 import { DehydratedError, SocketProtocolErrorStatuses, SocketProtocolIgnoreStatuses } from './types';
 
-const isStrict = (function ()
+function supportsStrict()
 {
-    return !this;
-})();
+    'use strict';
+    return typeof function ()
+    {
+        return this;
+    }() == 'undefined';
+}
 
 export class AuthTokenExpiredError extends Error
 {
@@ -19,7 +23,7 @@ export class AuthTokenExpiredError extends Error
         this.message = message;
         this.expiry  = new Date(expiry);
 
-        if (Error['captureStackTrace'] && !isStrict)
+        if (Error['captureStackTrace'] && !supportsStrict())
         {
             Error['captureStackTrace'](this, arguments.callee);
         }
@@ -42,7 +46,7 @@ export class AuthTokenInvalidError extends Error
         this.name    = 'AuthTokenInvalidError';
         this.message = message;
 
-        if (Error['captureStackTrace'] && !isStrict)
+        if (Error['captureStackTrace'] && !supportsStrict())
         {
             Error['captureStackTrace'](this, arguments.callee);
         }
@@ -67,7 +71,7 @@ export class AuthTokenNotBeforeError extends Error
         this.message = message;
         this.date    = date;
 
-        if (Error['captureStackTrace'] && !isStrict)
+        if (Error['captureStackTrace'] && !supportsStrict())
         {
             Error['captureStackTrace'](this, arguments.callee);
         }
@@ -93,7 +97,7 @@ export class AuthTokenError extends Error
         this.name    = 'AuthTokenError';
         this.message = message;
 
-        if (Error['captureStackTrace'] && !isStrict)
+        if (Error['captureStackTrace'] && !supportsStrict())
         {
             Error['captureStackTrace'](this, arguments.callee);
         }
@@ -115,7 +119,7 @@ export class AuthError extends Error
         this.name    = 'AuthError';
         this.message = message;
 
-        if (Error['captureStackTrace'] && !isStrict)
+        if (Error['captureStackTrace'] && !supportsStrict())
         {
             Error['captureStackTrace'](this, arguments.callee);
         }
@@ -138,7 +142,7 @@ export class SilentMiddlewareBlockedError extends Error
         this.message = message;
         this.type    = type;
 
-        if (Error['captureStackTrace'] && !isStrict)
+        if (Error['captureStackTrace'] && !supportsStrict())
         {
             Error['captureStackTrace'](this, arguments.callee);
         }
@@ -158,7 +162,7 @@ export class InvalidActionError extends Error
         this.name    = 'InvalidActionError';
         this.message = message;
 
-        if (Error['captureStackTrace'] && !isStrict)
+        if (Error['captureStackTrace'] && !supportsStrict())
         {
             Error['captureStackTrace'](this, arguments.callee);
         }
@@ -179,7 +183,7 @@ export class InvalidArgumentsError extends Error
         this.name    = 'InvalidArgumentsError';
         this.message = message;
 
-        if (Error['captureStackTrace'] && !isStrict)
+        if (Error['captureStackTrace'] && !supportsStrict())
         {
             Error['captureStackTrace'](this, arguments.callee);
         }
@@ -199,7 +203,7 @@ export class InvalidOptionsError extends Error
         this.name    = 'InvalidOptionsError';
         this.message = message;
 
-        if (Error['captureStackTrace'] && !isStrict)
+        if (Error['captureStackTrace'] && !supportsStrict())
         {
             Error['captureStackTrace'](this, arguments.callee);
         }
@@ -219,7 +223,7 @@ export class InvalidMessageError extends Error
         this.name    = 'InvalidMessageError';
         this.message = message;
 
-        if (Error['captureStackTrace'] && !isStrict)
+        if (Error['captureStackTrace'] && !supportsStrict())
         {
             Error['captureStackTrace'](this, arguments.callee);
         }
@@ -242,7 +246,7 @@ export class SocketProtocolError extends Error
         this.message = message;
         this.code    = code;
 
-        if (Error['captureStackTrace'] && !isStrict)
+        if (Error['captureStackTrace'] && !supportsStrict())
         {
             Error['captureStackTrace'](this, arguments.callee);
         }
@@ -262,7 +266,7 @@ export class ServerProtocolError extends Error
         this.name    = 'ServerProtocolError';
         this.message = message;
 
-        if (Error['captureStackTrace'] && !isStrict)
+        if (Error['captureStackTrace'] && !supportsStrict())
         {
             Error['captureStackTrace'](this, arguments.callee);
         }
@@ -282,7 +286,7 @@ export class HTTPServerError extends Error
         this.name    = 'HTTPServerError';
         this.message = message;
 
-        if (Error['captureStackTrace'] && !isStrict)
+        if (Error['captureStackTrace'] && !supportsStrict())
         {
             Error['captureStackTrace'](this, arguments.callee);
         }
@@ -302,7 +306,7 @@ export class ResourceLimitError extends Error
         this.name    = 'ResourceLimitError';
         this.message = message;
 
-        if (Error['captureStackTrace'] && !isStrict)
+        if (Error['captureStackTrace'] && !supportsStrict())
         {
             Error['captureStackTrace'](this, arguments.callee);
         }
@@ -322,7 +326,7 @@ export class TimeoutError extends Error
         this.name    = 'TimeoutError';
         this.message = message;
 
-        if (Error['captureStackTrace'] && !isStrict)
+        if (Error['captureStackTrace'] && !supportsStrict())
         {
             Error['captureStackTrace'](this, arguments.callee);
         }
@@ -345,7 +349,7 @@ export class BadConnectionError extends Error
         this.message = message;
         this.type    = type;
 
-        if (Error['captureStackTrace'] && !isStrict)
+        if (Error['captureStackTrace'] && !supportsStrict())
         {
             Error['captureStackTrace'](this, arguments.callee);
         }
@@ -365,7 +369,7 @@ export class BrokerError extends Error
         this.name    = 'BrokerError';
         this.message = message;
 
-        if (Error['captureStackTrace'] && !isStrict)
+        if (Error['captureStackTrace'] && !supportsStrict())
         {
             Error['captureStackTrace'](this, arguments.callee);
         }
@@ -378,7 +382,7 @@ export class BrokerError extends Error
 
 export class ProcessExitError extends Error
 {
-    code?: number | undefined;
+    code?: number|undefined;
 
     constructor(message: string, code?: number)
     {
@@ -388,7 +392,7 @@ export class ProcessExitError extends Error
         this.message = message;
         this.code    = code;
 
-        if (Error['captureStackTrace'] && !isStrict)
+        if (Error['captureStackTrace'] && !supportsStrict())
         {
             Error['captureStackTrace'](this, arguments.callee);
         }
@@ -408,7 +412,7 @@ export class UnknownError extends Error
         this.name    = 'UnknownError';
         this.message = message;
 
-        if (Error['captureStackTrace'] && !isStrict)
+        if (Error['captureStackTrace'] && !supportsStrict())
         {
             Error['captureStackTrace'](this, arguments.callee);
         }

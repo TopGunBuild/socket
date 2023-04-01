@@ -15,9 +15,6 @@
         "outDir": "dist",
         "module": "esnext",
         "skipLibCheck": true,
-        "types": [
-            "node",
-            "jest"
-        ]
+        "types": []
     }
 }

@@ -201,7 +201,7 @@ export interface ClientOptions
     protocolVersion?: ProtocolVersions|undefined;
 
     // This object will be passed to the constructor of the ws WebSocket instance.
-    wsOptions?: WebSocket.ClientOptions|undefined;
+    wsOptions?: any; // WebSocket.ClientOptions|undefined;
 
     version?: string|undefined;
 
