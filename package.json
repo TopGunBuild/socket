@@ -1,19 +1,19 @@
 {
     "name": "topgun-socket",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "Scalable realtime pub/sub and RPC serverless framework",
     "browser": "dist/socket-client.js",
     "exports": {
-        "./client": "dist/socket-client.js",
-        "./server": "dist/socket-server.js"
+        "./client": "./dist/socket-client.js",
+        "./server": "./dist/socket-server.js"
     },
     "typesVersions": {
         "*": {
             "./client": [
-                "dist/socket-client/index.d.ts"
+                "./dist/socket-client/index.d.ts"
             ],
             "./server": [
-                "dist/socket-server/index.d.ts"
+                "./dist/socket-server/index.d.ts"
             ]
         }
     },
