@@ -4,15 +4,25 @@
     "description": "Scalable realtime pub/sub and RPC serverless framework",
     "browser": "dist/socket-client.js",
     "exports": {
-        "./client": "./dist/socket-client.js",
-        "./server": "./dist/socket-server.js"
+        "./client": {
+            "types": "./dist/socket-client/index.d.ts",
+            "require": "./dist/socket-client.js",
+            "default": "./dist/socket-client.js"
+        },
+        "./server": {
+            "types": "./dist/socket-server/index.d.ts",
+            "node": "./dist/socket-server.js",
+            "require": "./dist/socket-server.js",
+            "default": "./dist/socket-server.js"
+        },
+        "./package.json": "./package.json"
     },
     "typesVersions": {
         "*": {
-            "./client": [
+            "client": [
                 "./dist/socket-client/index.d.ts"
             ],
-            "./server": [
+            "server": [
                 "./dist/socket-server/index.d.ts"
             ]
         }
