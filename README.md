@@ -7,7 +7,7 @@ Client/Server modules for TopGunSocket.
 
 To install this module:
 ```bash
-npm install topgunsocket
+npm install topgun-socket
 ```
 
 ## How to use client module
