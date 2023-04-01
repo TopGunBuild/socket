@@ -1,7 +1,7 @@
 (async () => {
     const esbuild = require('esbuild');
     const fs = require('fs');
-    const metafile = true;
+    const metafile = false;
 
     // Automatically exclude all node_modules from the bundled version
     const {nodeExternalsPlugin} = require('esbuild-node-externals');

@@ -1,4 +1,4 @@
-import { JwtAlgorithm, JwtPayload, JwtSignOptions, Secret } from '../jwt';
+import { JwtAlgorithm, JwtSignOptions, Secret } from '../jwt';
 import { AuthEngine } from '../auth';
 import {
     TGActionAuthenticate,
@@ -10,28 +10,12 @@ import {
 } from './action';
 import { WritableConsumableStream } from '../writable-consumable-stream';
 import { TGServerSocket } from './server-socket';
-import { EventObjectCallback } from '../socket-client';
-
-export interface EventObject
-{
-    event: string;
-    data: any;
-    callback?: EventObjectCallback|undefined;
-    cid?: number|undefined;
-    timeout?: any;
-    rid?: any;
-    error?: any;
-}
+import { AuthToken, UnsubscribeData } from '../types';
 
 export interface CodecEngine
 {
     decode: (input: any) => any;
     encode: (object: any) => any;
-}
-
-export interface AuthToken extends JwtPayload
-{
-    [x: string]: any;
 }
 
 export type SocketState = 'connecting'|'open'|'closed';
@@ -84,11 +68,6 @@ export interface SubscriptionOptions
     channel: string;
     waitForAuth?: boolean;
     data?: any;
-}
-
-export interface UnsubscribeData
-{
-    channel: string;
 }
 
 export interface ConnectAbortData

@@ -5,11 +5,10 @@ import {
     TGAuthEngine,
     AuthStates,
     AuthStatus,
-    AuthToken,
-    ClientOptions, EventObject, KickOutData,
+    ClientOptions, KickOutData,
     ProtocolVersions,
     SignedAuthToken,
-    States, SubscribeFailData, SubscribeOptions, TransmitOptions, UnsubscribeData
+    States, SubscribeFailData, SubscribeOptions, TransmitOptions
 } from './types';
 import { TGTransport } from './transport';
 import { CodecEngine } from '../socket-server/types';
@@ -33,6 +32,7 @@ import { DemuxedConsumableStream } from '../stream-demux/demuxed-consumable-stre
 import { ConsumerStats } from '../writable-consumable-stream/consumer-stats';
 import { ChannelState } from '../channel/channel-state';
 import { getGlobal } from '../utils/global';
+import { AuthToken, EventObject, UnsubscribeData } from '../types';
 
 const isBrowser = typeof window !== 'undefined';
 const global    = getGlobal();

@@ -4,11 +4,11 @@ import { SimpleExchange } from '../simple-broker/simple-exchange';
 import {
     AuthenticateData,
     AuthState, AuthStateChangeData,
-    AuthToken, AuthTokenOptions, BadAuthTokenData, CloseData, ConnectAbortData, ConnectData,
-    DeauthenticateData, DisconnectData, EventObject,
+    AuthTokenOptions, BadAuthTokenData, CloseData, ConnectAbortData, ConnectData,
+    DeauthenticateData, DisconnectData,
     IncomingMessage,
     SocketState,
-    StateChangeData, SubscribeData, SubscriptionOptions, UnsubscribeData
+    StateChangeData, SubscribeData, SubscriptionOptions,
 } from './types';
 import { WritableConsumableStream } from '../writable-consumable-stream';
 import { SocketProtocolErrorStatuses, SocketProtocolIgnoreStatuses } from '../errors/types';
@@ -27,6 +27,7 @@ import { ConsumerStats } from '../writable-consumable-stream/consumer-stats';
 import { ConsumableStream } from '../consumable-stream';
 import { TGRequest } from '../request/request';
 import { cloneDeep } from '../utils/clone-deep';
+import { AuthToken, EventObject, UnsubscribeData } from '../types';
 
 const HANDSHAKE_REJECTION_STATUS_CODE = 4008;
 

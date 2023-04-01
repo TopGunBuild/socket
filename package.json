@@ -1,8 +1,10 @@
 {
     "name": "topgun-socket",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "description": "Scalable realtime pub/sub and RPC serverless framework",
     "browser": "dist/socket-client.js",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
     "exports": {
         "./client": {
             "types": "./dist/socket-client/index.d.ts",
@@ -30,9 +32,10 @@
         }
     },
     "scripts": {
-        "buildall": "npm run clean && npm run ts-types && npm run build:socket-client && npm run build:socket-server",
+        "buildall": "npm run clean && npm run ts-types && npm run build:socket-client && npm run build:socket-server && npm run build:main",
         "build:socket-client": "node build-scripts/client.esbuild.js",
         "build:socket-server": "node build-scripts/server.esbuild.js",
+        "build:main": "node build-scripts/main.esbuild.js",
         "clean": "rimraf dist",
         "ts-types": "tsc -p tsconfig.json",
         "test": "echo \"Error: no test specified\" && exit 1"

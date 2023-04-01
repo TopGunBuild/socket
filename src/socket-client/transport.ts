@@ -2,7 +2,7 @@ import { CodecEngine } from '../socket-server/types';
 import {
     TGAuthEngine,
     CallIdGenerator,
-    ClientOptions, EventObject, EventObjectCallback, InvokeOptions,
+    ClientOptions, InvokeOptions,
     OnCloseValue,
     OnErrorValue,
     OnEventValue,
@@ -18,6 +18,7 @@ import { BadConnectionError, hydrateError, socketProtocolErrorStatuses, TimeoutE
 import { TGRequest } from '../request/request';
 import { getGlobal } from '../utils/global';
 import ws from 'ws';
+import { EventObject, EventObjectCallback } from '../types';
 
 const global    = getGlobal();
 let WebSocket;

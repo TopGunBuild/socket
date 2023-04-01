@@ -1,5 +1,5 @@
-import { ChannelState } from '../channel/channel-state';
 import { CodecEngine } from '../socket-server/types';
+import { AuthToken } from '../types';
 
 export interface TGAuthEngine
 {
@@ -12,11 +12,6 @@ export interface TGAuthEngine
     removeToken(name: string): Promise<AuthToken|SignedAuthToken|null>;
 
     loadToken(name: string): Promise<AuthToken|SignedAuthToken|null>;
-}
-
-export interface AuthToken
-{
-    [key: string]: any;
 }
 
 export type SignedAuthToken = string;
@@ -75,17 +70,6 @@ export interface OnInboundTransmitValue
     data: any;
 }
 
-export interface EventObject
-{
-    event: string;
-    data: any;
-    callback?: EventObjectCallback|undefined;
-    cid?: number|undefined;
-    timeout?: any;
-
-    [key: string]: any;
-}
-
 export interface TransmitOptions
 {
     force?: boolean|undefined;
@@ -99,10 +83,6 @@ export interface InvokeOptions
     noTimeout?: boolean|undefined;
     ackTimeout?: number|undefined;
 }
-
-export type EventObjectCallback = (error: Error, eventObject: EventObject) => void;
-
-export type AnyFunction = (...args: any[]) => any;
 
 export interface ClientOptions
 {
@@ -229,59 +209,11 @@ export interface AuthStatus
     authError: Error;
 }
 
-export interface AuthStateChangeData
-{
-    oldAuthState: AuthStates;
-    newAuthState: AuthStates;
-    signedAuthToken?: SignedAuthToken|undefined;
-    authToken?: AuthToken|undefined;
-}
-
-export interface AuthenticateData
-{
-    signedAuthToken: SignedAuthToken;
-    authToken: AuthToken;
-}
-
-export interface DeauthenticateData
-{
-    oldSignedAuthToken: SignedAuthToken|null;
-    oldAuthToken: AuthToken|null;
-}
-
-export interface CloseData
-{
-    code: number;
-    reason: string;
-}
-
-export interface ConnectData extends OnOpenValue
-{
-    processPendingSubscriptions: () => void;
-}
-
-export interface SubscribeStateChangeData extends SubscribeData
-{
-    oldChannelState: ChannelState;
-    newChannelState: ChannelState;
-}
-
-export interface SubscribeData
-{
-    channel: string;
-    subscriptionOptions: SubscribeOptions;
-}
-
 export interface SubscribeFailData
 {
     error: Error;
     channel: string;
     subscriptionOptions: SubscribeOptions;
-}
-
-export interface UnsubscribeData
-{
-    channel: string;
 }
 
 export interface KickOutData

@@ -1,6 +1,7 @@
 import { AuthTokenExpiredError, InvalidActionError } from '../errors/errors';
-import { IncomingMessage, AuthToken } from './types';
+import { IncomingMessage } from './types';
 import { TGServerSocket } from './server-socket';
+import { AuthToken } from '../types';
 
 const HANDSHAKE_WS = 'handshakeWS';
 const HANDSHAKE_SC = 'handshakeSC';

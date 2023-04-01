@@ -1,5 +1,6 @@
-import { TGAuthEngine, AuthToken, SignedAuthToken } from './types';
+import { TGAuthEngine, SignedAuthToken } from './types';
 import { getGlobal } from '../utils/global';
+import { AuthToken } from '../types';
 
 const global = getGlobal();
 

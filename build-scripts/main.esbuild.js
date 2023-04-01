@@ -4,20 +4,18 @@
     const metafile = false;
 
     let result = await esbuild.build({
-        globalName: 'topGunSocketClient',
-        entryPoints: ['src/socket-client/index.ts'],
-        outfile: 'dist/socket-client.js',
+        entryPoints: ['src/index.ts'],
+        outfile: 'dist/index.js',
         bundle: true,
         sourcemap: true,
         minify: true,
-        format: 'iife',
         target: ['esnext'],
         metafile
     });
 
     if (metafile) {
         let text = await esbuild.analyzeMetafile(result.metafile);
-        fs.writeFileSync('dist/client.meta.json', JSON.stringify(result.metafile));
+        fs.writeFileSync('dist/main.meta.json', JSON.stringify(result.metafile));
         console.log(text);
     }
 })();
