@@ -1,6 +1,6 @@
 {
     "name": "topgun-socket",
-    "version": "0.0.4",
+    "version": "0.0.5",
     "description": "Scalable realtime pub/sub and RPC serverless framework",
     "browser": "dist/socket-client.js",
     "main": "./dist/index.js",
