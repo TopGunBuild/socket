@@ -392,10 +392,10 @@ export class TGServer extends AsyncStreamEmitter<any>
         return generateId();
     }
 
-    setMiddleware(type: typeof MIDDLEWARE_HANDSHAKE, middleware: handshakeMiddlewareFunction): void;
-    setMiddleware(type: typeof MIDDLEWARE_INBOUND_RAW, middleware: inboundRawMiddlewareFunction): void;
-    setMiddleware(type: typeof MIDDLEWARE_INBOUND, middleware: inboundMiddlewareFunction): void;
-    setMiddleware(type: typeof MIDDLEWARE_OUTBOUND, middleware: outboundMiddlewareFunction): void
+    setMiddleware(type: typeof TGServer.MIDDLEWARE_HANDSHAKE, middleware: handshakeMiddlewareFunction): void;
+    setMiddleware(type: typeof TGServer.MIDDLEWARE_INBOUND_RAW, middleware: inboundRawMiddlewareFunction): void;
+    setMiddleware(type: typeof TGServer.MIDDLEWARE_INBOUND, middleware: inboundMiddlewareFunction): void;
+    setMiddleware(type: typeof TGServer.MIDDLEWARE_OUTBOUND, middleware: outboundMiddlewareFunction): void
     setMiddleware(type: Middlewares, middleware: any)
     {
         if (
