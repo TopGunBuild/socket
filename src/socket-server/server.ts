@@ -1,6 +1,6 @@
 import { AsyncStreamEmitter } from '../async-stream-emitter';
 import {
-    TGServerOptions,
+    TGServerSocketGatewayOptions,
     AuthEngineType,
     CodecEngine,
     MIDDLEWARE_HANDSHAKE,
@@ -50,7 +50,7 @@ export class TGServerSocketGateway extends AsyncStreamEmitter<any>
     static MIDDLEWARE_OUTBOUND: Middlewares    = MIDDLEWARE_OUTBOUND;
     static SYMBOL_MIDDLEWARE_HANDSHAKE_STREAM  = Symbol('handshakeStream');
 
-    options: TGServerOptions;
+    options: TGServerSocketGatewayOptions;
     origins: string;
     ackTimeout: number;
     handshakeTimeout: number;
@@ -95,7 +95,7 @@ export class TGServerSocketGateway extends AsyncStreamEmitter<any>
     /**
      * Constructor
      */
-    constructor(options?: TGServerOptions)
+    constructor(options?: TGServerSocketGatewayOptions)
     {
         super();
 

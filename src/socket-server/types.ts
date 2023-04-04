@@ -173,7 +173,7 @@ export interface ClosureData extends CloseData
     socket: TGServerSocket;
 }
 
-export interface TGServerOptions
+export interface TGServerSocketGatewayOptions
 {
     // NodeJS ot serverless
     isNode?: boolean;

@@ -1,5 +1,5 @@
 import { TGServerSocketGateway } from './server';
-import { TGServerOptions } from './types';
+import { TGServerSocketGatewayOptions } from './types';
 import { isObject } from '../utils/is-object';
 
 export * from './action';
@@ -10,7 +10,7 @@ export * from './types';
 /**
  * Captures upgrade requests for a http.Server.
  */
-export function attach(server, options?: TGServerOptions)
+export function attach(server, options?: TGServerSocketGatewayOptions)
 {
     if (!isObject(options))
     {
