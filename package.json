@@ -1,6 +1,6 @@
 {
     "name": "topgun-socket",
-    "version": "0.0.5",
+    "version": "0.0.6",
     "description": "Scalable realtime pub/sub and RPC serverless framework",
     "browser": "dist/socket-client.js",
     "main": "./dist/index.js",
@@ -8,12 +8,14 @@
     "exports": {
         "./client": {
             "types": "./dist/socket-client/index.d.ts",
-            "import": "./dist/socket-client.js",
-            "require": "./dist/socket-client.js",
+            "module": "./dist/socket-client.module.js",
+            "import": "./dist/socket-client.module.js",
+            "require": "./dist/socket-client.module.js",
             "default": "./dist/socket-client.js"
         },
         "./server": {
             "types": "./dist/socket-server/index.d.ts",
+            "module": "./dist/socket-server.js",
             "node": "./dist/socket-server.js",
             "import": "./dist/socket-server.js",
             "require": "./dist/socket-server.js",
