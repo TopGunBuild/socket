@@ -1,5 +1,5 @@
 import { AsyncStreamEmitter } from '../async-stream-emitter';
-import { TGServer } from './server';
+import { TGServerSocketGateway } from './server';
 import { SimpleExchange } from '../simple-broker/simple-exchange';
 import {
     AuthenticateData,
@@ -43,7 +43,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
     static errorStatuses: SocketProtocolErrorStatuses   = socketProtocolErrorStatuses;
 
     id: string;
-    server: TGServer;
+    server: TGServerSocketGateway;
     socket: any;
     protocolVersion: number;
 
@@ -99,7 +99,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
     /**
      * Constructor
      */
-    constructor(id: string, server: TGServer, socket: WebSocket, protocolVersion: number)
+    constructor(id: string, server: TGServerSocketGateway, socket: WebSocket, protocolVersion: number)
     {
         super();
         this.id              = id;
@@ -125,16 +125,16 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
         this.inboundMessageStream = new WritableConsumableStream();
         this.outboundPacketStream = new WritableConsumableStream();
 
-        this.middlewareHandshakeStream = this.request[TGServer.SYMBOL_MIDDLEWARE_HANDSHAKE_STREAM];
+        this.middlewareHandshakeStream = this.request[TGServerSocketGateway.SYMBOL_MIDDLEWARE_HANDSHAKE_STREAM];
 
         this.middlewareInboundRawStream      = new WritableConsumableStream();
-        this.middlewareInboundRawStream.type = TGServer.MIDDLEWARE_INBOUND_RAW;
+        this.middlewareInboundRawStream.type = TGServerSocketGateway.MIDDLEWARE_INBOUND_RAW;
 
         this.middlewareInboundStream      = new WritableConsumableStream();
-        this.middlewareInboundStream.type = TGServer.MIDDLEWARE_INBOUND;
+        this.middlewareInboundStream.type = TGServerSocketGateway.MIDDLEWARE_INBOUND;
 
         this.middlewareOutboundStream      = new WritableConsumableStream();
-        this.middlewareOutboundStream.type = TGServer.MIDDLEWARE_OUTBOUND;
+        this.middlewareOutboundStream.type = TGServerSocketGateway.MIDDLEWARE_OUTBOUND;
 
         if (this.request['connection'])
         {
@@ -235,7 +235,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
                 this._resetPongTimeout();
             }
 
-            if (this.server.hasMiddleware(TGServer.MIDDLEWARE_INBOUND_RAW))
+            if (this.server.hasMiddleware(TGServerSocketGateway.MIDDLEWARE_INBOUND_RAW))
             {
                 let action    = new TGAction();
                 action.socket = this;

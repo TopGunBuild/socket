@@ -42,7 +42,7 @@ import { TGAction } from './action';
 import { WritableConsumableStream } from '../writable-consumable-stream';
 import { ConsumableStream } from '../consumable-stream';
 
-export class TGServer extends AsyncStreamEmitter<any>
+export class TGServerSocketGateway extends AsyncStreamEmitter<any>
 {
     static MIDDLEWARE_HANDSHAKE: Middlewares   = MIDDLEWARE_HANDSHAKE;
     static MIDDLEWARE_INBOUND_RAW: Middlewares = MIDDLEWARE_INBOUND_RAW;
@@ -392,17 +392,17 @@ export class TGServer extends AsyncStreamEmitter<any>
         return generateId();
     }
 
-    setMiddleware(type: typeof TGServer.MIDDLEWARE_HANDSHAKE, middleware: handshakeMiddlewareFunction): void;
-    setMiddleware(type: typeof TGServer.MIDDLEWARE_INBOUND_RAW, middleware: inboundRawMiddlewareFunction): void;
-    setMiddleware(type: typeof TGServer.MIDDLEWARE_INBOUND, middleware: inboundMiddlewareFunction): void;
-    setMiddleware(type: typeof TGServer.MIDDLEWARE_OUTBOUND, middleware: outboundMiddlewareFunction): void
+    setMiddleware(type: typeof TGServerSocketGateway.MIDDLEWARE_HANDSHAKE, middleware: handshakeMiddlewareFunction): void;
+    setMiddleware(type: typeof TGServerSocketGateway.MIDDLEWARE_INBOUND_RAW, middleware: inboundRawMiddlewareFunction): void;
+    setMiddleware(type: typeof TGServerSocketGateway.MIDDLEWARE_INBOUND, middleware: inboundMiddlewareFunction): void;
+    setMiddleware(type: typeof TGServerSocketGateway.MIDDLEWARE_OUTBOUND, middleware: outboundMiddlewareFunction): void
     setMiddleware(type: Middlewares, middleware: any)
     {
         if (
-            type !== TGServer.MIDDLEWARE_HANDSHAKE &&
-            type !== TGServer.MIDDLEWARE_INBOUND_RAW &&
-            type !== TGServer.MIDDLEWARE_INBOUND &&
-            type !== TGServer.MIDDLEWARE_OUTBOUND
+            type !== TGServerSocketGateway.MIDDLEWARE_HANDSHAKE &&
+            type !== TGServerSocketGateway.MIDDLEWARE_INBOUND_RAW &&
+            type !== TGServerSocketGateway.MIDDLEWARE_INBOUND &&
+            type !== TGServerSocketGateway.MIDDLEWARE_OUTBOUND
         )
         {
             throw new InvalidArgumentsError(
@@ -456,11 +456,11 @@ export class TGServer extends AsyncStreamEmitter<any>
         }
 
         let middlewareHandshakeStream  = new WritableConsumableStream();
-        middlewareHandshakeStream.type = TGServer.MIDDLEWARE_HANDSHAKE;
+        middlewareHandshakeStream.type = TGServerSocketGateway.MIDDLEWARE_HANDSHAKE;
 
-        req[TGServer.SYMBOL_MIDDLEWARE_HANDSHAKE_STREAM] = middlewareHandshakeStream;
+        req[TGServerSocketGateway.SYMBOL_MIDDLEWARE_HANDSHAKE_STREAM] = middlewareHandshakeStream;
 
-        let handshakeMiddleware = this._middleware[TGServer.MIDDLEWARE_HANDSHAKE];
+        let handshakeMiddleware = this._middleware[TGServerSocketGateway.MIDDLEWARE_HANDSHAKE];
         if (handshakeMiddleware)
         {
             handshakeMiddleware(middlewareHandshakeStream);
@@ -597,19 +597,19 @@ export class TGServer extends AsyncStreamEmitter<any>
         const agSocket    = new TGServerSocket(socketId, this, wsSocket, this.protocolVersion);
         agSocket.exchange = this.exchange;
 
-        let inboundRawMiddleware = this._middleware[TGServer.MIDDLEWARE_INBOUND_RAW];
+        let inboundRawMiddleware = this._middleware[TGServerSocketGateway.MIDDLEWARE_INBOUND_RAW];
         if (inboundRawMiddleware)
         {
             inboundRawMiddleware(agSocket.middlewareInboundRawStream);
         }
 
-        let inboundMiddleware = this._middleware[TGServer.MIDDLEWARE_INBOUND];
+        let inboundMiddleware = this._middleware[TGServerSocketGateway.MIDDLEWARE_INBOUND];
         if (inboundMiddleware)
         {
             inboundMiddleware(agSocket.middlewareInboundStream);
         }
 
-        let outboundMiddleware = this._middleware[TGServer.MIDDLEWARE_OUTBOUND];
+        let outboundMiddleware = this._middleware[TGServerSocketGateway.MIDDLEWARE_OUTBOUND];
         if (outboundMiddleware)
         {
             outboundMiddleware(agSocket.middlewareOutboundStream);

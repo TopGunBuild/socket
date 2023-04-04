@@ -1,4 +1,4 @@
-import { TGServer } from './server';
+import { TGServerSocketGateway } from './server';
 import { TGServerOptions } from './types';
 import { isObject } from '../utils/is-object';
 
@@ -17,5 +17,5 @@ export function attach(server, options?: TGServerOptions)
         options = {};
     }
     options.httpServer = server;
-    return new TGServer(options);
+    return new TGServerSocketGateway(options);
 }
