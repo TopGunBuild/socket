@@ -1,11 +1,11 @@
-TopGunSocket
-======
+# TopGunSocket
 
 Client/Server modules for TopGunSocket.
 
 ## Client Setting up
 
 To install this module:
+
 ```bash
 npm install topgun-socket
 ```
@@ -14,9 +14,11 @@ npm install topgun-socket
 
 The socket-client script is called `socket-client.js` (located in the dist directory).
 Embed it in your HTML page like this:
+
 ```html
 <script type="text/javascript" src="https://unpkg.com/topgun-socket@0.0.2/dist/socket-client.js"></script>
 ```
+
 \* Note that the src attribute may be different depending on how you setup your HTTP server.
 
 Once you have embedded the client `socket-client.js` into your page, you will gain access to a global `topGunSocketClient` object.
@@ -26,8 +28,8 @@ You may also use CommonJS `require` or ES6 module imports.
 
 ```js
 let socket = topGunSocketClient.create({
-  hostname: 'localhost',
-  port: 8000
+  hostname: "localhost",
+  port: 8000,
 });
 ```
 
@@ -39,21 +41,19 @@ let socket = topGunSocketClient.create({
 // From the server socket, it can be handled using either:
 // - for await (let data of socket.receiver('foo')) {}
 // - let data = await socket.receiver('foo').once()
-socket.transmit('foo', 123);
+socket.transmit("foo", 123);
 ```
 
 ### Invoke an RPC
 
 ```js
 (async () => {
-
   // Invoke an RPC on the server.
   // It expects a response from the server.
   // From the server socket, it can be handled using either:
   // - for await (let req of socket.procedure('myProc')) {}
   // - let req = await socket.procedure('myProc').once()
-  let result = await socket.invoke('myProc', 123);
-
+  let result = await socket.invoke("myProc", 123);
 })();
 ```
 
@@ -61,13 +61,11 @@ socket.transmit('foo', 123);
 
 ```js
 (async () => {
-
   // Subscribe to a channel.
-  let myChannel = socket.subscribe('myChannel');
+  let myChannel = socket.subscribe("myChannel");
 
-  await myChannel.listener('subscribe').once();
+  await myChannel.listener("subscribe").once();
   // myChannel.state is now 'subscribed'.
-
 })();
 ```
 
@@ -75,14 +73,12 @@ socket.transmit('foo', 123);
 
 ```js
 (async () => {
-
-  let myChannel = socket.channel('myChannel');
+  let myChannel = socket.channel("myChannel");
 
   // Can subscribe to the channel later as a separate step.
   myChannel.subscribe();
-  await myChannel.listener('subscribe').once();
+  await myChannel.listener("subscribe").once();
   // myChannel.state is now 'subscribed'.
-
 })();
 ```
 
@@ -90,16 +86,16 @@ socket.transmit('foo', 123);
 
 ```js
 // Publish data to the channel.
-myChannel.transmitPublish('This is a message');
+myChannel.transmitPublish("This is a message");
 
 // Publish data to the channel from the socket.
-socket.transmitPublish('myChannel', 'This is a message');
+socket.transmitPublish("myChannel", "This is a message");
 
 (async () => {
   // Publish data to the channel and await for the message
   // to reach the server.
   try {
-    await myChannel.invokePublish('This is a message');
+    await myChannel.invokePublish("This is a message");
   } catch (error) {
     // Handle error.
   }
@@ -107,7 +103,7 @@ socket.transmitPublish('myChannel', 'This is a message');
   // Publish data to the channel from the socket and await for
   // the message to reach the server.
   try {
-    await socket.invokePublish('myChannel', 'This is a message');
+    await socket.invokePublish("myChannel", "This is a message");
   } catch (error) {
     // Handle error.
   }
@@ -118,11 +114,9 @@ socket.transmitPublish('myChannel', 'This is a message');
 
 ```js
 (async () => {
-
   for await (let data of myChannel) {
     // ...
   }
-
 })();
 ```
 
@@ -130,10 +124,10 @@ socket.transmitPublish('myChannel', 'This is a message');
 
 ```js
 let options = {
-  hostname: 'securedomain.com',
+  hostname: "securedomain.com",
   secure: true,
   port: 443,
-  rejectUnauthorized: false // Only necessary during debug if using a self-signed certificate
+  rejectUnauthorized: false, // Only necessary during debug if using a self-signed certificate
 };
 // Initiate the connection to the server
 let socket = topGunSocketClient.create(options);
@@ -143,28 +137,28 @@ let socket = topGunSocketClient.create(options);
 
 ```js
 let options = {
-  path: '/topgunsocket/',
+  path: "/topgunsocket/",
   port: 8000,
-  hostname: '127.0.0.1',
+  hostname: "127.0.0.1",
   autoConnect: true,
   secure: false,
   rejectUnauthorized: false,
-  connectTimeout: 10000, //milliseconds
-  ackTimeout: 10000, //milliseconds
+  connectTimeout: 10000, // milliseconds
+  ackTimeout: 10000, // milliseconds
   channelPrefix: null,
   disconnectOnUnload: true,
   autoReconnectOptions: {
-    initialDelay: 10000, //milliseconds
-    randomness: 10000, //milliseconds
-    multiplier: 1.5, //decimal
-    maxDelay: 60000 //milliseconds
+    initialDelay: 10000, // milliseconds
+    randomness: 10000, // milliseconds
+    multiplier: 1.5, // decimal
+    maxDelay: 60000, // milliseconds
   },
   authEngine: null,
   codecEngine: null,
   subscriptionRetryOptions: {},
   query: {
-    yourparam: 'hello'
-  }
+    yourparam: "hello",
+  },
 };
 ```
 
@@ -175,48 +169,47 @@ For compatibility with an existing TopGunSocket server, set the `protocolVersion
 ```js
 let socket = topGunSocketClient.create({
   protocolVersion: 1,
-  path: '/topgunsocket/'
+  path: "/topgunsocket/",
 });
 ```
 
 ## How to use server module
 
 You need to attach it to an existing Node.js http or https server (example) and pass wsEngine:
+
 ```js
-const http = require('http');
-const topGunSocketServer = require('topgun-socket/server');
-const ws = require('ws');
+const http = require("http");
+const topGunSocketServer = require("topgun-socket/server");
+const ws = require("ws");
 
 let httpServer = http.createServer();
 let tgServer = topGunSocketServer.attach(httpServer, {
-    path: '/topgunsocket/',
-    wsEngine: ws.Server
+  path: "/topgunsocket/",
+  wsEngine: ws.Server,
 });
 
 (async () => {
   // Handle new inbound sockets.
-  for await (let {socket} of tgServer.listener('connection')) {
-
+  for await (let { socket } of tgServer.listener("connection")) {
     (async () => {
       // Set up a loop to handle and respond to RPCs for a procedure.
-      for await (let req of socket.procedure('customProc')) {
+      for await (let req of socket.procedure("customProc")) {
         if (req.data.bad) {
-          let error = new Error('Server failed to execute the procedure');
-          error.name = 'BadCustomError';
+          let error = new Error("Server failed to execute the procedure");
+          error.name = "BadCustomError";
           req.error(error);
         } else {
-          req.end('Success');
+          req.end("Success");
         }
       }
     })();
 
     (async () => {
       // Set up a loop to handle remote transmitted events.
-      for await (let data of socket.receiver('customRemoteEvent')) {
+      for await (let data of socket.receiver("customRemoteEvent")) {
         // ...
       }
     })();
-
   }
 })();
 
@@ -234,17 +227,17 @@ let demux = new StreamDemux();
 
 (async () => {
   // Consume data from 'abc' stream.
-  let substream = demux.stream('abc');
+  let substream = demux.stream("abc");
   for await (let packet of substream) {
-    console.log('ABC:', packet);
+    console.log("ABC:", packet);
   }
 })();
 
 (async () => {
   // Consume data from 'def' stream.
-  let substream = demux.stream('def');
+  let substream = demux.stream("def");
   for await (let packet of substream) {
-    console.log('DEF:', packet);
+    console.log("DEF:", packet);
   }
 })();
 
@@ -256,22 +249,22 @@ let demux = new StreamDemux();
   // Note that you can optionally pass a number n to the
   // createConsumer(n) method to force the iteration to
   // timeout after n milliseconds of inactivity.
-  let consumer = demux.stream('def').createConsumer();
+  let consumer = demux.stream("def").createConsumer();
   while (true) {
     let packet = await consumer.next();
     if (packet.done) break;
-    console.log('DEF (while loop):', packet.value);
+    console.log("DEF (while loop):", packet.value);
   }
 })();
 
 (async () => {
   for (let i = 0; i < 10; i++) {
     await wait(10);
-    demux.write('abc', 'message-abc-' + i);
-    demux.write('def', 'message-def-' + i);
+    demux.write("abc", "message-abc-" + i);
+    demux.write("def", "message-def-" + i);
   }
-  demux.close('abc');
-  demux.close('def');
+  demux.close("abc");
+  demux.close("def");
 })();
 
 // Utility function for using setTimeout() with async/await.
@@ -290,20 +283,20 @@ function wait(duration) {
 // Log the next received packet from the abc stream.
 (async () => {
   // The returned promise never times out.
-  let packet = await demux.stream('abc').once();
-  console.log('Packet:', packet);
+  let packet = await demux.stream("abc").once();
+  console.log("Packet:", packet);
 })();
 
 // Same as above, except with a timeout of 10 seconds.
 (async () => {
   try {
-    let packet = await demux.stream('abc').once(10000);
-    console.log('Packet:', packet);
+    let packet = await demux.stream("abc").once(10000);
+    console.log("Packet:", packet);
   } catch (err) {
     // If no packets are written to the 'abc' stream before
     // the timeout, an error will be thrown and handled here.
     // The err.name property will be 'TimeoutError'.
-    console.log('Error:', err);
+    console.log("Error:", err);
   }
 })();
 ```
@@ -315,7 +308,7 @@ For compatibility with existing TopGunSocket clients, set the `protocolVersion` 
 ```js
 let tgServer = topGunSocketClient.attach(httpServer, {
   protocolVersion: 1,
-  path: '/topgunsocket/'
+  path: "/topgunsocket/",
 });
 ```
 
@@ -335,7 +328,7 @@ let tgServer = topGunSocketClient.attach(httpServer, {
 
 ## Reference
 
-The code in this repository is based on ```socketcluster-server``` (https://github.com/SocketCluster/socketcluster-server) and ```socketcluster-client``` (https://github.com/SocketCluster/socketcluster-client). The code is written in typescript and is ready to run in a serverless environment.
+The code in this repository is based on `socketcluster-server` (https://github.com/SocketCluster/socketcluster-server) and `socketcluster-client` (https://github.com/SocketCluster/socketcluster-client). The code is written in typescript and is ready to run in a serverless environment.
 
 ## License
 

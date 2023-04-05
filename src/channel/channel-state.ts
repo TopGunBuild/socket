@@ -1,1 +1,1 @@
-export type ChannelState = 'pending' | 'subscribed' | 'unsubscribed';
+export type ChannelState = "pending" | "subscribed" | "unsubscribed";

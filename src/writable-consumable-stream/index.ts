@@ -1,174 +1,145 @@
-import { Consumer } from './consumer';
-import { ConsumableStream } from '../consumable-stream';
-import { ConsumerStats } from './consumer-stats';
-import { Middlewares } from '../socket-server/types';
+import { ConsumableStream } from "../consumable-stream";
+import { Middlewares } from "../socket-server/types";
+import { Consumer } from "./consumer";
+import { ConsumerStats } from "./consumer-stats";
 
-export class WritableConsumableStream<T> extends ConsumableStream<T>
-{
-    type: Middlewares;
-    private nextConsumerId: number;
-    private _consumers: Map<any, any>;
-    private _tailNode: {next: null; data: {value: undefined; done: boolean}};
+export class WritableConsumableStream<T> extends ConsumableStream<T> {
+  type: Middlewares;
+  private nextConsumerId: number;
+  private _consumers: Map<any, any>;
+  private _tailNode: { next: null; data: { value: undefined; done: boolean } };
 
-    /**
-     * Constructor
-     */
-    constructor()
-    {
-        super();
-        this.nextConsumerId = 1;
-        this._consumers     = new Map();
+  /**
+   * Constructor
+   */
+  constructor() {
+    super();
+    this.nextConsumerId = 1;
+    this._consumers = new Map();
 
-        // Tail node of a singly linked list.
-        this._tailNode = {
-            next: null,
-            data: {
-                value: undefined,
-                done : false
-            }
-        };
+    // Tail node of a singly linked list.
+    this._tailNode = {
+      next: null,
+      data: {
+        value: undefined,
+        done: false,
+      },
+    };
+  }
+
+  // -----------------------------------------------------------------------------------------------------
+  // @ Public methods
+  // -----------------------------------------------------------------------------------------------------
+
+  write(value: T): void {
+    this._write(value, false);
+  }
+
+  close(value?: T): void {
+    this._write(value, true);
+  }
+
+  writeToConsumer(consumerId: number, value: T): void {
+    this._write(value, false, consumerId);
+  }
+
+  closeConsumer(consumerId: number, value?: T): void {
+    this._write(value, true, consumerId);
+  }
+
+  kill(value?: T): void {
+    for (let consumerId of this._consumers.keys()) {
+      this.killConsumer(consumerId, value);
     }
+  }
 
-    // -----------------------------------------------------------------------------------------------------
-    // @ Public methods
-    // -----------------------------------------------------------------------------------------------------
-
-    write(value: T): void
-    {
-        this._write(value, false);
+  killConsumer(consumerId: number, value?: T): void {
+    let consumer = this._consumers.get(consumerId);
+    if (!consumer) {
+      return;
     }
+    consumer.kill(value);
+  }
 
-    close(value?: T): void
-    {
-        this._write(value, true);
+  getBackpressure(): number {
+    let maxBackpressure = 0;
+    for (let consumer of this._consumers.values()) {
+      let backpressure = consumer.getBackpressure();
+      if (backpressure > maxBackpressure) {
+        maxBackpressure = backpressure;
+      }
     }
+    return maxBackpressure;
+  }
 
-    writeToConsumer(consumerId: number, value: T): void
-    {
-        this._write(value, false, consumerId);
+  getConsumerBackpressure(consumerId: number): number {
+    let consumer = this._consumers.get(consumerId);
+    if (consumer) {
+      return consumer.getBackpressure();
     }
+    return 0;
+  }
 
-    closeConsumer(consumerId: number, value?: T): void
-    {
-        this._write(value, true, consumerId);
+  hasConsumer(consumerId: number): boolean {
+    return this._consumers.has(consumerId);
+  }
+
+  setConsumer(consumerId: number, consumer: Consumer<T>): void {
+    this._consumers.set(consumerId, consumer);
+    if (!consumer.currentNode) {
+      consumer.currentNode = this._tailNode;
     }
+  }
 
-    kill(value?: T): void
-    {
-        for (let consumerId of this._consumers.keys())
-        {
-            this.killConsumer(consumerId, value);
-        }
+  removeConsumer(consumerId: number): boolean {
+    return this._consumers.delete(consumerId);
+  }
+
+  getConsumerStats(consumerId: number): ConsumerStats {
+    let consumer = this._consumers.get(consumerId);
+    if (consumer) {
+      return consumer.getStats();
     }
+    return undefined;
+  }
 
-    killConsumer(consumerId: number, value?: T): void
-    {
-        let consumer = this._consumers.get(consumerId);
-        if (!consumer)
-        {
-            return;
-        }
-        consumer.kill(value);
+  getConsumerStatsList(): ConsumerStats[] {
+    let consumerStats = [];
+    for (let consumer of this._consumers.values()) {
+      consumerStats.push(consumer.getStats());
     }
+    return consumerStats;
+  }
 
-    getBackpressure(): number
-    {
-        let maxBackpressure = 0;
-        for (let consumer of this._consumers.values())
-        {
-            let backpressure = consumer.getBackpressure();
-            if (backpressure > maxBackpressure)
-            {
-                maxBackpressure = backpressure;
-            }
-        }
-        return maxBackpressure;
+  createConsumer(timeout?: number): Consumer<T> {
+    return new Consumer(this, this.nextConsumerId++, this._tailNode, timeout);
+  }
+
+  getConsumerList() {
+    return [...this._consumers.values()];
+  }
+
+  getConsumerCount() {
+    return this._consumers.size;
+  }
+
+  // -----------------------------------------------------------------------------------------------------
+  // @ Private methods
+  // -----------------------------------------------------------------------------------------------------
+
+  private _write(value: T, done: boolean, consumerId?: number) {
+    let dataNode: any = {
+      data: { value, done },
+      next: null,
+    };
+    if (consumerId) {
+      dataNode.consumerId = consumerId;
     }
+    this._tailNode.next = dataNode;
+    this._tailNode = dataNode;
 
-    getConsumerBackpressure(consumerId: number): number
-    {
-        let consumer = this._consumers.get(consumerId);
-        if (consumer)
-        {
-            return consumer.getBackpressure();
-        }
-        return 0;
+    for (let consumer of this._consumers.values()) {
+      consumer.write(dataNode.data);
     }
-
-    hasConsumer(consumerId: number): boolean
-    {
-        return this._consumers.has(consumerId);
-    }
-
-    setConsumer(consumerId: number, consumer: Consumer<T>): void
-    {
-        this._consumers.set(consumerId, consumer);
-        if (!consumer.currentNode)
-        {
-            consumer.currentNode = this._tailNode;
-        }
-    }
-
-    removeConsumer(consumerId: number): boolean
-    {
-        return this._consumers.delete(consumerId);
-    }
-
-    getConsumerStats(consumerId: number): ConsumerStats
-    {
-        let consumer = this._consumers.get(consumerId);
-        if (consumer)
-        {
-            return consumer.getStats();
-        }
-        return undefined;
-    }
-
-    getConsumerStatsList(): ConsumerStats[]
-    {
-        let consumerStats = [];
-        for (let consumer of this._consumers.values())
-        {
-            consumerStats.push(consumer.getStats());
-        }
-        return consumerStats;
-    }
-
-    createConsumer(timeout?: number): Consumer<T>
-    {
-        return new Consumer(this, this.nextConsumerId++, this._tailNode, timeout);
-    }
-
-    getConsumerList()
-    {
-        return [...this._consumers.values()];
-    }
-
-    getConsumerCount()
-    {
-        return this._consumers.size;
-    }
-
-    // -----------------------------------------------------------------------------------------------------
-    // @ Private methods
-    // -----------------------------------------------------------------------------------------------------
-
-    private _write(value: T, done: boolean, consumerId?: number)
-    {
-        let dataNode: any = {
-            data: { value, done },
-            next: null
-        };
-        if (consumerId)
-        {
-            dataNode.consumerId = consumerId;
-        }
-        this._tailNode.next = dataNode;
-        this._tailNode      = dataNode;
-
-        for (let consumer of this._consumers.values())
-        {
-            consumer.write(dataNode.data);
-        }
-    }
+  }
 }

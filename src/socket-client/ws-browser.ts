@@ -1,7 +1,7 @@
-import { getGlobal } from '../utils/global';
+import { getGlobal } from "../utils/global";
 
-const global    = getGlobal();
-const WebSocket = global.WebSocket || global.MozWebSocket;
+const global = getGlobal();
+const WebSocket = global?.WebSocket || global?.MozWebSocket;
 
 /**
  * WebSocket constructor.
@@ -16,23 +16,18 @@ const WebSocket = global.WebSocket || global.MozWebSocket;
  * @api public
  */
 
-function ws(uri: string, protocols?: string[], opts?: any)
-{
-    let instance;
-    if (protocols)
-    {
-        instance = new WebSocket(uri, protocols);
-    }
-    else
-    {
-        instance = new WebSocket(uri);
-    }
-    return instance;
+function ws(uri: string, protocols?: string[], opts?: any) {
+  let instance;
+  if (protocols) {
+    instance = new WebSocket(uri, protocols);
+  } else {
+    instance = new WebSocket(uri);
+  }
+  return instance;
 }
 
-if (WebSocket)
-{
-    ws.prototype = WebSocket.prototype;
+if (WebSocket) {
+  ws.prototype = WebSocket.prototype;
 }
 
-export { ws }
+export { ws };

@@ -1,51 +1,48 @@
-import crypto from 'isomorphic-webcrypto';
-import { AuthTokenError } from '../errors/errors';
+import crypto from "isomorphic-webcrypto";
+import { AuthTokenError } from "../errors/errors";
 
-if (typeof crypto === 'undefined' || !crypto.subtle)
-{
-    throw new Error('SubtleCrypto not supported!')
+if (typeof crypto === "undefined" || !crypto.subtle) {
+  throw new Error("SubtleCrypto not supported!");
 }
 
 /**
  * @typedef JwtAlgorithm
  * @type {'ES256'|'ES384'|'ES512'|'HS256'|'HS384'|'HS512'|'RS256'|'RS384'|'RS512'}
  */
-export type JwtAlgorithm = 'ES256'|'ES384'|'ES512'|'HS256'|'HS384'|'HS512'|'RS256'|'RS384'|'RS512'
+export type JwtAlgorithm = "ES256" | "ES384" | "ES512" | "HS256" | "HS384" | "HS512" | "RS256" | "RS384" | "RS512";
 
 interface SubtleCryptoHashAlgorithm {
-    name: string;
+  name: string;
 }
 
 export interface SubtleCryptoImportKeyAlgorithm {
-    name: string;
-    hash: string | SubtleCryptoHashAlgorithm;
-    length?: number;
-    namedCurve?: string;
-    compressed?: boolean;
+  name: string;
+  hash: string | SubtleCryptoHashAlgorithm;
+  length?: number;
+  namedCurve?: string;
+  compressed?: boolean;
 }
 
 /**
  * @typedef JwtAlgorithms
  */
-export interface JwtAlgorithms
-{
-    [key: string]: SubtleCryptoImportKeyAlgorithm
+export interface JwtAlgorithms {
+  [key: string]: SubtleCryptoImportKeyAlgorithm;
 }
 
 /**
  * @typedef JwtHeader
  * @prop {string} [typ] Type
  */
-export interface JwtHeader
-{
-    /**
-     * Type (default: `"JWT"`)
-     *
-     * @default "JWT"
-     */
-    typ?: string
+export interface JwtHeader {
+  /**
+   * Type (default: `"JWT"`)
+   *
+   * @default "JWT"
+   */
+  typ?: string;
 
-    [key: string]: any
+  [key: string]: any;
 }
 
 /**
@@ -58,39 +55,37 @@ export interface JwtHeader
  * @prop {string} [iat] Issued At
  * @prop {string} [jti] JWT ID
  */
-export interface JwtPayload
-{
-    /** Issuer */
-    iss?: string
+export interface JwtPayload {
+  /** Issuer */
+  iss?: string;
 
-    /** Subject */
-    sub?: string
+  /** Subject */
+  sub?: string;
 
-    /** Audience */
-    aud?: string
+  /** Audience */
+  aud?: string;
 
-    /** Expiration Time */
-    exp?: number
+  /** Expiration Time */
+  exp?: number;
 
-    /** Not Before */
-    nbf?: number
+  /** Not Before */
+  nbf?: number;
 
-    /** Issued At */
-    iat?: number
+  /** Issued At */
+  iat?: number;
 
-    /** JWT ID */
-    jti?: string
+  /** JWT ID */
+  jti?: string;
 
-    [key: string]: any
+  [key: string]: any;
 }
 
 /**
  * @typedef JwtOptions
  * @prop {JwtAlgorithm | string} algorithm
  */
-export interface JwtOptions
-{
-    algorithm?: JwtAlgorithm|string
+export interface JwtOptions {
+  algorithm?: JwtAlgorithm | string;
 }
 
 /**
@@ -98,9 +93,8 @@ export interface JwtOptions
  * @extends JwtOptions
  * @prop {JwtHeader} [header]
  */
-export interface JwtSignOptions extends JwtOptions
-{
-    header?: JwtHeader
+export interface JwtSignOptions extends JwtOptions {
+  header?: JwtHeader;
 }
 
 /**
@@ -108,14 +102,13 @@ export interface JwtSignOptions extends JwtOptions
  * @extends JwtOptions
  * @prop {boolean} [throwError=false] If `true` throw error if checks fail. (default: `false`)
  */
-export interface JwtVerifyOptions extends JwtOptions
-{
-    /**
-     * If `true` throw error if checks fail. (default: `false`)
-     *
-     * @default false
-     */
-    throwError?: boolean
+export interface JwtVerifyOptions extends JwtOptions {
+  /**
+   * If `true` throw error if checks fail. (default: `false`)
+   *
+   * @default false
+   */
+  throwError?: boolean;
 }
 
 /**
@@ -123,86 +116,80 @@ export interface JwtVerifyOptions extends JwtOptions
  * @prop {JwtHeader} header
  * @prop {JwtPayload} payload
  */
-export interface JwtData
-{
-    header: JwtHeader
-    payload: JwtPayload
+export interface JwtData {
+  header: JwtHeader;
+  payload: JwtPayload;
 }
 
-function base64UrlParse(s: string): Uint8Array
-{
-    // @ts-ignore
-    return new Uint8Array(Array.prototype.map.call(atob(s.replace(/-/g, '+').replace(/_/g, '/')
-        .replace(/\s/g, '')), c => c.charCodeAt(0)))
-    // return new Uint8Array(Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/').replace(/\s/g, ''))).map(c => c.charCodeAt(0)))
+function base64UrlParse(s: string): Uint8Array {
+  // @ts-ignore
+  return new Uint8Array(Array.prototype.map.call(
+    atob(
+      s.replace(/-/g, "+").replace(/_/g, "/")
+        .replace(/\s/g, ""),
+    ),
+    c => c.charCodeAt(0),
+  ));
+  // return new Uint8Array(Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/').replace(/\s/g, ''))).map(c => c.charCodeAt(0)))
 }
 
-function base64UrlStringify(a: Uint8Array): string
-{
-    // @ts-ignore
-    return btoa(String.fromCharCode.apply(0, a)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')
-    // return btoa(String.fromCharCode.apply(0, Array.from(a))).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')
+function base64UrlStringify(a: Uint8Array): string {
+  // @ts-ignore
+  return btoa(String.fromCharCode.apply(0, a)).replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
+  // return btoa(String.fromCharCode.apply(0, Array.from(a))).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')
 }
 
 const algorithms: JwtAlgorithms = {
-    ES256: { name: 'ECDSA', namedCurve: 'P-256', hash: { name: 'SHA-256' } },
-    ES384: { name: 'ECDSA', namedCurve: 'P-384', hash: { name: 'SHA-384' } },
-    ES512: { name: 'ECDSA', namedCurve: 'P-521', hash: { name: 'SHA-512' } },
-    HS256: { name: 'HMAC', hash: { name: 'SHA-256' } },
-    HS384: { name: 'HMAC', hash: { name: 'SHA-384' } },
-    HS512: { name: 'HMAC', hash: { name: 'SHA-512' } },
-    RS256: { name: 'RSASSA-PKCS1-v1_5', hash: { name: 'SHA-256' } },
-    RS384: { name: 'RSASSA-PKCS1-v1_5', hash: { name: 'SHA-384' } },
-    RS512: { name: 'RSASSA-PKCS1-v1_5', hash: { name: 'SHA-512' } }
+  ES256: { name: "ECDSA", namedCurve: "P-256", hash: { name: "SHA-256" } },
+  ES384: { name: "ECDSA", namedCurve: "P-384", hash: { name: "SHA-384" } },
+  ES512: { name: "ECDSA", namedCurve: "P-521", hash: { name: "SHA-512" } },
+  HS256: { name: "HMAC", hash: { name: "SHA-256" } },
+  HS384: { name: "HMAC", hash: { name: "SHA-384" } },
+  HS512: { name: "HMAC", hash: { name: "SHA-512" } },
+  RS256: { name: "RSASSA-PKCS1-v1_5", hash: { name: "SHA-256" } },
+  RS384: { name: "RSASSA-PKCS1-v1_5", hash: { name: "SHA-384" } },
+  RS512: { name: "RSASSA-PKCS1-v1_5", hash: { name: "SHA-512" } },
 };
 
-function _utf8ToUint8Array(str: string): Uint8Array
-{
-    return base64UrlParse(btoa(unescape(encodeURIComponent(str))))
+function _utf8ToUint8Array(str: string): Uint8Array {
+  return base64UrlParse(btoa(unescape(encodeURIComponent(str))));
 }
 
-function _str2ab(str: string): ArrayBuffer
-{
-    str = atob(str)
+function _str2ab(str: string): ArrayBuffer {
+  str = atob(str);
 
-    const buf     = new ArrayBuffer(str.length);
-    const bufView = new Uint8Array(buf);
+  const buf = new ArrayBuffer(str.length);
+  const bufView = new Uint8Array(buf);
 
-    for (let i = 0, strLen = str.length; i < strLen; i++)
-    {
-        bufView[i] = str.charCodeAt(i);
-    }
+  for (let i = 0, strLen = str.length; i < strLen; i++) {
+    bufView[i] = str.charCodeAt(i);
+  }
 
-    return buf;
+  return buf;
 }
 
-function _decodePayload(raw: string): JwtHeader|JwtPayload|null
-{
-    switch (raw.length % 4)
-    {
-        case 0:
-            break;
-        case 2:
-            raw += '==';
-            break;
-        case 3:
-            raw += '=';
-            break;
-        default:
-            throw new Error('Illegal base64url string!')
-    }
+function _decodePayload(raw: string): JwtHeader | JwtPayload | null {
+  switch (raw.length % 4) {
+    case 0:
+      break;
+    case 2:
+      raw += "==";
+      break;
+    case 3:
+      raw += "=";
+      break;
+    default:
+      throw new Error("Illegal base64url string!");
+  }
 
-    try
-    {
-        return JSON.parse(decodeURIComponent(escape(atob(raw))))
-    }
-    catch
-    {
-        return null
-    }
+  try {
+    return JSON.parse(decodeURIComponent(escape(atob(raw))));
+  } catch {
+    return null;
+  }
 }
 
-export type Secret = string|JsonWebKey;
+export type Secret = string | JsonWebKey;
 
 /**
  * Signs a payload and returns the token
@@ -213,74 +200,66 @@ export type Secret = string|JsonWebKey;
  * @throws {Error} If there's a validation issue.
  * @returns {Promise<string>} Returns token as a `string`.
  */
-export async function sign(payload: JwtPayload, secret: Secret, options: JwtSignOptions|JwtAlgorithm = {
-    algorithm: 'HS256',
-    header   : { typ: 'JWT' }
-}): Promise<string>
-{
-    if (typeof options === 'string')
-    {
-        options = { algorithm: options, header: { typ: 'JWT' } }
-    }
+export async function sign(payload: JwtPayload, secret: Secret, options: JwtSignOptions | JwtAlgorithm = {
+  algorithm: "HS256",
+  header: { typ: "JWT" },
+}): Promise<string> {
+  if (typeof options === "string") {
+    options = { algorithm: options, header: { typ: "JWT" } };
+  }
 
-    options = { algorithm: 'HS256', header: { typ: 'JWT' }, ...options };
+  options = { algorithm: "HS256", header: { typ: "JWT" }, ...options };
 
-    if (payload === null || typeof payload !== 'object')
-    {
-        throw new Error('payload must be an object')
-    }
+  if (payload === null || typeof payload !== "object") {
+    throw new Error("payload must be an object");
+  }
 
-    if (typeof secret !== 'string' && typeof secret !== 'object')
-    {
-        throw new Error('secret must be a string or a JWK object')
-    }
+  if (typeof secret !== "string" && typeof secret !== "object") {
+    throw new Error("secret must be a string or a JWK object");
+  }
 
-    if (typeof options.algorithm !== 'string')
-    {
-        throw new Error('options.algorithm must be a string')
-    }
+  if (typeof options.algorithm !== "string") {
+    throw new Error("options.algorithm must be a string");
+  }
 
-    const algorithm: SubtleCryptoImportKeyAlgorithm = algorithms[options.algorithm];
+  const algorithm: SubtleCryptoImportKeyAlgorithm = algorithms[options.algorithm];
 
-    if (!algorithm)
-    {
-        throw new Error('algorithm not found')
-    }
+  if (!algorithm) {
+    throw new Error("algorithm not found");
+  }
 
-    if (!payload.iat)
-    {
-        payload.iat = Math.floor(Date.now() / 1000)
-    }
+  if (!payload.iat) {
+    payload.iat = Math.floor(Date.now() / 1000);
+  }
 
-    const payloadAsJSON = JSON.stringify(payload);
-    const partialToken  = `${base64UrlStringify(_utf8ToUint8Array(JSON.stringify({
-        ...options.header,
-        alg: options.algorithm
-    })))}.${base64UrlStringify(_utf8ToUint8Array(payloadAsJSON))}`;
+  const payloadAsJSON = JSON.stringify(payload);
+  const partialToken = `${
+    base64UrlStringify(_utf8ToUint8Array(JSON.stringify({
+      ...options.header,
+      alg: options.algorithm,
+    })))
+  }.${base64UrlStringify(_utf8ToUint8Array(payloadAsJSON))}`;
 
-    let keyFormat: any = 'raw';
-    let keyData;
+  let keyFormat: any = "raw";
+  let keyData;
 
-    if (typeof secret === 'object')
-    {
-        keyFormat = 'jwk';
-        keyData   = secret
-    }
-    else if (typeof secret === 'string' && secret.startsWith('-----BEGIN'))
-    {
-        keyFormat = 'pkcs8'
-        keyData   = _str2ab(secret.replace(/-----BEGIN.*?-----/g, '').replace(/-----END.*?-----/g, '')
-            .replace(/\s/g, ''))
-    }
-    else
-    {
-        keyData = _utf8ToUint8Array(secret)
-    }
+  if (typeof secret === "object") {
+    keyFormat = "jwk";
+    keyData = secret;
+  } else if (typeof secret === "string" && secret.startsWith("-----BEGIN")) {
+    keyFormat = "pkcs8";
+    keyData = _str2ab(
+      secret.replace(/-----BEGIN.*?-----/g, "").replace(/-----END.*?-----/g, "")
+        .replace(/\s/g, ""),
+    );
+  } else {
+    keyData = _utf8ToUint8Array(secret);
+  }
 
-    const key       = await crypto.subtle.importKey(keyFormat, keyData, algorithm, false, ['sign'])
-    const signature = await crypto.subtle.sign(algorithm, key, _utf8ToUint8Array(partialToken))
+  const key = await crypto.subtle.importKey(keyFormat, keyData, algorithm, false, ["sign"]);
+  const signature = await crypto.subtle.sign(algorithm, key, _utf8ToUint8Array(partialToken));
 
-    return `${partialToken}.${base64UrlStringify(new Uint8Array(signature))}`
+  return `${partialToken}.${base64UrlStringify(new Uint8Array(signature))}`;
 }
 
 /**
@@ -292,100 +271,89 @@ export async function sign(payload: JwtPayload, secret: Secret, options: JwtSign
  * @throws {Error | string} Throws an error `string` if the token is invalid or an `Error-Object` if there's a validation issue.
  * @returns {Promise<boolean>} Returns `true` if signature, `nbf` (if set) and `exp` (if set) are valid, otherwise returns `false`.
  */
-export async function verify(token: string, secret: string|JsonWebKey, options: JwtVerifyOptions|JwtAlgorithm = {
-    algorithm : 'HS256',
-    throwError: false
-}): Promise<boolean>
-{
-    if (typeof options === 'string')
-    {
-        options = { algorithm: options, throwError: false }
+export async function verify(token: string, secret: string | JsonWebKey, options: JwtVerifyOptions | JwtAlgorithm = {
+  algorithm: "HS256",
+  throwError: false,
+}): Promise<boolean> {
+  if (typeof options === "string") {
+    options = { algorithm: options, throwError: false };
+  }
+
+  options = { algorithm: "HS256", throwError: false, ...options };
+
+  if (typeof token !== "string") {
+    throw new Error("token must be a string");
+  }
+
+  if (typeof secret !== "string" && typeof secret !== "object") {
+    throw new Error("secret must be a string or a JWK object");
+  }
+
+  if (typeof options.algorithm !== "string") {
+    throw new Error("options.algorithm must be a string");
+  }
+
+  const tokenParts = token.split(".");
+
+  if (tokenParts.length !== 3) {
+    throw new Error("token must consist of 3 parts");
+  }
+
+  const algorithm: SubtleCryptoImportKeyAlgorithm = algorithms[options.algorithm];
+
+  if (!algorithm) {
+    throw new Error("algorithm not found");
+  }
+
+  const { payload } = decode(token);
+
+  if (!payload) {
+    if (options.throwError) {
+      throw new AuthTokenError("ParseError");
     }
 
-    options = { algorithm: 'HS256', throwError: false, ...options };
+    return false;
+  }
 
-    if (typeof token !== 'string')
-    {
-        throw new Error('token must be a string')
+  if (payload.nbf && payload.nbf > Math.floor(Date.now() / 1000)) {
+    if (options.throwError) {
+      throw new AuthTokenError("NotYetValid");
     }
 
-    if (typeof secret !== 'string' && typeof secret !== 'object')
-    {
-        throw new Error('secret must be a string or a JWK object')
+    return false;
+  }
+
+  if (payload.exp && payload.exp <= Math.floor(Date.now() / 1000)) {
+    if (options.throwError) {
+      throw new AuthTokenError("TokenExpiredError");
     }
 
-    if (typeof options.algorithm !== 'string')
-    {
-        throw new Error('options.algorithm must be a string')
-    }
+    return false;
+  }
+  let keyFormat: any = "raw";
+  let keyData;
 
-    const tokenParts = token.split('.');
+  if (typeof secret === "object") {
+    keyFormat = "jwk";
+    keyData = secret;
+  } else if (typeof secret === "string" && secret.startsWith("-----BEGIN")) {
+    keyFormat = "spki";
+    keyData = _str2ab(
+      secret.replace(/-----BEGIN.*?-----/g, "").replace(/-----END.*?-----/g, "")
+        .replace(/\s/g, ""),
+    );
+  } else {
+    keyData = _utf8ToUint8Array(secret);
+  }
 
-    if (tokenParts.length !== 3)
-    {
-        throw new Error('token must consist of 3 parts')
-    }
+  const key = await crypto.subtle.importKey(keyFormat, keyData, algorithm, false, ["verify"]);
 
-    const algorithm: SubtleCryptoImportKeyAlgorithm = algorithms[options.algorithm];
-
-    if (!algorithm)
-    {
-        throw new Error('algorithm not found')
-    }
-
-    const { payload } = decode(token);
-
-    if (!payload)
-    {
-        if (options.throwError)
-        {
-            throw new AuthTokenError('ParseError')
-        }
-
-        return false
-    }
-
-    if (payload.nbf && payload.nbf > Math.floor(Date.now() / 1000))
-    {
-        if (options.throwError)
-        {
-            throw new AuthTokenError('NotYetValid')
-        }
-
-        return false
-    }
-
-    if (payload.exp && payload.exp <= Math.floor(Date.now() / 1000))
-    {
-        if (options.throwError)
-        {
-            throw new AuthTokenError('TokenExpiredError')
-        }
-
-        return false
-    }
-    let keyFormat: any = 'raw';
-    let keyData;
-
-    if (typeof secret === 'object')
-    {
-        keyFormat = 'jwk';
-        keyData   = secret;
-    }
-    else if (typeof secret === 'string' && secret.startsWith('-----BEGIN'))
-    {
-        keyFormat = 'spki';
-        keyData   = _str2ab(secret.replace(/-----BEGIN.*?-----/g, '').replace(/-----END.*?-----/g, '')
-            .replace(/\s/g, ''))
-    }
-    else
-    {
-        keyData = _utf8ToUint8Array(secret)
-    }
-
-    const key = await crypto.subtle.importKey(keyFormat, keyData, algorithm, false, ['verify'])
-
-    return await crypto.subtle.verify(algorithm, key, base64UrlParse(tokenParts[2]), _utf8ToUint8Array(`${tokenParts[0]}.${tokenParts[1]}`))
+  return await crypto.subtle.verify(
+    algorithm,
+    key,
+    base64UrlParse(tokenParts[2]),
+    _utf8ToUint8Array(`${tokenParts[0]}.${tokenParts[1]}`),
+  );
 }
 
 /**
@@ -394,11 +362,9 @@ export async function verify(token: string, secret: string|JsonWebKey, options: 
  * @param {string} token The token string generated by `jwt.sign()`.
  * @returns {JwtData} Returns an `object` containing `header` and `payload`.
  */
-export function decode(token: string): JwtData
-{
-    return {
-        header : _decodePayload(token.split('.')[0].replace(/-/g, '+').replace(/_/g, '/')) as JwtHeader,
-        payload: _decodePayload(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')) as JwtPayload
-    }
+export function decode(token: string): JwtData {
+  return {
+    header: _decodePayload(token.split(".")[0].replace(/-/g, "+").replace(/_/g, "/")) as JwtHeader,
+    payload: _decodePayload(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")) as JwtPayload,
+  };
 }
-
