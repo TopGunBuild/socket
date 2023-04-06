@@ -2,9 +2,6 @@
     "name": "topgun-socket",
     "version": "0.1.0",
     "description": "Scalable realtime pub/sub and RPC serverless framework",
-    "publishConfig": {
-        "registry": "https://npm.pkg.github.com"
-    },
     "browser": "dist/client.global.js",
     "exports": {
         "./client": {
