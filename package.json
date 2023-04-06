@@ -1,104 +1,107 @@
 {
-  "name": "topgun-socket",
-  "version": "0.0.9",
-  "description": "Scalable realtime pub/sub and RPC serverless framework",
-  "browser": "dist/client.global.js",
-  "exports": {
-    "./client": {
-      "types": "./dist/client.d.ts",
-      "require": "./dist/client.js",
-      "import": "./dist/client.mjs",
-      "default": "./dist/client.js"
+    "name": "topgun-socket",
+    "version": "0.0.9",
+    "description": "Scalable realtime pub/sub and RPC serverless framework",
+    "publishConfig": {
+        "registry": "https://npm.pkg.github.com"
     },
-    "./server": {
-      "types": "./dist/server.d.ts",
-      "require": "./dist/server.js",
-      "import": "./dist/server.mjs",
-      "default": "./dist/server.js"
+    "browser": "dist/client.global.js",
+    "exports": {
+        "./client": {
+            "types": "./dist/client.d.ts",
+            "require": "./dist/client.js",
+            "import": "./dist/client.mjs",
+            "default": "./dist/client.js"
+        },
+        "./server": {
+            "types": "./dist/server.d.ts",
+            "require": "./dist/server.js",
+            "import": "./dist/server.mjs",
+            "default": "./dist/server.js"
+        },
+        "./channel": {
+            "types": "./dist/channel.d.ts",
+            "require": "./dist/channel.js",
+            "import": "./dist/channel.mjs",
+            "default": "./dist/channel.js"
+        },
+        "./writable-consumable-stream": {
+            "types": "./dist/writable-consumable-stream.d.ts",
+            "require": "./dist/writable-consumable-stream.js",
+            "import": "./dist/writable-consumable-stream.mjs",
+            "default": "./dist/writable-consumable-stream.js"
+        },
+        "./package.json": "./package.json"
     },
-    "./channel": {
-      "types": "./dist/channel.d.ts",
-      "require": "./dist/channel.js",
-      "import": "./dist/channel.mjs",
-      "default": "./dist/channel.js"
+    "typesVersions": {
+        "*": {
+            "client": [
+                "./dist/client.d.ts"
+            ],
+            "server": [
+                "./dist/server.d.ts"
+            ],
+            "writable-consumable-stream": [
+                "./dist/writable-consumable-stream.d.ts"
+            ],
+            "channel": [
+                "./dist/channel.d.ts"
+            ]
+        }
     },
-    "./writable-consumable-stream": {
-      "types": "./dist/writable-consumable-stream.d.ts",
-      "require": "./dist/writable-consumable-stream.js",
-      "import": "./dist/writable-consumable-stream.mjs",
-      "default": "./dist/writable-consumable-stream.js"
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "cross-env NODE_ENV=production tsup",
+        "build:dev": "cross-env NODE_ENV=development tsup",
+        "coverage": "vitest run --coverage",
+        "dev": "node-dev dist/main.js",
+        "semantic-release": "semantic-release",
+        "test": "vitest"
     },
-    "./package.json": "./package.json"
-  },
-  "typesVersions": {
-    "*": {
-      "client": [
-        "./dist/client.d.ts"
-      ],
-      "server": [
-        "./dist/server.d.ts"
-      ],
-      "writable-consumable-stream": [
-        "./dist/writable-consumable-stream.d.ts"
-      ],
-      "channel": [
-        "./dist/channel.d.ts"
-      ]
+    "keywords": [
+        "websocket",
+        "realtime",
+        "client",
+        "server",
+        "serverless",
+        "topgun"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/topgunjs/topgun-socket.git"
+    },
+    "readmeFilename": "README.md",
+    "license": "MIT",
+    "author": "Ivan Kalashnik",
+    "bugs": {
+        "url": "https://github.com/topgunjs/topgun-socket/issues"
+    },
+    "homepage": "https://github.com/topgunjs/topgun-socket#readme",
+    "dependencies": {
+        "buffer": "^5.2.1",
+        "isomorphic-webcrypto": "^2.3.8",
+        "ws": "^8.9.0"
+    },
+    "devDependencies": {
+        "@semantic-release/changelog": "6.0.2",
+        "@semantic-release/commit-analyzer": "9.0.2",
+        "@semantic-release/git": "10.0.1",
+        "@semantic-release/github": "8.0.7",
+        "@semantic-release/npm": "9.0.1",
+        "@semantic-release/release-notes-generator": "10.0.3",
+        "@types/node": "18.11.18",
+        "cross-env": "^7.0.3",
+        "dotenv": "16.0.3",
+        "esbuild": "0.16.13",
+        "esbuild-node-externals": "^1.5.0",
+        "eslint": "8.31.0",
+        "semantic-release": "19.0.5",
+        "tslib": "2.4.1",
+        "tsup": "6.5.0",
+        "typescript": "4.9.4",
+        "vite": "4.0.4",
+        "vitest": "0.26.3"
     }
-  },
-  "files": [
-    "dist"
-  ],
-  "scripts": {
-    "build": "cross-env NODE_ENV=production tsup",
-    "build:dev": "cross-env NODE_ENV=development tsup",
-    "coverage": "vitest run --coverage",
-    "dev": "node-dev dist/main.js",
-    "semantic-release": "semantic-release",
-    "test": "vitest"
-  },
-  "keywords": [
-    "websocket",
-    "realtime",
-    "client",
-    "server",
-    "serverless",
-    "topgun"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/topgunjs/topgun-socket.git"
-  },
-  "readmeFilename": "README.md",
-  "license": "MIT",
-  "author": "Ivan Kalashnik",
-  "bugs": {
-    "url": "https://github.com/topgunjs/topgun-socket/issues"
-  },
-  "homepage": "https://github.com/topgunjs/topgun-socket#readme",
-  "dependencies": {
-    "buffer": "^5.2.1",
-    "isomorphic-webcrypto": "^2.3.8",
-    "ws": "^8.9.0"
-  },
-  "devDependencies": {
-    "@semantic-release/changelog": "6.0.2",
-    "@semantic-release/commit-analyzer": "9.0.2",
-    "@semantic-release/git": "10.0.1",
-    "@semantic-release/github": "8.0.7",
-    "@semantic-release/npm": "9.0.1",
-    "@semantic-release/release-notes-generator": "10.0.3",
-    "@types/node": "18.11.18",
-    "cross-env": "^7.0.3",
-    "dotenv": "16.0.3",
-    "esbuild": "0.16.13",
-    "esbuild-node-externals": "^1.5.0",
-    "eslint": "8.31.0",
-    "semantic-release": "19.0.5",
-    "tslib": "2.4.1",
-    "tsup": "6.5.0",
-    "typescript": "4.9.4",
-    "vite": "4.0.4",
-    "vitest": "0.26.3"
-  }
 }
