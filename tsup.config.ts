@@ -1,11 +1,9 @@
-import type { Options } from "tsup";
-
-const env = process.env.NODE_ENV;
+import { Options } from "tsup";
 
 export const tsup: Options = {
   globalName: "topGunSocket",
   splitting: true,
-  sourcemap: env === "development",
+  sourcemap: true,
   clean: true,
   dts: true,
   format: ["cjs", "esm", "iife"],
@@ -18,5 +16,5 @@ export const tsup: Options = {
     "channel": "src/channel/index.ts",
     "writable-consumable-stream": "src/writable-consumable-stream/index.ts",
   },
-  watch: env === "development",
+  watch: false,
 };

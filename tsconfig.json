@@ -1,24 +1,33 @@
 {
-  "extends": "./tsconfig.base",
-  "compilerOptions": {
-    "emitDeclarationOnly": true,
-    "declaration": true,
-    "target": "esnext",
-    "lib": [
-      "esnext",
-      "dom"
-    ],
-    "strict": false,
-    "noImplicitAny": false,
-    "esModuleInterop": true,
-    "moduleResolution": "node",
-    "outDir": "build",
-    "rootDir": ".",
-    "module": "esnext",
-    "skipLibCheck": true,
-    "types": []
-  },
-  "ts-node": {
-    "swc": true
-  }
+    "compilerOptions": {
+        "emitDeclarationOnly": true,
+        "declaration": true,
+        "target": "esnext",
+        "lib": [
+            "esnext",
+            "dom"
+        ],
+        "strict": false,
+        "noImplicitAny": false,
+        "esModuleInterop": true,
+        "moduleResolution": "node",
+        "outDir": "build",
+        "rootDir": ".",
+        "module": "esnext",
+        "skipLibCheck": true,
+        "types": [],
+        "inlineSourceMap": true,
+        "noUnusedLocals": false,
+        "noUnusedParameters": false,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "traceResolution": false,
+        "listEmittedFiles": false,
+        "listFiles": false,
+        "pretty": true,
+        "typeRoots": [
+            "node_modules/@types",
+            "src/types"
+        ]
+    }
 }
