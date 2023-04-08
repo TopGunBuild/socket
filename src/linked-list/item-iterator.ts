@@ -7,26 +7,26 @@ import { Item } from "./item";
  */
 
 export class ItemIterator<T extends Item> {
-  item: T | null = null;
+    item: T | null = null;
 
-  /**
-   * Create a new iterator.
-   */
-  constructor(item: T | null) {
-    this.item = item;
-  }
-
-  /**
-   * Move to the next item.
-   */
-  next(): IteratorResult<T | null> {
-    const value = this.item;
-
-    if (value) {
-      this.item = value.next as T;
-      return { value, done: false };
+    /**
+     * Create a new iterator.
+     */
+    constructor(item: T | null) {
+        this.item = item;
     }
 
-    return { value: null, done: true };
-  }
+    /**
+     * Move to the next item.
+     */
+    next(): IteratorResult<T | null> {
+        const value = this.item;
+
+        if (value) {
+            this.item = value.next as T;
+            return { value, done: false };
+        }
+
+        return { value: null, done: true };
+    }
 }

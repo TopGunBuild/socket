@@ -17,17 +17,17 @@ const WebSocket = global?.WebSocket || global?.MozWebSocket;
  */
 
 function ws(uri: string, protocols?: string[], opts?: any) {
-  let instance;
-  if (protocols) {
-    instance = new WebSocket(uri, protocols);
-  } else {
-    instance = new WebSocket(uri);
-  }
-  return instance;
+    let instance;
+    if (protocols) {
+        instance = new WebSocket(uri, protocols);
+    } else {
+        instance = new WebSocket(uri);
+    }
+    return instance;
 }
 
 if (WebSocket) {
-  ws.prototype = WebSocket.prototype;
+    ws.prototype = WebSocket.prototype;
 }
 
 export { ws };

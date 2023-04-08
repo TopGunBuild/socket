@@ -11,7 +11,7 @@ export * from "./ws-browser";
 const version = "1.0.0";
 
 export function create(options: ClientOptions): TGClientSocket {
-  return factoryCreate({ ...options, version });
+    return factoryCreate({ ...options, version });
 }
 
 export { version };

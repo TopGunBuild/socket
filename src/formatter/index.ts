@@ -1,85 +1,85 @@
 import { getGlobal } from "../utils/global";
 
-const base64Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+const base64Chars =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 const validJSONStartRegex = /^[ \n\r\t]*[{\[]/;
 
 const global = getGlobal();
 
-let arrayBufferToBase64 = function(arraybuffer) {
-  let bytes = new Uint8Array(arraybuffer);
-  let len = bytes.length;
-  let base64 = "";
+let arrayBufferToBase64 = function (arraybuffer) {
+    let bytes = new Uint8Array(arraybuffer);
+    let len = bytes.length;
+    let base64 = "";
 
-  for (let i = 0; i < len; i += 3) {
-    base64 += base64Chars[bytes[i] >> 2];
-    base64 += base64Chars[((bytes[i] & 3) << 4) | (bytes[i + 1] >> 4)];
-    base64 += base64Chars[((bytes[i + 1] & 15) << 2) | (bytes[i + 2] >> 6)];
-    base64 += base64Chars[bytes[i + 2] & 63];
-  }
+    for (let i = 0; i < len; i += 3) {
+        base64 += base64Chars[bytes[i] >> 2];
+        base64 += base64Chars[((bytes[i] & 3) << 4) | (bytes[i + 1] >> 4)];
+        base64 += base64Chars[((bytes[i + 1] & 15) << 2) | (bytes[i + 2] >> 6)];
+        base64 += base64Chars[bytes[i + 2] & 63];
+    }
 
-  if ((len % 3) === 2) {
-    base64 = base64.substring(0, base64.length - 1) + "=";
-  } else if (len % 3 === 1) {
-    base64 = base64.substring(0, base64.length - 2) + "==";
-  }
+    if (len % 3 === 2) {
+        base64 = base64.substring(0, base64.length - 1) + "=";
+    } else if (len % 3 === 1) {
+        base64 = base64.substring(0, base64.length - 2) + "==";
+    }
 
-  return base64;
+    return base64;
 };
 
-let binaryToBase64Replacer = function(key, value) {
-  if (global.ArrayBuffer && value instanceof global.ArrayBuffer) {
-    return {
-      base64: true,
-      data: arrayBufferToBase64(value),
-    };
-  } else if (global.Buffer) {
-    if (value instanceof global.Buffer) {
-      return {
-        base64: true,
-        data: value.toString("base64"),
-      };
+let binaryToBase64Replacer = function (key, value) {
+    if (global.ArrayBuffer && value instanceof global.ArrayBuffer) {
+        return {
+            base64: true,
+            data: arrayBufferToBase64(value),
+        };
+    } else if (global.Buffer) {
+        if (value instanceof global.Buffer) {
+            return {
+                base64: true,
+                data: value.toString("base64"),
+            };
+        }
+        // Some versions of Node.js convert Buffers to Objects before they are passed to
+        // the replacer function - Because of this, we need to rehydrate Buffers
+        // before we can convert them to base64 strings.
+        if (value && value.type === "Buffer" && Array.isArray(value.data)) {
+            let rehydratedBuffer;
+            if (global.Buffer.from) {
+                rehydratedBuffer = global.Buffer.from(value.data);
+            } else {
+                rehydratedBuffer = new global.Buffer(value.data);
+            }
+            return {
+                base64: true,
+                data: rehydratedBuffer.toString("base64"),
+            };
+        }
     }
-    // Some versions of Node.js convert Buffers to Objects before they are passed to
-    // the replacer function - Because of this, we need to rehydrate Buffers
-    // before we can convert them to base64 strings.
-    if (value && value.type === "Buffer" && Array.isArray(value.data)) {
-      let rehydratedBuffer;
-      if (global.Buffer.from) {
-        rehydratedBuffer = global.Buffer.from(value.data);
-      } else {
-        rehydratedBuffer = new global.Buffer(value.data);
-      }
-      return {
-        base64: true,
-        data: rehydratedBuffer.toString("base64"),
-      };
-    }
-  }
-  return value;
+    return value;
 };
 
 // Decode the data which was transmitted over the wire to a JavaScript Object in a format which SC understands.
 // See encode function below for more details.
 export function decode(encodedMessage) {
-  if (encodedMessage == null) {
-    return null;
-  }
-  // Leave ping or pong message as is
-  if (encodedMessage === "#1" || encodedMessage === "#2") {
-    return encodedMessage;
-  }
-  let message = encodedMessage.toString();
+    if (encodedMessage == null) {
+        return null;
+    }
+    // Leave ping or pong message as is
+    if (encodedMessage === "#1" || encodedMessage === "#2") {
+        return encodedMessage;
+    }
+    let message = encodedMessage.toString();
 
-  // Performance optimization to detect invalid JSON packet sooner.
-  if (!validJSONStartRegex.test(message)) {
+    // Performance optimization to detect invalid JSON packet sooner.
+    if (!validJSONStartRegex.test(message)) {
+        return message;
+    }
+
+    try {
+        return JSON.parse(message);
+    } catch (err) {}
     return message;
-  }
-
-  try {
-    return JSON.parse(message);
-  } catch (err) {
-  }
-  return message;
 }
 
 // Encode raw data (which is in the SC protocol format) into a format for
@@ -91,11 +91,11 @@ export function decode(encodedMessage) {
 // See https://github.com/SocketCluster/socketcluster/blob/master/socketcluster-protocol.md
 // for details about the SC protocol.
 export function encode(rawData): string {
-  // Leave ping or pong message as is
-  if (rawData === "#1" || rawData === "#2") {
-    return rawData;
-  }
-  return JSON.stringify(rawData, binaryToBase64Replacer);
+    // Leave ping or pong message as is
+    if (rawData === "#1" || rawData === "#2") {
+        return rawData;
+    }
+    return JSON.stringify(rawData, binaryToBase64Replacer);
 }
 
 export const formatter = { encode, decode };
