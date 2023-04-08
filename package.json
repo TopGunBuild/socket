@@ -1,9 +1,9 @@
 {
     "name": "topgun-socket",
-    "version": "0.0.1",
+    "version": "1.0.0",
     "description": "Scalable realtime pub/sub and RPC serverless framework",
     "publishConfig": {
-        "registry": "https://npm.pkg.github.com"
+        "access": "public"
     },
     "scripts": {
         "build": "tsup",
@@ -105,34 +105,5 @@
         "tsup": "6.5.0",
         "typescript": "4.9.4",
         "vitest": "^0.29.8"
-    },
-    "release": {
-        "plugins": [
-            "@semantic-release/commit-analyzer",
-            "@semantic-release/release-notes-generator",
-            [
-                "@semantic-release/npm",
-                {
-                    "npmPublish": true
-                }
-            ],
-            "@semantic-release/github",
-            "@semantic-release/changelog",
-            [
-                "@semantic-release/git",
-                {
-                    "assets": [
-                        "CHANGELOG.md",
-                        "package.json",
-                        "pnpm-lock.yaml",
-                        "yarn.lock"
-                    ],
-                    "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
-                }
-            ]
-        ],
-        "branches": [
-            "main"
-        ]
     }
 }
