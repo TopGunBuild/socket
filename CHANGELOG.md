@@ -1,3 +1,10 @@
+## [1.0.3](https://github.com/topgunjs/topgun-socket/compare/v1.0.2...v1.0.3) (2023-04-08)
+
+
+### Bug Fixes
+
+* change crypto dependency ([802e8c1](https://github.com/topgunjs/topgun-socket/commit/802e8c19624e90992244e6b629ec445ae15dc3ed))
+
 ## [1.0.2](https://github.com/topgunjs/topgun-socket/compare/v1.0.1...v1.0.2) (2023-04-08)
 
 
