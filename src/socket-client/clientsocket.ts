@@ -116,7 +116,7 @@ export class TGClientSocket
     private _receiverDemux: StreamDemux<unknown>;
     private _procedureDemux: StreamDemux<unknown>;
     private _cid: number;
-    private _reconnectTimeoutRef: number;
+    private _reconnectTimeoutRef: any;
 
     private _privateDataHandlerMap = {
         "#publish": (data) => {
