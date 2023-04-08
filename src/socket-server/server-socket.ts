@@ -109,13 +109,13 @@ export class TGServerSocket extends AsyncStreamEmitter<any> {
     private _receiverDemux: StreamDemux<unknown>;
     private _procedureDemux: StreamDemux<unknown>;
     private _batchBuffer: any[];
-    private _batchingIntervalId: number = null;
+    private _batchingIntervalId: any = null;
     private _cid: number;
     private readonly _callbackMap: { [key: string]: any };
     private readonly _sendPing: () => void;
-    private readonly _pingIntervalTicker: number;
-    private readonly _handshakeTimeoutRef: number;
-    private _pingTimeoutTicker: number;
+    private readonly _pingIntervalTicker: any;
+    private readonly _handshakeTimeoutRef: any;
+    private _pingTimeoutTicker: any;
 
     /**
      * Constructor
