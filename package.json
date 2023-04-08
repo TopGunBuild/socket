@@ -13,6 +13,7 @@
         "semantic-release": "semantic-release"
     },
     "simple-git-hooks": {
+        "pre-commit": "npx prettier --write .",
         "commit-msg": "npx --no -- commitlint --edit ${1}"
     },
     "commitlint": {
@@ -100,6 +101,7 @@
         "@semantic-release/github": "^8.0.7",
         "@semantic-release/npm": "^10.0.3",
         "@semantic-release/release-notes-generator": "^10.0.3",
+        "prettier": "^2.8.7",
         "semantic-release": "^21.0.1",
         "simple-git-hooks": "^2.8.1",
         "tsup": "6.5.0",
