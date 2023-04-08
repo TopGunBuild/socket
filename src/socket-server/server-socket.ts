@@ -435,9 +435,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any> {
     emit(eventName: "connectAbort", data: ConnectAbortData): void;
     emit(eventName: "disconnect", data: DisconnectData): void;
     emit(eventName: "close", data: CloseData): void;
-    emit(
-        eventName: "message" | "raw"
-    ): ConsumableStream<{
+    emit(eventName: "message" | "raw"): ConsumableStream<{
         message: { data: any; type: string; target: WebSocket };
     }>;
     emit(eventName: "error"): ConsumableStream<{ error: Error }>;
