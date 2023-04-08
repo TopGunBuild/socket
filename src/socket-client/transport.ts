@@ -71,7 +71,7 @@ export class TGTransport {
     private _onErrorHandler: (value: OnErrorValue) => void;
     private _onInboundInvokeHandler: (value: OnInboundInvokeValue) => void;
     private _onInboundTransmitHandler: (value: OnInboundTransmitValue) => void;
-    private _connectTimeoutRef: number;
+    private _connectTimeoutRef: any;
     private _handlePing: (message) => boolean;
 
     /**
