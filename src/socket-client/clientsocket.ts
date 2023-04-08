@@ -1097,7 +1097,7 @@ export class TGClientSocket
         return Object.keys(streamNamesLookup);
     }
 
-    private _tryUnsubscribe(channel): void {
+    private _tryUnsubscribe(channel: TGChannel<any>): void {
         if (this.state === TGClientSocket.OPEN) {
             let options: TransmitOptions = {
                 noTimeout: true,
