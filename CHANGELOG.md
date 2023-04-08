@@ -1,3 +1,12 @@
+## [1.0.4](https://github.com/topgunjs/topgun-socket/compare/v1.0.3...v1.0.4) (2023-04-08)
+
+
+### Bug Fixes
+
+* **socket-client:** fix type ([d8f3067](https://github.com/topgunjs/topgun-socket/commit/d8f3067646faf015b3005699e897551d265d7b81))
+* **socket-client:** fix type ([cdb5988](https://github.com/topgunjs/topgun-socket/commit/cdb5988fef112b38c9ff4b0b4ef8d0d020eaeebd))
+* **socket-server:** fix type ([503be4a](https://github.com/topgunjs/topgun-socket/commit/503be4a87448df4676ec66841612cdcdf1c445e7))
+
 ## [1.0.3](https://github.com/topgunjs/topgun-socket/compare/v1.0.2...v1.0.3) (2023-04-08)
 
 
