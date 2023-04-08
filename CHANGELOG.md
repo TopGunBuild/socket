@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/topgunjs/topgun-socket/compare/v1.0.0...v1.0.1) (2023-04-08)
+
+
+### Bug Fixes
+
+* config build process ([6443a4e](https://github.com/topgunjs/topgun-socket/commit/6443a4e435c2d64d218157473bb255bfcc1a3053))
+
 # 1.0.0 (2023-04-08)
 
 
