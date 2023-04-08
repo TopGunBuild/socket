@@ -13,8 +13,14 @@
         "semantic-release": "semantic-release"
     },
     "simple-git-hooks": {
-        "pre-commit": "npx prettier --write .",
+        "pre-commit": "npx lint-staged",
         "commit-msg": "npx --no -- commitlint --edit ${1}"
+    },
+    "lint-staged": {
+        "src/**/*.{js,jsx,ts,tsx,json,css,scss,md}": [
+            "prettier --write",
+            "git add"
+        ]
     },
     "commitlint": {
         "extends": [
@@ -101,6 +107,7 @@
         "@semantic-release/github": "^8.0.7",
         "@semantic-release/npm": "^10.0.3",
         "@semantic-release/release-notes-generator": "^10.0.3",
+        "lint-staged": "^13.2.1",
         "prettier": "^2.8.7",
         "semantic-release": "^21.0.1",
         "simple-git-hooks": "^2.8.1",
