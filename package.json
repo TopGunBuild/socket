@@ -13,17 +13,11 @@
         "semantic-release": "semantic-release"
     },
     "simple-git-hooks": {
-        "pre-commit": "npx lint-staged",
-        "commit-msg": "npx --no -- commitlint --edit ${1}"
+        "pre-commit": "npx lint-staged"
     },
     "lint-staged": {
         "src/**/*.{js,jsx,ts,tsx,json,css,scss,md}": [
             "prettier --write"
-        ]
-    },
-    "commitlint": {
-        "extends": [
-            "@commitlint/config-conventional"
         ]
     },
     "browser": "dist/client.global.js",
@@ -98,8 +92,6 @@
         "ws": "^8.9.0"
     },
     "devDependencies": {
-        "@commitlint/cli": "^17.5.1",
-        "@commitlint/config-conventional": "^17.4.4",
         "@semantic-release/changelog": "^6.0.3",
         "@semantic-release/commit-analyzer": "^9.0.2",
         "@semantic-release/git": "^10.0.1",
