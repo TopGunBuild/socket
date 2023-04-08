@@ -1,5 +1,7 @@
-import crypto from "isomorphic-webcrypto";
+import { Crypto } from '@peculiar/webcrypto';
 import { AuthTokenError } from "../errors/errors";
+
+const crypto = new Crypto();
 
 if (typeof crypto === "undefined" || !crypto.subtle) {
     throw new Error("SubtleCrypto not supported!");

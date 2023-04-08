@@ -1,5 +1,7 @@
-import crypto from "isomorphic-webcrypto";
+import { Crypto } from '@peculiar/webcrypto';
 import { toHEX } from "../utils";
+
+const crypto = new Crypto();
 
 export function randomBytes(
     randomBytesLength = 9,
