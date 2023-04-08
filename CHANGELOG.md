@@ -1,3 +1,11 @@
+## [1.0.2](https://github.com/topgunjs/topgun-socket/compare/v1.0.1...v1.0.2) (2023-04-08)
+
+
+### Bug Fixes
+
+* fix version ([e6e3a14](https://github.com/topgunjs/topgun-socket/commit/e6e3a14e10fe7b0fed19b24cd333576e3894ab21))
+* fix version 2 ([b0282b4](https://github.com/topgunjs/topgun-socket/commit/b0282b46d2d5e9e7536bd5ee84e9cd21406ee25d))
+
 ## [1.0.1](https://github.com/topgunjs/topgun-socket/compare/v1.0.0...v1.0.1) (2023-04-08)
 
 
