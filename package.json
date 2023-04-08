@@ -8,8 +8,8 @@
     "scripts": {
         "build": "tsup",
         "prepublishOnly": "pnpm run build",
-        "prepare": "simple-git-hooks",
         "test": "vitest run",
+        "prepare": "simple-git-hooks",
         "semantic-release": "semantic-release"
     },
     "simple-git-hooks": {
