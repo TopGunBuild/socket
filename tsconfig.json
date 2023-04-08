@@ -15,8 +15,7 @@
         "module": "esnext",
         "skipLibCheck": true,
         "types": [
-            "node",
-            "jest"
+            "node"
         ],
         "rootDir": "src",
         "inlineSourceMap": true,
