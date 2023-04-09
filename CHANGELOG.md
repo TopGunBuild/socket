@@ -1,3 +1,10 @@
+## [1.0.5](https://github.com/topgunjs/topgun-socket/compare/v1.0.4...v1.0.5) (2023-04-09)
+
+
+### Performance Improvements
+
+* minify = `true` ([d8c8afb](https://github.com/topgunjs/topgun-socket/commit/d8c8afb0bf61f560b285c86f700220e5c3544aab))
+
 ## [1.0.4](https://github.com/topgunjs/topgun-socket/compare/v1.0.3...v1.0.4) (2023-04-08)
 
 
