@@ -9,7 +9,7 @@ export const tsup: Options = {
     clean: true,
     dts: true,
     format: ["cjs", "esm", "iife"],
-    minify: false,
+    minify: true,
     bundle: true,
     skipNodeModulesBundle: true,
     entry: {
