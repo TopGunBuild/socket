@@ -1,42 +1,24 @@
 {
     "compilerOptions": {
-        "emitDeclarationOnly": true,
-        "declaration": true,
-        "target": "esnext",
-        "lib": [
-            "esnext",
-            "dom"
-        ],
-        "strict": false,
-        "noImplicitAny": false,
-        "esModuleInterop": true,
-        "moduleResolution": "node",
-        "outDir": "dist",
         "module": "esnext",
-        "skipLibCheck": true,
-        "types": [
-            "node"
-        ],
-        "rootDir": "src",
-        "inlineSourceMap": true,
+        "moduleResolution": "node",
+        "declaration": true,
+        "noImplicitAny": false,
         "noUnusedLocals": false,
-        "noUnusedParameters": false,
-        "noImplicitReturns": true,
-        "noFallthroughCasesInSwitch": true,
-        "traceResolution": false,
-        "listEmittedFiles": false,
-        "listFiles": false,
-        "pretty": true,
-        "typeRoots": [
-            "node_modules/@types",
-            "src/types"
-        ]
+        "removeComments": false,
+        "noLib": false,
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "target": "es6",
+        "sourceMap": false,
+        "outDir": "./dist",
+        "esModuleInterop": true
     },
     "include": [
-        "src/**/*.ts"
+        "src/**/*"
     ],
     "exclude": [
-        "node_modules/**"
-    ],
-    "compileOnSave": false
+        "node_modules",
+        "**/*.spec.ts"
+    ]
 }
