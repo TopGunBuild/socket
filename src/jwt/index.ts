@@ -1,7 +1,7 @@
-import { Crypto } from '@peculiar/webcrypto';
+import WebCrypto from 'topgun-webcrypto';
 import { AuthTokenError } from "../errors/errors";
 
-const crypto = new Crypto();
+const crypto = WebCrypto;
 
 if (typeof crypto === "undefined" || !crypto.subtle) {
     throw new Error("SubtleCrypto not supported!");

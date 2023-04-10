@@ -1,7 +1,7 @@
-import { Crypto } from '@peculiar/webcrypto';
+import WebCrypto from 'topgun-webcrypto';
 import { toHEX } from "../utils";
 
-const crypto = new Crypto();
+const crypto = WebCrypto;
 
 export function randomBytes(
     randomBytesLength = 9,
