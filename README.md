@@ -1,8 +1,20 @@
-# TopGunSocket
+<h1 align="center" style="border-bottom: none;">🚀 topgun-socket</h1>
+<h3 align="center">Pub/sub and RPC toolkit for <a href="https://github.com/TopGunBuild/topgun">TopGun</a></h3>
 
-Client/Server modules for TopGunSocket.
-
-[![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg)](https://github.com/semantic-release/semantic-release)  [![npm version](https://badgen.net/npm/v/topgun-socket)](https://npm.im/topgun-socket) [![bundlephobia](https://img.shields.io/bundlephobia/minzip/topgun-socket.svg)](https://bundlephobia.com/result?p=topgun-socket)
+<p align="center">
+  <a href="https://github.com/semantic-release/semantic-release">
+      <img alt="semantic-release" src="https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg">
+  </a>
+  <a href="https://npm.im/topgun-socket">
+    <img alt="npm" src="https://badgen.net/npm/v/topgun-socket">
+  </a>
+  <a href="https://bundlephobia.com/result?p=topgun-socket">
+    <img alt="bundlephobia" src="https://img.shields.io/bundlephobia/minzip/topgun-socket.svg">
+  </a>
+  <a href="https://opensource.org/licenses/MIT">
+      <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg">
+  </a>
+</p>
 
 ## Client Setting up
 
