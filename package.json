@@ -9,7 +9,7 @@
         "build": "tsup",
         "prepublishOnly": "pnpm run build",
         "test": "jest",
-        "format": "prettier --write \"**/*.ts\"",
+        "format": "prettier --write \"src/**/*.ts\"",
         "lint": "eslint \"src/**/*.ts\" --fix",
         "prepare": "simple-git-hooks",
         "semantic-release": "semantic-release"

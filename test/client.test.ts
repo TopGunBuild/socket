@@ -1,6 +1,7 @@
-import { TGServerSocket } from "../src/socket-server";
+import { TGServerSocket } from '../src/socket-server';
 
-test('simple', () => {
+test('simple', () =>
+{
     expect(TGServerSocket).toBeInstanceOf(Object);
 });
 

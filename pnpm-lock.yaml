@@ -5,8 +5,8 @@ dependencies:
     specifier: ^5.2.1
     version: 5.7.1
   topgun-webcrypto:
-    specifier: ^1.0.1
-    version: 1.0.1
+    specifier: ^1.0.2
+    version: 1.0.2
   ws:
     specifier: ^8.9.0
     version: 8.13.0
@@ -5473,8 +5473,8 @@ packages:
       is-number: 7.0.0
     dev: true
 
-  /topgun-webcrypto@1.0.1:
-    resolution: {integrity: sha512-lkmZggxplbRA8geK7Ne29/8SmVv9sFEp/SXHloy6hcBCtm+p3NcEzd2JdyPSIG2GebJDNOr4jPkn5m5ATMcY4g==}
+  /topgun-webcrypto@1.0.2:
+    resolution: {integrity: sha512-mseA/yTJSZFDPit2oq1tgzISxjNYaRZofGLzQQjNMc1uo5KMSvv0d/IGU/1tWlNtLFtStHHnzFPADirT8nC00Q==}
     dependencies:
       '@peculiar/webcrypto': 1.4.3
     dev: false
