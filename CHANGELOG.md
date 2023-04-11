@@ -1,3 +1,15 @@
+# [1.1.0](https://github.com/topgunjs/topgun-socket/compare/v1.0.5...v1.1.0) (2023-04-11)
+
+
+### Bug Fixes
+
+* upgrade topgun-webcrypto 1.0.1 -> 1.0.3 ([6f2f63f](https://github.com/topgunjs/topgun-socket/commit/6f2f63fb46cb3a62e024d5f4b994c2a6d64a92f6))
+
+
+### Features
+
+* add linter ([307fad9](https://github.com/topgunjs/topgun-socket/commit/307fad901f25693d4fd1f18ab8ee64a2c2f8412e))
+
 ## [1.0.5](https://github.com/topgunjs/topgun-socket/compare/v1.0.4...v1.0.5) (2023-04-09)
 
 
