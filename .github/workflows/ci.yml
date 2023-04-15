@@ -71,8 +71,8 @@ jobs:
             - run: npm i -g pnpm
             - run: pnpm i
 
-            - name: Copy json file to dist dir
-              run: cp package.json ./dist
+            - name: Move folders
+              run: cp -a ./prepare-package/. ./
             - name: Run semantic release and publish package
               run: pnpm semantic-release
               env:

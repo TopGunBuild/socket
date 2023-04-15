@@ -1,7 +1,5 @@
 {
     "compilerOptions": {
-        "rootDir": "src",
-        "outDir": "dist",
         "target": "es2020",
         "module": "esnext",
         "strict": true,
@@ -12,6 +10,7 @@
         "noImplicitAny": true,
         "allowJs": true,
         "noEmit": true,
+        "outDir": "dist",
         "resolveJsonModule": true,
         "strictNullChecks": false,
         "noImplicitThis": false

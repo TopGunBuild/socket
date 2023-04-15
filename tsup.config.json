@@ -18,6 +18,5 @@
         "channel": "src/channel/index.ts",
         "writable-consumable-stream": "src/writable-consumable-stream/index.ts"
     },
-    "watch": false,
-    "publicDir": "prepare-package"
+    "watch": false
 }
