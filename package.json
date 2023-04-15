@@ -62,13 +62,13 @@
             ]
         }
     },
-    "directories": {
-        "dist": "./dist",
-        "client": "./client",
-        "server": "./server",
-        "writable-consumable-stream": "./writable-consumable-stream",
-        "channel": "./channel"
-    },
+    "files": [
+        "dist",
+        "client",
+        "server",
+        "writable-consumable-stream",
+        "channel"
+    ],
     "keywords": [
         "websocket",
         "realtime",
