@@ -1,3 +1,10 @@
+## [1.1.9](https://github.com/topgunjs/topgun-socket/compare/v1.1.8...v1.1.9) (2023-04-15)
+
+
+### Bug Fixes
+
+* add "prepublishOnly" ([0da0f0a](https://github.com/topgunjs/topgun-socket/commit/0da0f0a4ab19ed2aaf881c1c5991393ca608c620))
+
 ## [1.1.8](https://github.com/topgunjs/topgun-socket/compare/v1.1.7...v1.1.8) (2023-04-15)
 
 
