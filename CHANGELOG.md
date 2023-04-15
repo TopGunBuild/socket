@@ -1,3 +1,11 @@
+## [1.1.1](https://github.com/topgunjs/topgun-socket/compare/v1.1.0...v1.1.1) (2023-04-15)
+
+
+### Bug Fixes
+
+* configure package.json, update eslint rules ([1c5adf3](https://github.com/topgunjs/topgun-socket/commit/1c5adf375b6cf412380ecb9c5e3ddccebd280b9f))
+* fix types for test passing ([b185e1e](https://github.com/topgunjs/topgun-socket/commit/b185e1e93a25e014f9841e9416a76e99aa5d7290))
+
 # [1.1.0](https://github.com/topgunjs/topgun-socket/compare/v1.0.5...v1.1.0) (2023-04-11)
 
 
