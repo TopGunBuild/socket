@@ -1,3 +1,11 @@
+## [1.1.3](https://github.com/topgunjs/topgun-socket/compare/v1.1.2...v1.1.3) (2023-04-15)
+
+
+### Bug Fixes
+
+* build package in `build` folder ([76f3e48](https://github.com/topgunjs/topgun-socket/commit/76f3e48925fc30929f9fd470bfbed2c375719946))
+* remove "files" property ([b5359b3](https://github.com/topgunjs/topgun-socket/commit/b5359b3f8d1cbf301f552083f86a800dfe1e3200))
+
 ## [1.1.2](https://github.com/topgunjs/topgun-socket/compare/v1.1.1...v1.1.2) (2023-04-15)
 
 
