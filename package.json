@@ -6,7 +6,7 @@
         "access": "public"
     },
     "scripts": {
-        "build": "tsup && cp package.json dist/package.json",
+        "build": "tsup",
         "prepublishOnly": "pnpm run build",
         "test": "jest",
         "format": "prettier --write \"src/**/*.ts\"",
