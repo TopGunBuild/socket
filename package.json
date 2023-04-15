@@ -6,7 +6,7 @@
         "access": "public"
     },
     "scripts": {
-        "build": "tsup",
+        "build": "tsup && cp package.json dist/package.json",
         "prepublishOnly": "pnpm run build",
         "test": "jest",
         "format": "prettier --write \"src/**/*.ts\"",
@@ -14,61 +14,57 @@
         "prepare": "simple-git-hooks",
         "semantic-release": "semantic-release"
     },
-    "browser": "dist/client.global.js",
+    "browser": "./client.global.js",
     "exports": {
         "./client": {
-            "types": "./dist/client.d.ts",
-            "node": "./dist/client.js",
-            "require": "./dist/client.js",
-            "import": "./dist/client.mjs",
-            "default": "./dist/client.mjs"
+            "types": "./client.d.ts",
+            "node": "./client.js",
+            "require": "./client.js",
+            "import": "./client.mjs",
+            "default": "./client.mjs"
         },
         "./server": {
-            "types": "./dist/server.d.ts",
-            "node": "./dist/server.js",
-            "require": "./dist/server.js",
-            "import": "./dist/server.mjs",
-            "default": "./dist/server.mjs"
+            "types": "./server.d.ts",
+            "node": "./server.js",
+            "require": "./server.js",
+            "import": "./server.mjs",
+            "default": "./server.mjs"
         },
         "./channel": {
-            "types": "./dist/channel.d.ts",
-            "node": "./dist/channel.js",
-            "require": "./dist/channel.js",
-            "import": "./dist/channel.mjs",
-            "default": "./dist/channel.mjs"
+            "types": "./channel.d.ts",
+            "node": "./channel.js",
+            "require": "./channel.js",
+            "import": "./channel.mjs",
+            "default": "./channel.mjs"
         },
         "./writable-consumable-stream": {
-            "types": "./dist/writable-consumable-stream.d.ts",
-            "node": "./dist/writable-consumable-stream.js",
-            "require": "./dist/writable-consumable-stream.js",
-            "import": "./dist/writable-consumable-stream.mjs",
-            "default": "./dist/writable-consumable-stream.mjs"
+            "types": "./writable-consumable-stream.d.ts",
+            "node": "./writable-consumable-stream.js",
+            "require": "./writable-consumable-stream.js",
+            "import": "./writable-consumable-stream.mjs",
+            "default": "./writable-consumable-stream.mjs"
         },
         "./package.json": "./package.json"
     },
     "typesVersions": {
         "*": {
             "client": [
-                "./dist/client.d.ts"
+                "./client.d.ts"
             ],
             "server": [
-                "./dist/server.d.ts"
+                "./server.d.ts"
             ],
             "writable-consumable-stream": [
-                "./dist/writable-consumable-stream.d.ts"
+                "./writable-consumable-stream.d.ts"
             ],
             "channel": [
-                "./dist/channel.d.ts"
+                "./channel.d.ts"
             ]
         }
     },
-    "directories": {
-        "dist": "./dist",
-        "channel": "./prepare-package/channel",
-        "client": "./prepare-package/client",
-        "server": "./prepare-package/server",
-        "writable-consumable-stream": "./prepare-package/writable-consumable-stream"
-    },
+    "files": [
+        "dist"
+    ],
     "keywords": [
         "websocket",
         "realtime",
