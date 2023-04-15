@@ -15,84 +15,71 @@ import {
 } from './action';
 import { TGServerSocket } from './server-socket';
 
-export interface CodecEngine
-{
+export interface CodecEngine {
     decode: (input: any) => any;
     encode: (object: any) => any;
 }
 
-export type SocketState = 'connecting'|'open'|'closed';
-export type AuthState = 'authenticated'|'unauthenticated';
+export type SocketState = 'connecting' | 'open' | 'closed';
+export type AuthState = 'authenticated' | 'unauthenticated';
 
-export interface AuthTokenOptions extends JwtSignOptions
-{
+export interface AuthTokenOptions extends JwtSignOptions {
     rejectOnFailedDelivery?: boolean;
 }
 
-export interface StateChangeData
-{
+export interface StateChangeData {
     oldState: AuthState;
     newState: AuthState;
     authToken?: AuthToken;
 }
 
-export interface AuthenticateData
-{
+export interface AuthenticateData {
     authToken?: AuthToken;
 }
 
-export interface DeauthenticateData
-{
+export interface DeauthenticateData {
     oldAuthToken?: AuthToken;
 }
 
-export interface BadAuthTokenData
-{
+export interface BadAuthTokenData {
     authError: Error;
     signedAuthToken: string;
 }
 
-export interface ConnectData
-{
+export interface ConnectData {
     id: string;
     pingTimeout: number;
     authError?: Error;
     isAuthenticated: boolean;
 }
 
-export interface SubscribeData
-{
+export interface SubscribeData {
     channel: string;
     subscriptionOptions: SubscriptionOptions;
 }
 
-export interface SubscriptionOptions
-{
+export interface SubscriptionOptions {
     channel: string;
     waitForAuth?: boolean;
     data?: any;
 }
 
-export interface ConnectAbortData
-{
+export interface ConnectAbortData {
     code: number;
     reason: string;
 }
 
-export interface DisconnectData
-{
+export interface DisconnectData {
     code: number;
     reason: string;
 }
 
-export interface CloseData
-{
+export interface CloseData {
     code: number;
     reason: string;
 }
 
-export interface IncomingMessage
-{
+export interface IncomingMessage {
     remoteAddress?: string;
     remoteFamily?: any;
     remotePort?: number;
@@ -102,87 +89,78 @@ export interface IncomingMessage
 export type IncomingMessageKey = keyof IncomingMessage;
 
 export type handshakeMiddlewareFunction = (
-    stream: WritableConsumableStream<TGActionHandshakeWS|TGActionHandshakeSC>
+    stream: WritableConsumableStream<TGActionHandshakeWS | TGActionHandshakeSC>
 ) => void;
 export type inboundRawMiddlewareFunction = (
     stream: WritableConsumableStream<TGActionMessage>
 ) => void;
 export type inboundMiddlewareFunction = (
-    stream: WritableConsumableStream<|TGActionTransmit
-        |TGActionInvoke
-        |TGActionSubscribe
-        |TGActionPublishIn
-        |TGActionAuthenticate>
+    stream: WritableConsumableStream<
+        | TGActionTransmit
+        | TGActionInvoke
+        | TGActionSubscribe
+        | TGActionPublishIn
+        | TGActionAuthenticate
+    >
 ) => void;
 export type outboundMiddlewareFunction = (
     stream: WritableConsumableStream<TGActionPublishOut>
 ) => void;
 
-export const MIDDLEWARE_HANDSHAKE   = 'handshake';
+export const MIDDLEWARE_HANDSHAKE = 'handshake';
 export const MIDDLEWARE_INBOUND_RAW = 'inboundRaw';
-export const MIDDLEWARE_INBOUND     = 'inbound';
-export const MIDDLEWARE_OUTBOUND    = 'outbound';
+export const MIDDLEWARE_INBOUND = 'inbound';
+export const MIDDLEWARE_OUTBOUND = 'outbound';
 
 export type Middlewares =
-    |typeof MIDDLEWARE_HANDSHAKE
-    |typeof MIDDLEWARE_INBOUND_RAW
-    |typeof MIDDLEWARE_INBOUND
-    |typeof MIDDLEWARE_OUTBOUND;
+    | typeof MIDDLEWARE_HANDSHAKE
+    | typeof MIDDLEWARE_INBOUND_RAW
+    | typeof MIDDLEWARE_INBOUND
+    | typeof MIDDLEWARE_OUTBOUND;
 
-export type AuthEngineType = Pick<AuthEngine, 'verifyToken'|'signToken'>;
+export type AuthEngineType = Pick<AuthEngine, 'verifyToken' | 'signToken'>;
 
-export interface AuthStateChangeData extends StateChangeData
-{
+export interface AuthStateChangeData extends StateChangeData {
     socket: TGServerSocket;
 }
 
-export interface AuthenticationData extends AuthenticateData
-{
+export interface AuthenticationData extends AuthenticateData {
     socket: TGServerSocket;
 }
 
-export interface DeauthenticationData extends DeauthenticateData
-{
+export interface DeauthenticationData extends DeauthenticateData {
     socket: TGServerSocket;
 }
 
-export interface BadSocketAuthTokenData extends BadAuthTokenData
-{
+export interface BadSocketAuthTokenData extends BadAuthTokenData {
     socket: TGServerSocket;
 }
 
-export interface ConnectionData extends ConnectData
-{
+export interface ConnectionData extends ConnectData {
     socket: TGServerSocket;
 }
 
-export interface SubscriptionData extends SubscribeData
-{
+export interface SubscriptionData extends SubscribeData {
     socket: TGServerSocket;
 }
 
-export interface UnsubscriptionData extends UnsubscribeData
-{
+export interface UnsubscriptionData extends UnsubscribeData {
     socket: TGServerSocket;
 }
 
-export interface ConnectionAbortData extends ConnectAbortData
-{
+export interface ConnectionAbortData extends ConnectAbortData {
     socket: TGServerSocket;
 }
 
-export interface DisconnectionData extends DisconnectData
-{
+export interface DisconnectionData extends DisconnectData {
     socket: TGServerSocket;
 }
 
-export interface ClosureData extends CloseData
-{
+export interface ClosureData extends CloseData {
     socket: TGServerSocket;
 }
 
-export interface TGServerSocketGatewayOptions
-{
+export interface TGServerSocketGatewayOptions {
     // NodeJS ot serverless
     isNode?: boolean;
 
@@ -194,7 +172,7 @@ export interface TGServerSocketGatewayOptions
 
     // This can be the name of an npm module or a path to a
     // Node.js module to use as the WebSocket server engine.
-    wsEngine?: {Server: any}|string;
+    wsEngine?: { Server: any } | string;
 
     // Custom options to pass to the wsEngine when it is being
     // instantiated.
@@ -213,7 +191,7 @@ export interface TGServerSocketGatewayOptions
     // object instead of a boolean.
     // Note that by default, per-message deflate only kicks in
     // for messages > 1024 bytes.
-    perMessageDeflate?: boolean|{};
+    perMessageDeflate?: boolean | object;
 
     // If using an RSA or ECDSA algorithm to sign the
     // authToken, you will need to provide an authPrivateKey
@@ -229,7 +207,7 @@ export interface TGServerSocketGatewayOptions
 
     // Can be 1 or 2. Version 1 is for maximum backwards
     // compatibility with SocketCluster clients.
-    protocolVersion?: 1|2;
+    protocolVersion?: 1 | 2;
 
     // In milliseconds - If the socket handshake hasn't been
     // completed before this timeout is reached, the new
@@ -292,9 +270,9 @@ export interface TGServerSocketGatewayOptions
     // Close mode means that consumers on the socket will
     // be able to finish processing their stream backlogs
     // bebfore they are ended.
-    socketStreamCleanupMode?: 'kill'|'close';
+    socketStreamCleanupMode?: 'kill' | 'close';
 
-    authVerifyAlgorithm?: JwtAlgorithm|string;
+    authVerifyAlgorithm?: JwtAlgorithm | string;
     authEngine?: AuthEngineType;
     codecEngine?: CodecEngine;
     cloneData?: boolean;

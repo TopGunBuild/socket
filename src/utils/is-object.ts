@@ -1,7 +1,8 @@
-export function isObject(value: any): boolean {
+export function isObject(value: any): boolean 
+{
     return (
         !!value &&
-        typeof value === "object" &&
-        Object.prototype.toString.call(value) !== "[object Array]"
+        typeof value === 'object' &&
+        Object.prototype.toString.call(value) !== '[object Array]'
     );
 }

@@ -1,8 +1,9 @@
-import { AsyncStreamEmitter } from "../async-stream-emitter";
-import { CodecEngine } from "../socket-server/types";
-import { SimpleExchange } from "./simple-exchange";
+import { AsyncStreamEmitter } from '../async-stream-emitter';
+import { CodecEngine } from '../socket-server/types';
+import { SimpleExchange } from './simple-exchange';
 
-export class TGSimpleBroker extends AsyncStreamEmitter<any> {
+export class TGSimpleBroker extends AsyncStreamEmitter<any> 
+{
     isReady: boolean;
     private _codec: CodecEngine;
     private readonly _exchangeClient: SimpleExchange;
@@ -12,7 +13,8 @@ export class TGSimpleBroker extends AsyncStreamEmitter<any> {
     /**
      * Constructor
      */
-    constructor() {
+    constructor() 
+    {
         super();
         this.isReady = false;
         this._codec = null;
@@ -20,9 +22,10 @@ export class TGSimpleBroker extends AsyncStreamEmitter<any> {
         this._clientSubscribers = {};
         this._clientSubscribersCounter = {};
 
-        setTimeout(() => {
+        setTimeout(() => 
+        {
             this.isReady = true;
-            this.emit("ready", {});
+            this.emit('ready', {});
         }, 0);
     }
 
@@ -30,22 +33,26 @@ export class TGSimpleBroker extends AsyncStreamEmitter<any> {
     // @ Public methods
     // -----------------------------------------------------------------------------------------------------
 
-    exchange(): SimpleExchange {
+    exchange(): SimpleExchange 
+    {
         return this._exchangeClient;
     }
 
     async subscribeClient(
         client: { id: string },
         channelName: string
-    ): Promise<void> {
-        if (!this._clientSubscribers[channelName]) {
+    ): Promise<void> 
+    {
+        if (!this._clientSubscribers[channelName]) 
+        {
             this._clientSubscribers[channelName] = {};
             this._clientSubscribersCounter[channelName] = 0;
-            this.emit("subscribe", {
+            this.emit('subscribe', {
                 channel: channelName,
             });
         }
-        if (!this._clientSubscribers[channelName][client.id]) {
+        if (!this._clientSubscribers[channelName][client.id]) 
+        {
             this._clientSubscribersCounter[channelName]++;
         }
         this._clientSubscribers[channelName][client.id] = client;
@@ -54,23 +61,28 @@ export class TGSimpleBroker extends AsyncStreamEmitter<any> {
     async subscribeSocket(
         client: { id: string },
         channelName: string
-    ): Promise<void> {
+    ): Promise<void> 
+    {
         return this.subscribeClient(client, channelName);
     }
 
     async unsubscribeClient(
         client: { id: string },
         channelName: string
-    ): Promise<void> {
-        if (this._clientSubscribers[channelName]) {
-            if (this._clientSubscribers[channelName][client.id]) {
+    ): Promise<void> 
+    {
+        if (this._clientSubscribers[channelName]) 
+        {
+            if (this._clientSubscribers[channelName][client.id]) 
+            {
                 this._clientSubscribersCounter[channelName]--;
                 delete this._clientSubscribers[channelName][client.id];
 
-                if (this._clientSubscribersCounter[channelName] <= 0) {
+                if (this._clientSubscribersCounter[channelName] <= 0) 
+                {
                     delete this._clientSubscribers[channelName];
                     delete this._clientSubscribersCounter[channelName];
-                    this.emit("unsubscribe", {
+                    this.emit('unsubscribe', {
                         channel: channelName,
                     });
                 }
@@ -81,19 +93,23 @@ export class TGSimpleBroker extends AsyncStreamEmitter<any> {
     async unsubscribeSocket(
         client: { id: string },
         channelName: string
-    ): Promise<void> {
+    ): Promise<void> 
+    {
         return this.unsubscribeClient(client, channelName);
     }
 
-    subscriptions(): string[] {
+    subscriptions(): string[] 
+    {
         return Object.keys(this._clientSubscribers);
     }
 
-    isSubscribed(channelName: string): boolean {
+    isSubscribed(channelName: string): boolean 
+    {
         return !!this._clientSubscribers[channelName];
     }
 
-    setCodecEngine(codec: CodecEngine): void {
+    setCodecEngine(codec: CodecEngine): void 
+    {
         this._codec = codec;
     }
 
@@ -105,7 +121,8 @@ export class TGSimpleBroker extends AsyncStreamEmitter<any> {
         channelName: string,
         data: any,
         suppressEvent?: boolean
-    ): Promise<void> {
+    ): Promise<void> 
+    {
         return this.transmitPublish(channelName, data, suppressEvent);
     }
 
@@ -113,34 +130,41 @@ export class TGSimpleBroker extends AsyncStreamEmitter<any> {
         channelName: string,
         data: any,
         suppressEvent?: boolean
-    ): Promise<void> {
-        let packet = {
+    ): Promise<void> 
+    {
+        const packet = {
             channel: channelName,
             data,
         };
-        let transmitOptions: any = {};
+        const transmitOptions: any = {};
 
-        if (this._codec) {
+        if (this._codec) 
+        {
             // Optimization
-            try {
+            try 
+            {
                 transmitOptions.stringifiedData = this._codec.encode({
-                    event: "#publish",
+                    event: '#publish',
                     data: packet,
                 });
-            } catch (error) {
-                this.emit("error", { error });
+            }
+            catch (error) 
+            {
+                this.emit('error', { error });
                 return;
             }
         }
 
-        let subscriberClients = this._clientSubscribers[channelName] || {};
+        const subscriberClients = this._clientSubscribers[channelName] || {};
 
-        Object.keys(subscriberClients).forEach((i) => {
-            subscriberClients[i].transmit("#publish", packet, transmitOptions);
+        Object.keys(subscriberClients).forEach((i) => 
+        {
+            subscriberClients[i].transmit('#publish', packet, transmitOptions);
         });
 
-        if (!suppressEvent) {
-            this.emit("publish", packet);
+        if (!suppressEvent) 
+        {
+            this.emit('publish', packet);
         }
     }
 }

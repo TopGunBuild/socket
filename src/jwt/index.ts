@@ -13,25 +13,23 @@ if (typeof crypto === 'undefined' || !crypto.subtle)
  * @type {'ES256'|'ES384'|'ES512'|'HS256'|'HS384'|'HS512'|'RS256'|'RS384'|'RS512'}
  */
 export type JwtAlgorithm =
-    |'ES256'
-    |'ES384'
-    |'ES512'
-    |'HS256'
-    |'HS384'
-    |'HS512'
-    |'RS256'
-    |'RS384'
-    |'RS512';
+    | 'ES256'
+    | 'ES384'
+    | 'ES512'
+    | 'HS256'
+    | 'HS384'
+    | 'HS512'
+    | 'RS256'
+    | 'RS384'
+    | 'RS512';
 
-interface SubtleCryptoHashAlgorithm
-{
+interface SubtleCryptoHashAlgorithm {
     name: string;
 }
 
-export interface SubtleCryptoImportKeyAlgorithm
-{
+export interface SubtleCryptoImportKeyAlgorithm {
     name: string;
-    hash: string|SubtleCryptoHashAlgorithm;
+    hash: string | SubtleCryptoHashAlgorithm;
     length?: number;
     namedCurve?: string;
     compressed?: boolean;
@@ -40,8 +38,7 @@ export interface SubtleCryptoImportKeyAlgorithm
 /**
  * @typedef JwtAlgorithms
  */
-export interface JwtAlgorithms
-{
+export interface JwtAlgorithms {
     [key: string]: SubtleCryptoImportKeyAlgorithm;
 }
 
@@ -49,8 +46,7 @@ export interface JwtAlgorithms
  * @typedef JwtHeader
  * @prop {string} [typ] Type
  */
-export interface JwtHeader
-{
+export interface JwtHeader {
     /**
      * Type (default: `"JWT"`)
      *
@@ -71,8 +67,7 @@ export interface JwtHeader
  * @prop {string} [iat] Issued At
  * @prop {string} [jti] JWT ID
  */
-export interface JwtPayload
-{
+export interface JwtPayload {
     /** Issuer */
     iss?: string;
 
@@ -101,9 +96,8 @@ export interface JwtPayload
  * @typedef JwtOptions
  * @prop {JwtAlgorithm | string} algorithm
  */
-export interface JwtOptions
-{
-    algorithm?: JwtAlgorithm|string;
+export interface JwtOptions {
+    algorithm?: JwtAlgorithm | string;
 }
 
 /**
@@ -111,8 +105,7 @@ export interface JwtOptions
  * @extends JwtOptions
  * @prop {JwtHeader} [header]
  */
-export interface JwtSignOptions extends JwtOptions
-{
+export interface JwtSignOptions extends JwtOptions {
     header?: JwtHeader;
 }
 
@@ -121,8 +114,7 @@ export interface JwtSignOptions extends JwtOptions
  * @extends JwtOptions
  * @prop {boolean} [throwError=false] If `true` throw error if checks fail. (default: `false`)
  */
-export interface JwtVerifyOptions extends JwtOptions
-{
+export interface JwtVerifyOptions extends JwtOptions {
     /**
      * If `true` throw error if checks fail. (default: `false`)
      *
@@ -136,8 +128,7 @@ export interface JwtVerifyOptions extends JwtOptions
  * @prop {JwtHeader} header
  * @prop {JwtPayload} payload
  */
-export interface JwtData
-{
+export interface JwtData {
     header: JwtHeader;
     payload: JwtPayload;
 }
@@ -146,26 +137,18 @@ function base64UrlParse(s: string): Uint8Array
 {
     return new Uint8Array(
         Array.prototype.map.call(
-            atob(
-                s
-                    .replace(/-/g, '+')
-                    .replace(/_/g, '/')
-                    .replace(/\s/g, '')
-            ),
-            (c) => c.charCodeAt(0)
+            atob(s.replace(/-/g, '+').replace(/_/g, '/').replace(/\s/g, '')),
+            c => c.charCodeAt(0)
         ) as any[]
     );
-    // return new Uint8Array(Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/').replace(/\s/g, ''))).map(c => c.charCodeAt(0)))
 }
 
 function base64UrlStringify(a: Uint8Array): string
 {
-    // @ts-ignore
-    return btoa(String.fromCharCode.apply(0, a))
+    return btoa(String.fromCharCode.apply(0, Array.from(a)))
         .replace(/=/g, '')
         .replace(/\+/g, '-')
         .replace(/\//g, '_');
-    // return btoa(String.fromCharCode.apply(0, Array.from(a))).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')
 }
 
 const algorithms: JwtAlgorithms = {
@@ -189,7 +172,7 @@ function _str2ab(str: string): ArrayBuffer
 {
     str = atob(str);
 
-    const buf     = new ArrayBuffer(str.length);
+    const buf = new ArrayBuffer(str.length);
     const bufView = new Uint8Array(buf);
 
     for (let i = 0, strLen = str.length; i < strLen; i++)
@@ -200,20 +183,20 @@ function _str2ab(str: string): ArrayBuffer
     return buf;
 }
 
-function _decodePayload(raw: string): JwtHeader|JwtPayload|null
+function _decodePayload(raw: string): JwtHeader | JwtPayload | null
 {
     switch (raw.length % 4)
     {
-        case 0:
-            break;
-        case 2:
-            raw += '==';
-            break;
-        case 3:
-            raw += '=';
-            break;
-        default:
-            throw new Error('Illegal base64url string!');
+    case 0:
+        break;
+    case 2:
+        raw += '==';
+        break;
+    case 3:
+        raw += '=';
+        break;
+    default:
+        throw new Error('Illegal base64url string!');
     }
 
     try
@@ -226,7 +209,7 @@ function _decodePayload(raw: string): JwtHeader|JwtPayload|null
     }
 }
 
-export type Secret = string|JsonWebKey;
+export type Secret = string | JsonWebKey;
 
 /**
  * Signs a payload and returns the token
@@ -240,9 +223,9 @@ export type Secret = string|JsonWebKey;
 export async function sign(
     payload: JwtPayload,
     secret: Secret,
-    options: JwtSignOptions|JwtAlgorithm = {
+    options: JwtSignOptions | JwtAlgorithm = {
         algorithm: 'HS256',
-        header   : { typ: 'JWT' },
+        header: { typ: 'JWT' },
     }
 ): Promise<string>
 {
@@ -269,7 +252,7 @@ export async function sign(
     }
 
     const algorithm: SubtleCryptoImportKeyAlgorithm =
-              algorithms[options.algorithm];
+        algorithms[options.algorithm];
 
     if (!algorithm)
     {
@@ -282,7 +265,7 @@ export async function sign(
     }
 
     const payloadAsJSON = JSON.stringify(payload);
-    const partialToken  = `${base64UrlStringify(
+    const partialToken = `${base64UrlStringify(
         _utf8ToUint8Array(
             JSON.stringify({
                 ...options.header,
@@ -297,12 +280,12 @@ export async function sign(
     if (typeof secret === 'object')
     {
         keyFormat = 'jwk';
-        keyData   = secret;
+        keyData = secret;
     }
     else if (typeof secret === 'string' && secret.startsWith('-----BEGIN'))
     {
         keyFormat = 'pkcs8';
-        keyData   = _str2ab(
+        keyData = _str2ab(
             secret
                 .replace(/-----BEGIN.*?-----/g, '')
                 .replace(/-----END.*?-----/g, '')
@@ -314,7 +297,7 @@ export async function sign(
         keyData = _utf8ToUint8Array(secret);
     }
 
-    const key       = await crypto.subtle.importKey(
+    const key = await crypto.subtle.importKey(
         keyFormat,
         keyData,
         algorithm,
@@ -341,9 +324,9 @@ export async function sign(
  */
 export async function verify(
     token: string,
-    secret: string|JsonWebKey,
-    options: JwtVerifyOptions|JwtAlgorithm = {
-        algorithm : 'HS256',
+    secret: string | JsonWebKey,
+    options: JwtVerifyOptions | JwtAlgorithm = {
+        algorithm: 'HS256',
         throwError: false,
     }
 ): Promise<boolean>
@@ -378,7 +361,7 @@ export async function verify(
     }
 
     const algorithm: SubtleCryptoImportKeyAlgorithm =
-              algorithms[options.algorithm];
+        algorithms[options.algorithm];
 
     if (!algorithm)
     {
@@ -422,12 +405,12 @@ export async function verify(
     if (typeof secret === 'object')
     {
         keyFormat = 'jwk';
-        keyData   = secret;
+        keyData = secret;
     }
     else if (typeof secret === 'string' && secret.startsWith('-----BEGIN'))
     {
         keyFormat = 'spki';
-        keyData   = _str2ab(
+        keyData = _str2ab(
             secret
                 .replace(/-----BEGIN.*?-----/g, '')
                 .replace(/-----END.*?-----/g, '')
@@ -464,7 +447,7 @@ export async function verify(
 export function decode(token: string): JwtData
 {
     return {
-        header : _decodePayload(
+        header: _decodePayload(
             token.split('.')[0].replace(/-/g, '+').replace(/_/g, '/')
         ) as JwtHeader,
         payload: _decodePayload(

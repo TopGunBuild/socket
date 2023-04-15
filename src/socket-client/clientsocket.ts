@@ -1,8 +1,8 @@
-import { Buffer } from "buffer/";
-import { AsyncStreamEmitter } from "../async-stream-emitter";
-import { TGChannel } from "../channel/channel";
-import { ChannelState } from "../channel/channel-state";
-import { TGChannelClient } from "../channel/client";
+import { Buffer } from 'buffer/';
+import { AsyncStreamEmitter } from '../async-stream-emitter';
+import { TGChannel } from '../channel/channel';
+import { ChannelState } from '../channel/channel-state';
+import { TGChannelClient } from '../channel/client';
 import {
     BadConnectionError,
     hydrateError,
@@ -12,23 +12,23 @@ import {
     socketProtocolErrorStatuses,
     socketProtocolIgnoreStatuses,
     TimeoutError,
-} from "../errors/errors";
+} from '../errors/errors';
 import {
     SocketProtocolErrorStatuses,
-    SocketProtocolIgnoreStatuses
+    SocketProtocolIgnoreStatuses,
 } from '../errors/types';
-import { formatter } from "../formatter";
-import { Item, LinkedList } from "../linked-list";
-import { CodecEngine } from "../socket-server/types";
-import { StreamDemux } from "../stream-demux";
-import { DemuxedConsumableStream } from "../stream-demux/demuxed-consumable-stream";
-import { AuthToken, EventObject, UnsubscribeData } from "../types";
-import { cloneDeep } from "../utils/clone-deep";
-import { getGlobal } from "../utils/global";
-import { wait } from "../utils/wait";
-import { ConsumerStats } from "../writable-consumable-stream/consumer-stats";
-import { AuthEngine } from "./auth";
-import { TGTransport } from "./transport";
+import { formatter } from '../formatter';
+import { Item, LinkedList } from '../linked-list';
+import { CodecEngine } from '../socket-server/types';
+import { StreamDemux } from '../stream-demux';
+import { DemuxedConsumableStream } from '../stream-demux/demuxed-consumable-stream';
+import { AuthToken, EventObject, UnsubscribeData } from '../types';
+import { cloneDeep } from '../utils/clone-deep';
+import { getGlobal } from '../utils/global';
+import { wait } from '../utils/wait';
+import { ConsumerStats } from '../writable-consumable-stream/consumer-stats';
+import { AuthEngine } from './auth';
+import { TGTransport } from './transport';
 import {
     AuthStates,
     AuthStatus,
@@ -41,26 +41,27 @@ import {
     SubscribeOptions,
     TGAuthEngine,
     TransmitOptions,
-} from "./types";
+} from './types';
 import { TGRequest } from '../request';
 
-const isBrowser = typeof window !== "undefined";
+const isBrowser = typeof window !== 'undefined';
 const global = getGlobal();
 
+/* eslint-disable @typescript-eslint/no-unused-vars */
 export class TGClientSocket
     extends AsyncStreamEmitter<any>
     implements TGChannelClient
 {
-    static readonly CONNECTING: States = "connecting";
-    static readonly OPEN: States = "open";
-    static readonly CLOSED: States = "closed";
+    static readonly CONNECTING: States = 'connecting';
+    static readonly OPEN: States = 'open';
+    static readonly CLOSED: States = 'closed';
 
-    static readonly AUTHENTICATED: AuthStates = "authenticated";
-    static readonly UNAUTHENTICATED: AuthStates = "unauthenticated";
+    static readonly AUTHENTICATED: AuthStates = 'authenticated';
+    static readonly UNAUTHENTICATED: AuthStates = 'unauthenticated';
 
-    static readonly SUBSCRIBED = "subscribed";
-    static readonly PENDING = "pending";
-    static readonly UNSUBSCRIBED = "unsubscribed";
+    static readonly SUBSCRIBED = 'subscribed';
+    static readonly PENDING = 'pending';
+    static readonly UNSUBSCRIBED = 'unsubscribed';
 
     static readonly ignoreStatuses: SocketProtocolIgnoreStatuses =
         socketProtocolIgnoreStatuses;
@@ -119,72 +120,89 @@ export class TGClientSocket
     private _cid: number;
     private _reconnectTimeoutRef: any;
 
-    private _privateDataHandlerMap: {[key: string]: (...params: any[]) => void} = {
-        "#publish": (data: any) => {
-            let undecoratedChannelName = this._undecorateChannelName(
-                data.channel
-            );
-            let isSubscribed = this.isSubscribed(undecoratedChannelName, true);
-
-            if (isSubscribed) {
-                this._channelDataDemux.write(undecoratedChannelName, data.data);
-            }
-        },
-        "#kickOut": (data: any) => {
-            let undecoratedChannelName = this._undecorateChannelName(
-                data.channel
-            );
-            let channel = this._channelMap[undecoratedChannelName];
-            if (channel) {
-                this.emit("kickOut", {
-                    channel: undecoratedChannelName,
-                    message: data.message,
-                } as KickOutData);
-                this._channelEventDemux.write(
-                    `${undecoratedChannelName}/kickOut`,
-                    { message: data.message }
+    private _privateDataHandlerMap: {
+        [key: string]: (...params: any[]) => void;
+    } = {
+            '#publish': (data: any) =>
+            {
+                const undecoratedChannelName = this._undecorateChannelName(
+                    data.channel
                 );
-                this._triggerChannelUnsubscribe(channel);
-            }
-        },
-        "#setAuthToken": (data: any) => {
-            if (data) {
-                this._setAuthToken(data);
-            }
-        },
-        "#removeAuthToken": (data: any) => {
-            this._removeAuthToken();
-        },
-    };
+                const isSubscribed = this.isSubscribed(undecoratedChannelName, true);
 
-    private _privateRPCHandlerMap: {[key: string]: (...params: any[]) => void} = {
-        "#setAuthToken": (data: any, request: any) => {
-            if (data) {
-                this._setAuthToken(data);
+                if (isSubscribed)
+                {
+                    this._channelDataDemux.write(undecoratedChannelName, data.data);
+                }
+            },
+            '#kickOut': (data: any) =>
+            {
+                const undecoratedChannelName = this._undecorateChannelName(
+                    data.channel
+                );
+                const channel = this._channelMap[undecoratedChannelName];
+                if (channel)
+                {
+                    this.emit('kickOut', {
+                        channel: undecoratedChannelName,
+                        message: data.message,
+                    } as KickOutData);
+                    this._channelEventDemux.write(
+                        `${undecoratedChannelName}/kickOut`,
+                        { message: data.message }
+                    );
+                    this._triggerChannelUnsubscribe(channel);
+                }
+            },
+            '#setAuthToken': (data: any) =>
+            {
+                if (data)
+                {
+                    this._setAuthToken(data);
+                }
+            },
+            '#removeAuthToken': (data: any) =>
+            {
+                this._removeAuthToken();
+            },
+        };
 
+    private _privateRPCHandlerMap: {
+        [key: string]: (...params: any[]) => void;
+    } = {
+            '#setAuthToken': (data: any, request: any) =>
+            {
+                if (data)
+                {
+                    this._setAuthToken(data);
+
+                    request.end();
+                }
+                else
+                {
+                    request.error(
+                        new InvalidMessageError(
+                            'No token data provided by #setAuthToken event'
+                        )
+                    );
+                }
+            },
+            '#removeAuthToken': (data: any, request: any) =>
+            {
+                this._removeAuthToken();
                 request.end();
-            } else {
-                request.error(
-                    new InvalidMessageError(
-                        "No token data provided by #setAuthToken event"
-                    )
-                );
-            }
-        },
-        "#removeAuthToken": (data: any, request: any) => {
-            this._removeAuthToken();
-            request.end();
-        },
-    };
+            },
+        };
 
     /**
      * Constructor
      */
-    constructor(socketOptions: ClientOptions) {
+    constructor(socketOptions: ClientOptions)
+    {
         super();
 
-        let defaultOptions: ClientOptions = {
-            path: "/topgunsocket/",
+        const defaultOptions: ClientOptions = {
+            path: '/topgunsocket/',
             secure: false,
             protocolScheme: null,
             socketPath: null,
@@ -194,9 +212,9 @@ export class TGClientSocket
             connectTimeout: 20000,
             ackTimeout: 10000,
             timestampRequests: false,
-            timestampParam: "t",
-            authTokenName: "topgunsocket.authToken",
-            binaryType: "arraybuffer",
+            timestampParam: 't',
+            authTokenName: 'topgunsocket.authToken',
+            binaryType: 'arraybuffer',
             batchOnHandshake: false,
             batchOnHandshakeDuration: 100,
             batchInterval: 50,
@@ -235,19 +253,21 @@ export class TGClientSocket
         this.pingTimeout = opts.pingTimeout;
         this.pingTimeoutDisabled = !!opts.pingTimeoutDisabled;
 
-        let maxTimeout = Math.pow(2, 31) - 1;
+        const maxTimeout = Math.pow(2, 31) - 1;
 
-        let verifyDuration = (propertyName: string) => {
-            if ((this as any)[propertyName] > maxTimeout) {
+        const verifyDuration = (propertyName: string) =>
+        {
+            if ((this as any)[propertyName] > maxTimeout)
+            {
                 throw new InvalidArgumentsError(
                     `The ${propertyName} value provided exceeded the maximum amount allowed`
                 );
             }
         };
 
-        verifyDuration("connectTimeout");
-        verifyDuration("ackTimeout");
-        verifyDuration("pingTimeout");
+        verifyDuration('connectTimeout');
+        verifyDuration('ackTimeout');
+        verifyDuration('pingTimeout');
 
         this.connectAttempts = 0;
 
@@ -269,51 +289,66 @@ export class TGClientSocket
 
         this._cid = 1;
 
-        this.options.callIdGenerator = () => {
+        this.options.callIdGenerator = () =>
+        {
             return this._cid++;
         };
 
-        if (this.options.autoReconnect) {
-            if (this.options.autoReconnectOptions == null) {
+        if (this.options.autoReconnect)
+        {
+            if (this.options.autoReconnectOptions == null)
+            {
                 this.options.autoReconnectOptions = {};
             }
 
             // Add properties to the this.options.autoReconnectOptions object.
             // We assign the reference to a reconnectOptions variable to avoid repetition.
-            let reconnectOptions = this.options.autoReconnectOptions;
-            if (reconnectOptions.initialDelay == null) {
+            const reconnectOptions = this.options.autoReconnectOptions;
+            if (reconnectOptions.initialDelay == null)
+            {
                 reconnectOptions.initialDelay = 10000;
             }
-            if (reconnectOptions.randomness == null) {
+            if (reconnectOptions.randomness == null)
+            {
                 reconnectOptions.randomness = 10000;
             }
-            if (reconnectOptions.multiplier == null) {
+            if (reconnectOptions.multiplier == null)
+            {
                 reconnectOptions.multiplier = 1.5;
             }
-            if (reconnectOptions.maxDelay == null) {
+            if (reconnectOptions.maxDelay == null)
+            {
                 reconnectOptions.maxDelay = 60000;
             }
         }
 
-        if (this.options.subscriptionRetryOptions == null) {
+        if (this.options.subscriptionRetryOptions == null)
+        {
             this.options.subscriptionRetryOptions = {};
         }
 
-        if (this.options.authEngine) {
+        if (this.options.authEngine)
+        {
             this.auth = this.options.authEngine;
-        } else {
+        }
+        else
+        {
             this.auth = new AuthEngine();
         }
 
-        if (this.options.codecEngine) {
+        if (this.options.codecEngine)
+        {
             this.codec = this.options.codecEngine;
-        } else {
+        }
+        else
+        {
             // Default codec engine
             this.codec = formatter;
         }
 
-        if ((this.options as any)["protocol"]) {
-            let protocolOptionError = new InvalidArgumentsError(
+        if ((this.options as any)['protocol'])
+        {
+            const protocolOptionError = new InvalidArgumentsError(
                 'The "protocol" option does not affect socketcluster-client - ' +
                     'If you want to utilize SSL/TLS, use "secure" option instead'
             );
@@ -321,16 +356,22 @@ export class TGClientSocket
         }
 
         this.options.query = opts.query || {};
-        if (typeof this.options.query === "string") {
-            let searchParams = new URLSearchParams(this.options.query);
-            let queryObject: {[key: string]: any} = {};
+        if (typeof this.options.query === 'string')
+        {
+            const searchParams = new URLSearchParams(this.options.query);
+            const queryObject: { [key: string]: any } = {};
 
-            searchParams.forEach((value, key) => {
-                let currentValue = queryObject[key];
-                if (currentValue == null) {
+            searchParams.forEach((value, key) =>
+            {
+                const currentValue = queryObject[key];
+                if (currentValue == null)
+                {
                     queryObject[key] = value;
-                } else {
-                    if (!Array.isArray(currentValue)) {
+                }
+                else
+                {
+                    if (!Array.isArray(currentValue))
+                    {
                         queryObject[key] = [currentValue];
                     }
                     queryObject[key].push(value);
@@ -345,11 +386,13 @@ export class TGClientSocket
             this.disconnectOnUnload &&
             global.addEventListener &&
             global.removeEventListener
-        ) {
+        )
+        {
             this._handleBrowserUnload();
         }
 
-        if (this.options.autoConnect) {
+        if (this.options.autoConnect)
+        {
             this.connect();
         }
     }
@@ -358,7 +401,8 @@ export class TGClientSocket
     // @ Accessors
     // -----------------------------------------------------------------------------------------------------
 
-    get isBufferingBatch(): boolean {
+    get isBufferingBatch(): boolean
+    {
         return this.transport.isBufferingBatch;
     }
 
@@ -366,7 +410,8 @@ export class TGClientSocket
     // @ Public methods
     // -----------------------------------------------------------------------------------------------------
 
-    getBackpressure(): number {
+    getBackpressure(): number
+    {
         return Math.max(
             this.getAllListenersBackpressure(),
             this.getAllReceiversBackpressure(),
@@ -375,73 +420,93 @@ export class TGClientSocket
         );
     }
 
-    getState(): States {
+    getState(): States
+    {
         return this.state;
     }
 
-    getBytesReceived(): any {
+    getBytesReceived(): any
+    {
         return this.transport.getBytesReceived();
     }
 
-    async deauthenticate(): Promise<void> {
-        (async () => {
+    async deauthenticate(): Promise<void>
+    {
+        (async () =>
+        {
             let oldAuthToken;
-            try {
+            try
+            {
                 oldAuthToken = await this.auth.removeToken(this.authTokenName);
-            } catch (err) {
+            }
+            catch (err)
+            {
                 this._onError(err);
                 return;
             }
-            this.emit("removeAuthToken", { oldAuthToken });
+            this.emit('removeAuthToken', { oldAuthToken });
         })();
 
-        if (this.state !== TGClientSocket.CLOSED) {
-            this.transmit("#removeAuthToken");
+        if (this.state !== TGClientSocket.CLOSED)
+        {
+            this.transmit('#removeAuthToken');
         }
         this._changeToUnauthenticatedStateAndClearTokens();
         await wait(0);
     }
 
-    connect(): void {
-        if (this.state === TGClientSocket.CLOSED) {
+    connect(): void
+    {
+        if (this.state === TGClientSocket.CLOSED)
+        {
             this.pendingReconnect = false;
             this.pendingReconnectTimeout = null;
             clearTimeout(this._reconnectTimeoutRef);
 
             this.state = TGClientSocket.CONNECTING;
-            this.emit("connecting", {});
+            this.emit('connecting', {});
 
-            if (this.transport) {
+            if (this.transport)
+            {
                 this.transport.clearAllListeners();
             }
 
-            let transportHandlers = {
-                onOpen: (value: any) => {
+            const transportHandlers = {
+                onOpen: (value: any) =>
+                {
                     this.state = TGClientSocket.OPEN;
                     this._onOpen(value);
                 },
-                onOpenAbort: (value: any) => {
-                    if (this.state !== TGClientSocket.CLOSED) {
+                onOpenAbort: (value: any) =>
+                {
+                    if (this.state !== TGClientSocket.CLOSED)
+                    {
                         this.state = TGClientSocket.CLOSED;
                         this._destroy(value.code, value.reason, true);
                     }
                 },
-                onClose: (value: any) => {
-                    if (this.state !== TGClientSocket.CLOSED) {
+                onClose: (value: any) =>
+                {
+                    if (this.state !== TGClientSocket.CLOSED)
+                    {
                         this.state = TGClientSocket.CLOSED;
                         this._destroy(value.code, value.reason);
                     }
                 },
-                onEvent: (value: any) => {
+                onEvent: (value: any) =>
+                {
                     this.emit(value.event, value.data);
                 },
-                onError: (value: any) => {
+                onError: (value: any) =>
+                {
                     this._onError(value.error);
                 },
-                onInboundInvoke: (value: any) => {
+                onInboundInvoke: (value: any) =>
+                {
                     this._onInboundInvoke(value);
                 },
-                onInboundTransmit: (value: any) => {
+                onInboundTransmit: (value: any) =>
+                {
                     this._onInboundTransmit(value.event, value.data);
                 },
             };
@@ -456,61 +521,76 @@ export class TGClientSocket
         }
     }
 
-    reconnect(code?: number, reason?: string): void {
+    reconnect(code?: number, reason?: string): void
+    {
         this.disconnect(code, reason);
         this.connect();
     }
 
-    disconnect(code?: number, reason?: string): void {
+    disconnect(code?: number, reason?: string): void
+    {
         code = code || 1000;
 
-        if (typeof code !== "number") {
+        if (typeof code !== 'number')
+        {
             throw new InvalidArgumentsError(
-                "If specified, the code argument must be a number"
+                'If specified, the code argument must be a number'
             );
         }
 
-        let isConnecting = this.state === TGClientSocket.CONNECTING;
-        if (isConnecting || this.state === TGClientSocket.OPEN) {
+        const isConnecting = this.state === TGClientSocket.CONNECTING;
+        if (isConnecting || this.state === TGClientSocket.OPEN)
+        {
             this.state = TGClientSocket.CLOSED;
             this._destroy(code, reason, isConnecting);
             this.transport.close(code, reason);
-        } else {
+        }
+        else
+        {
             this.pendingReconnect = false;
             this.pendingReconnectTimeout = null;
             clearTimeout(this._reconnectTimeoutRef);
         }
     }
 
-    decodeBase64(encodedString: string): string {
-        return Buffer.from(encodedString, "base64").toString("utf8");
+    decodeBase64(encodedString: string): string
+    {
+        return Buffer.from(encodedString, 'base64').toString('utf8');
     }
 
-    encodeBase64(decodedString: string): string {
-        return Buffer.from(decodedString, "utf8").toString("base64");
+    encodeBase64(decodedString: string): string
+    {
+        return Buffer.from(decodedString, 'utf8').toString('base64');
     }
 
-    getAuthToken(): AuthToken | null {
+    getAuthToken(): AuthToken | null
+    {
         return this.authToken;
     }
 
-    getSignedAuthToken(): SignedAuthToken | null {
+    getSignedAuthToken(): SignedAuthToken | null
+    {
         return this.signedAuthToken;
     }
 
     /**
      * Perform client-initiated authentication by providing an encrypted token string.
      */
-    async authenticate(signedAuthToken: string): Promise<AuthStatus> {
+    async authenticate(signedAuthToken: string): Promise<AuthStatus>
+    {
         let authStatus;
 
-        try {
-            authStatus = await this.invoke("#authenticate", signedAuthToken);
-        } catch (err) {
+        try
+        {
+            authStatus = await this.invoke('#authenticate', signedAuthToken);
+        }
+        catch (err)
+        {
             if (
-                (err as Error).name !== "BadConnectionError" &&
-                (err as Error).name !== "TimeoutError"
-            ) {
+                (err as Error).name !== 'BadConnectionError' &&
+                (err as Error).name !== 'TimeoutError'
+            )
+            {
                 // In case of a bad/closed connection or a timeout, we maintain the last
                 // known auth state since those errors don't mean that the token is invalid.
                 this._changeToUnauthenticatedStateAndClearTokens();
@@ -519,13 +599,17 @@ export class TGClientSocket
             throw err;
         }
 
-        if (authStatus && authStatus.isAuthenticated != null) {
+        if (authStatus && authStatus.isAuthenticated != null)
+        {
             // If authStatus is correctly formatted (has an isAuthenticated property),
             // then we will rehydrate the authError.
-            if (authStatus.authError) {
+            if (authStatus.authError)
+            {
                 authStatus.authError = hydrateError(authStatus.authError);
             }
-        } else {
+        }
+        else
+        {
             // Some errors like BadConnectionError and TimeoutError will not pass a valid
             // authStatus object to the current function, so we need to create it ourselves.
             authStatus = {
@@ -534,20 +618,27 @@ export class TGClientSocket
             };
         }
 
-        if (authStatus.isAuthenticated) {
+        if (authStatus.isAuthenticated)
+        {
             this._changeToAuthenticatedState(signedAuthToken);
-        } else {
+        }
+        else
+        {
             this._changeToUnauthenticatedStateAndClearTokens();
         }
 
-        (async () => {
-            try {
+        (async () =>
+        {
+            try
+            {
                 await this.auth.saveToken(
                     this.authTokenName,
                     signedAuthToken,
                     {}
                 );
-            } catch (err) {
+            }
+            catch (err)
+            {
                 this._onError(err);
             }
         })();
@@ -556,15 +647,18 @@ export class TGClientSocket
         return authStatus;
     }
 
-    decode(message: any): any {
+    decode(message: any): any
+    {
         return this.transport.decode(message);
     }
 
-    encode(object: any): any {
+    encode(object: any): any
+    {
         return this.transport.encode(object);
     }
 
-    send(data: any): void {
+    send(data: any): void
+    {
         this.transport.send(data);
     }
 
@@ -572,7 +666,8 @@ export class TGClientSocket
         event: string,
         data?: any,
         options?: { ackTimeout?: number | undefined }
-    ): Promise<void> {
+    ): Promise<void>
+    {
         return this._processOutboundEvent(event, data, options);
     }
 
@@ -580,72 +675,85 @@ export class TGClientSocket
         event: string,
         data: any,
         options?: { ackTimeout?: number | undefined }
-    ): Promise<any> {
+    ): Promise<any>
+    {
         return this._processOutboundEvent(event, data, options, true);
     }
 
-    transmitPublish(channelName: string, data: any): Promise<void> {
-        let pubData = {
+    transmitPublish(channelName: string, data: any): Promise<void>
+    {
+        const pubData = {
             channel: this._decorateChannelName(channelName),
             data,
         };
-        return this.transmit("#publish", pubData);
+        return this.transmit('#publish', pubData);
     }
 
     invokePublish(
         channelName: string,
         data: any
-    ): Promise<{ channel: string; data: any }> {
-        let pubData = {
+    ): Promise<{ channel: string; data: any }>
+    {
+        const pubData = {
             channel: this._decorateChannelName(channelName),
             data,
         };
-        return this.invoke("#publish", pubData);
+        return this.invoke('#publish', pubData);
     }
 
-    startBatch(): void {
+    startBatch(): void
+    {
         this.transport.startBatch();
     }
 
-    flushBatch(): void {
+    flushBatch(): void
+    {
         this.transport.flushBatch();
     }
 
-    cancelBatch(): void {
+    cancelBatch(): void
+    {
         this.transport.cancelBatch();
     }
 
-    startBatching(): void {
+    startBatching(): void
+    {
         this.isBatching = true;
         this._startBatching();
     }
 
-    stopBatching(): void {
+    stopBatching(): void
+    {
         this.isBatching = false;
         this._stopBatching();
     }
 
-    cancelBatching(): void {
+    cancelBatching(): void
+    {
         this.isBatching = false;
         this._cancelBatching();
     }
 
-    subscribe(channelName: string, options?: SubscribeOptions): TGChannel<any> {
+    subscribe(channelName: string, options?: SubscribeOptions): TGChannel<any>
+    {
         options = options || {};
         let channel = this._channelMap[channelName];
 
-        let sanitizedOptions: SubscribeOptions = {
+        const sanitizedOptions: SubscribeOptions = {
             waitForAuth: !!options.waitForAuth,
         };
 
-        if (options.priority != null) {
+        if (options.priority != null)
+        {
             sanitizedOptions.priority = options.priority;
         }
-        if (options.data !== undefined) {
+        if (options.data !== undefined)
+        {
             sanitizedOptions.data = options.data;
         }
 
-        if (!channel) {
+        if (!channel)
+        {
             channel = {
                 name: channelName,
                 state: TGChannel.PENDING,
@@ -653,11 +761,13 @@ export class TGClientSocket
             };
             this._channelMap[channelName] = channel;
             this._trySubscribe(channel);
-        } else if (options) {
+        }
+        else if (options)
+        {
             channel.options = sanitizedOptions;
         }
 
-        let channelIterable = new TGChannel(
+        const channelIterable = new TGChannel(
             channelName,
             this,
             this._channelEventDemux,
@@ -667,10 +777,12 @@ export class TGClientSocket
         return channelIterable;
     }
 
-    async unsubscribe(channelName: string): Promise<void> {
-        let channel = this._channelMap[channelName];
+    async unsubscribe(channelName: string): Promise<void>
+    {
+        const channel = this._channelMap[channelName];
 
-        if (channel) {
+        if (channel)
+        {
             this._triggerChannelUnsubscribe(channel);
             this._tryUnsubscribe(channel);
         }
@@ -678,126 +790,155 @@ export class TGClientSocket
 
     // ---- Receiver logic ----
 
-    receiver(receiverName: string): DemuxedConsumableStream<any> {
+    receiver(receiverName: string): DemuxedConsumableStream<any>
+    {
         return this._receiverDemux.stream(receiverName);
     }
 
-    closeReceiver(receiverName: string): void {
+    closeReceiver(receiverName: string): void
+    {
         this._receiverDemux.close(receiverName);
     }
 
-    closeAllReceivers(): void {
+    closeAllReceivers(): void
+    {
         this._receiverDemux.closeAll();
     }
 
-    killReceiver(receiverName: string): void {
+    killReceiver(receiverName: string): void
+    {
         this._receiverDemux.kill(receiverName);
     }
 
-    killAllReceivers(): void {
+    killAllReceivers(): void
+    {
         this._receiverDemux.killAll();
     }
 
-    killReceiverConsumer(consumerId: number): void {
+    killReceiverConsumer(consumerId: number): void
+    {
         this._receiverDemux.killConsumer(consumerId);
     }
 
-    getReceiverConsumerStats(consumerId: number): ConsumerStats {
+    getReceiverConsumerStats(consumerId: number): ConsumerStats
+    {
         return this._receiverDemux.getConsumerStats(consumerId);
     }
 
-    getReceiverConsumerStatsList(receiverName: string): ConsumerStats[] {
+    getReceiverConsumerStatsList(receiverName: string): ConsumerStats[]
+    {
         return this._receiverDemux.getConsumerStatsList(receiverName);
     }
 
-    getAllReceiversConsumerStatsList(): ConsumerStats[] {
+    getAllReceiversConsumerStatsList(): ConsumerStats[]
+    {
         return this._receiverDemux.getConsumerStatsListAll();
     }
 
-    getReceiverBackpressure(receiverName: string): number {
+    getReceiverBackpressure(receiverName: string): number
+    {
         return this._receiverDemux.getBackpressure(receiverName);
     }
 
-    getAllReceiversBackpressure(): number {
+    getAllReceiversBackpressure(): number
+    {
         return this._receiverDemux.getBackpressureAll();
     }
 
-    getReceiverConsumerBackpressure(consumerId: number): number {
+    getReceiverConsumerBackpressure(consumerId: number): number
+    {
         return this._receiverDemux.getConsumerBackpressure(consumerId);
     }
 
-    hasReceiverConsumer(receiverName: string, consumerId: number): boolean {
+    hasReceiverConsumer(receiverName: string, consumerId: number): boolean
+    {
         return this._receiverDemux.hasConsumer(receiverName, consumerId);
     }
 
-    hasAnyReceiverConsumer(consumerId: number): boolean {
+    hasAnyReceiverConsumer(consumerId: number): boolean
+    {
         return this._receiverDemux.hasConsumerAll(consumerId);
     }
 
     // ---- Procedure logic ----
 
-    procedure(procedureName: string): DemuxedConsumableStream<any> {
+    procedure(procedureName: string): DemuxedConsumableStream<any>
+    {
         return this._procedureDemux.stream(procedureName);
     }
 
-    closeProcedure(procedureName: string): void {
+    closeProcedure(procedureName: string): void
+    {
         this._procedureDemux.close(procedureName);
     }
 
-    closeAllProcedures(): void {
+    closeAllProcedures(): void
+    {
         this._procedureDemux.closeAll();
     }
 
-    killProcedure(procedureName: string): void {
+    killProcedure(procedureName: string): void
+    {
         this._procedureDemux.kill(procedureName);
     }
 
-    killAllProcedures(): void {
+    killAllProcedures(): void
+    {
         this._procedureDemux.killAll();
     }
 
-    killProcedureConsumer(consumerId: number): void {
+    killProcedureConsumer(consumerId: number): void
+    {
         this._procedureDemux.killConsumer(consumerId);
     }
 
-    getProcedureConsumerStats(consumerId: number): ConsumerStats {
+    getProcedureConsumerStats(consumerId: number): ConsumerStats
+    {
         return this._procedureDemux.getConsumerStats(consumerId);
     }
 
-    getProcedureConsumerStatsList(procedureName: string): ConsumerStats[] {
+    getProcedureConsumerStatsList(procedureName: string): ConsumerStats[]
+    {
         return this._procedureDemux.getConsumerStatsList(procedureName);
     }
 
-    getAllProceduresConsumerStatsList(): ConsumerStats[] {
+    getAllProceduresConsumerStatsList(): ConsumerStats[]
+    {
         return this._procedureDemux.getConsumerStatsListAll();
     }
 
-    getProcedureBackpressure(procedureName: string): number {
+    getProcedureBackpressure(procedureName: string): number
+    {
         return this._procedureDemux.getBackpressure(procedureName);
     }
 
-    getAllProceduresBackpressure(): number {
+    getAllProceduresBackpressure(): number
+    {
         return this._procedureDemux.getBackpressureAll();
     }
 
-    getProcedureConsumerBackpressure(consumerId: number): number {
+    getProcedureConsumerBackpressure(consumerId: number): number
+    {
         return this._procedureDemux.getConsumerBackpressure(consumerId);
     }
 
-    hasProcedureConsumer(procedureName: string, consumerId: number): boolean {
+    hasProcedureConsumer(procedureName: string, consumerId: number): boolean
+    {
         return this._procedureDemux.hasConsumer(procedureName, consumerId);
     }
 
-    hasAnyProcedureConsumer(consumerId: number): boolean {
+    hasAnyProcedureConsumer(consumerId: number): boolean
+    {
         return this._procedureDemux.hasConsumerAll(consumerId);
     }
 
     // ---- Channel logic ----
 
-    channel(channelName: string): TGChannel<any> {
+    channel(channelName: string): TGChannel<any>
+    {
         // let currentChannel = this._channelMap[channelName];
 
-        let channelIterable = new TGChannel(
+        const channelIterable = new TGChannel(
             channelName,
             this,
             this._channelEventDemux,
@@ -807,160 +948,192 @@ export class TGClientSocket
         return channelIterable;
     }
 
-    closeChannel(channelName: string): void {
+    closeChannel(channelName: string): void
+    {
         this.channelCloseOutput(channelName);
         this.channelCloseAllListeners(channelName);
     }
 
-    closeAllChannelOutputs(): void {
+    closeAllChannelOutputs(): void
+    {
         this._channelDataDemux.closeAll();
     }
 
-    closeAllChannelListeners(): void {
+    closeAllChannelListeners(): void
+    {
         this._channelEventDemux.closeAll();
     }
 
-    closeAllChannels(): void {
+    closeAllChannels(): void
+    {
         this.closeAllChannelOutputs();
         this.closeAllChannelListeners();
     }
 
-    killChannel(channelName: string): void {
+    killChannel(channelName: string): void
+    {
         this.channelKillOutput(channelName);
         this.channelKillAllListeners(channelName);
     }
 
-    killAllChannelOutputs(): void {
+    killAllChannelOutputs(): void
+    {
         this._channelDataDemux.killAll();
     }
 
-    killAllChannelListeners(): void {
+    killAllChannelListeners(): void
+    {
         this._channelEventDemux.killAll();
     }
 
-    killAllChannels(): void {
+    killAllChannels(): void
+    {
         this.killAllChannelOutputs();
         this.killAllChannelListeners();
     }
 
-    killChannelOutputConsumer(consumerId: number): void {
+    killChannelOutputConsumer(consumerId: number): void
+    {
         this._channelDataDemux.killConsumer(consumerId);
     }
 
-    killChannelListenerConsumer(consumerId: number): void {
+    killChannelListenerConsumer(consumerId: number): void
+    {
         this._channelEventDemux.killConsumer(consumerId);
     }
 
-    getChannelOutputConsumerStats(consumerId: number): ConsumerStats {
+    getChannelOutputConsumerStats(consumerId: number): ConsumerStats
+    {
         return this._channelDataDemux.getConsumerStats(consumerId);
     }
 
-    getChannelListenerConsumerStats(consumerId: number): ConsumerStats {
+    getChannelListenerConsumerStats(consumerId: number): ConsumerStats
+    {
         return this._channelEventDemux.getConsumerStats(consumerId);
     }
 
-    getAllChannelOutputsConsumerStatsList(): any[] {
+    getAllChannelOutputsConsumerStatsList(): any[]
+    {
         return this._channelDataDemux.getConsumerStatsListAll();
     }
 
-    getAllChannelListenersConsumerStatsList(): any[] {
+    getAllChannelListenersConsumerStatsList(): any[]
+    {
         return this._channelEventDemux.getConsumerStatsListAll();
     }
 
-    getChannelBackpressure(channelName: string): number {
+    getChannelBackpressure(channelName: string): number
+    {
         return Math.max(
             this.channelGetOutputBackpressure(channelName),
             this.channelGetAllListenersBackpressure(channelName)
         );
     }
 
-    getAllChannelOutputsBackpressure(): number {
+    getAllChannelOutputsBackpressure(): number
+    {
         return this._channelDataDemux.getBackpressureAll();
     }
 
-    getAllChannelListenersBackpressure(): number {
+    getAllChannelListenersBackpressure(): number
+    {
         return this._channelEventDemux.getBackpressureAll();
     }
 
-    getAllChannelsBackpressure(): number {
+    getAllChannelsBackpressure(): number
+    {
         return Math.max(
             this.getAllChannelOutputsBackpressure(),
             this.getAllChannelListenersBackpressure()
         );
     }
 
-    getChannelListenerConsumerBackpressure(consumerId: number): number {
+    getChannelListenerConsumerBackpressure(consumerId: number): number
+    {
         return this._channelEventDemux.getConsumerBackpressure(consumerId);
     }
 
-    getChannelOutputConsumerBackpressure(consumerId: number): number {
+    getChannelOutputConsumerBackpressure(consumerId: number): number
+    {
         return this._channelDataDemux.getConsumerBackpressure(consumerId);
     }
 
-    hasAnyChannelOutputConsumer(consumerId: any): boolean {
+    hasAnyChannelOutputConsumer(consumerId: any): boolean
+    {
         return this._channelDataDemux.hasConsumerAll(consumerId);
     }
 
-    hasAnyChannelListenerConsumer(consumerId: any): boolean {
+    hasAnyChannelListenerConsumer(consumerId: any): boolean
+    {
         return this._channelEventDemux.hasConsumerAll(consumerId);
     }
 
-    getChannelState(channelName: string): ChannelState {
-        let channel = this._channelMap[channelName];
-        if (channel) {
+    getChannelState(channelName: string): ChannelState
+    {
+        const channel = this._channelMap[channelName];
+        if (channel)
+        {
             return channel.state;
         }
         return TGChannel.UNSUBSCRIBED;
     }
 
-    getChannelOptions(channelName: string): object {
-        let channel = this._channelMap[channelName];
-        if (channel) {
+    getChannelOptions(channelName: string): object
+    {
+        const channel = this._channelMap[channelName];
+        if (channel)
+        {
             return { ...channel.options };
         }
         return {};
     }
 
-    channelCloseOutput(channelName: string): void {
+    channelCloseOutput(channelName: string): void
+    {
         this._channelDataDemux.close(channelName);
     }
 
-    channelCloseListener(channelName: string, eventName: string): void {
+    channelCloseListener(channelName: string, eventName: string): void
+    {
         this._channelEventDemux.close(`${channelName}/${eventName}`);
     }
 
-    channelCloseAllListeners(channelName: string): void {
-        this._getAllChannelStreamNames(
-            channelName
-        ).forEach((streamName) => {
+    channelCloseAllListeners(channelName: string): void
+    {
+        this._getAllChannelStreamNames(channelName).forEach((streamName) =>
+        {
             this._channelEventDemux.close(streamName);
         });
     }
 
-    channelKillOutput(channelName: string): void {
+    channelKillOutput(channelName: string): void
+    {
         this._channelDataDemux.kill(channelName);
     }
 
-    channelKillListener(channelName: string, eventName: string): void {
+    channelKillListener(channelName: string, eventName: string): void
+    {
         this._channelEventDemux.kill(`${channelName}/${eventName}`);
     }
 
-    channelKillAllListeners(channelName: string): void {
-        this._getAllChannelStreamNames(
-            channelName
-        ).forEach((streamName) => {
+    channelKillAllListeners(channelName: string): void
+    {
+        this._getAllChannelStreamNames(channelName).forEach((streamName) =>
+        {
             this._channelEventDemux.kill(streamName);
         });
     }
 
-    channelGetOutputConsumerStatsList(channelName: string): ConsumerStats[] {
+    channelGetOutputConsumerStatsList(channelName: string): ConsumerStats[]
+    {
         return this._channelDataDemux.getConsumerStatsList(channelName);
     }
 
     channelGetListenerConsumerStatsList(
         channelName: string,
         eventName: string
-    ): ConsumerStats[] {
+    ): ConsumerStats[]
+    {
         return this._channelEventDemux.getConsumerStatsList(
             `${channelName}/${eventName}`
         );
@@ -968,42 +1141,51 @@ export class TGClientSocket
 
     channelGetAllListenersConsumerStatsList(
         channelName: string
-    ): ConsumerStats[] {
+    ): ConsumerStats[]
+    {
         return this._getAllChannelStreamNames(channelName)
-            .map((streamName) => {
+            .map((streamName) =>
+            {
                 return this._channelEventDemux.getConsumerStatsList(streamName);
             })
-            .reduce((accumulator, statsList) => {
-                statsList.forEach((stats) => {
+            .reduce((accumulator, statsList) =>
+            {
+                statsList.forEach((stats) =>
+                {
                     accumulator.push(stats);
                 });
                 return accumulator;
             }, []);
     }
 
-    channelGetOutputBackpressure(channelName: string): number {
+    channelGetOutputBackpressure(channelName: string): number
+    {
         return this._channelDataDemux.getBackpressure(channelName);
     }
 
     channelGetListenerBackpressure(
         channelName: string,
         eventName: string
-    ): number {
+    ): number
+    {
         return this._channelEventDemux.getBackpressure(
             `${channelName}/${eventName}`
         );
     }
 
-    channelGetAllListenersBackpressure(channelName: string): number {
-        let listenerStreamBackpressures = this._getAllChannelStreamNames(
+    channelGetAllListenersBackpressure(channelName: string): number
+    {
+        const listenerStreamBackpressures = this._getAllChannelStreamNames(
             channelName
-        ).map((streamName) => {
+        ).map((streamName) =>
+        {
             return this._channelEventDemux.getBackpressure(streamName);
         });
         return Math.max(...listenerStreamBackpressures.concat(0));
     }
 
-    channelHasOutputConsumer(channelName: string, consumerId: number): boolean {
+    channelHasOutputConsumer(channelName: string, consumerId: number): boolean
+    {
         return this._channelDataDemux.hasConsumer(channelName, consumerId);
     }
 
@@ -1011,7 +1193,8 @@ export class TGClientSocket
         channelName: string,
         eventName: string,
         consumerId: number
-    ): boolean {
+    ): boolean
+    {
         return this._channelEventDemux.hasConsumer(
             `${channelName}/${eventName}`,
             consumerId
@@ -1021,9 +1204,11 @@ export class TGClientSocket
     channelHasAnyListenerConsumer(
         channelName: string,
         consumerId: number
-    ): boolean {
+    ): boolean
+    {
         return this._getAllChannelStreamNames(channelName).some(
-            (streamName) => {
+            (streamName) =>
+            {
                 return this._channelEventDemux.hasConsumer(
                     streamName,
                     consumerId
@@ -1032,51 +1217,63 @@ export class TGClientSocket
         );
     }
 
-    subscriptions(includePending?: boolean): string[] {
-        let subs: string[] = [];
-        Object.keys(this._channelMap).forEach((channelName) => {
+    subscriptions(includePending?: boolean): string[]
+    {
+        const subs: string[] = [];
+        Object.keys(this._channelMap).forEach((channelName) =>
+        {
             if (
                 includePending ||
                 this._channelMap[channelName].state === TGChannel.SUBSCRIBED
-            ) {
+            )
+            {
                 subs.push(channelName);
             }
         });
         return subs;
     }
 
-    isSubscribed(channelName: string, includePending?: boolean): boolean {
-        let channel = this._channelMap[channelName];
-        if (includePending) {
+    isSubscribed(channelName: string, includePending?: boolean): boolean
+    {
+        const channel = this._channelMap[channelName];
+        if (includePending)
+        {
             return !!channel;
         }
         return !!channel && channel.state === TGChannel.SUBSCRIBED;
     }
 
-    processPendingSubscriptions(): void {
+    processPendingSubscriptions(): void
+    {
         this.preparingPendingSubscriptions = false;
-        let pendingChannels: any[] = [];
+        const pendingChannels: any[] = [];
 
-        Object.keys(this._channelMap).forEach((channelName) => {
-            let channel = this._channelMap[channelName];
-            if (channel.state === TGChannel.PENDING) {
+        Object.keys(this._channelMap).forEach((channelName) =>
+        {
+            const channel = this._channelMap[channelName];
+            if (channel.state === TGChannel.PENDING)
+            {
                 pendingChannels.push(channel);
             }
         });
 
-        pendingChannels.sort((a, b) => {
-            let ap = a.options.priority || 0;
-            let bp = b.options.priority || 0;
-            if (ap > bp) {
+        pendingChannels.sort((a, b) =>
+        {
+            const ap = a.options.priority || 0;
+            const bp = b.options.priority || 0;
+            if (ap > bp)
+            {
                 return -1;
             }
-            if (ap < bp) {
+            if (ap < bp)
+            {
                 return 1;
             }
             return 0;
         });
 
-        pendingChannels.forEach((channel) => {
+        pendingChannels.forEach((channel) =>
+        {
             this._trySubscribe(channel);
         });
     }
@@ -1085,22 +1282,27 @@ export class TGClientSocket
     // @ Private methods
     // -----------------------------------------------------------------------------------------------------
 
-    private _getAllChannelStreamNames(channelName: string): string[] {
-        let streamNamesLookup = this._channelEventDemux
+    private _getAllChannelStreamNames(channelName: string): string[]
+    {
+        const streamNamesLookup = this._channelEventDemux
             .getConsumerStatsListAll()
-            .filter((stats) => {
+            .filter((stats) =>
+            {
                 return stats.stream.indexOf(`${channelName}/`) === 0;
             })
-            .reduce((accumulator: any, stats: any) => {
+            .reduce((accumulator: any, stats: any) =>
+            {
                 accumulator[stats.stream] = true;
                 return accumulator;
             }, {});
         return Object.keys(streamNamesLookup);
     }
 
-    private _tryUnsubscribe(channel: TGChannel<any>): void {
-        if (this.state === TGClientSocket.OPEN) {
-            let options: TransmitOptions = {
+    private _tryUnsubscribe(channel: TGChannel<any>): void
+    {
+        if (this.state === TGClientSocket.OPEN)
+        {
+            const options: TransmitOptions = {
                 noTimeout: true,
             };
             // If there is a pending subscribe action, cancel the callback
@@ -1110,9 +1312,9 @@ export class TGClientSocket
             // so long as the connection remains open. If the connection closes,
             // the server will automatically unsubscribe the client and thus complete
             // the operation on the server side.
-            let decoratedChannelName = this._decorateChannelName(channel.name);
+            const decoratedChannelName = this._decorateChannelName(channel.name);
             this.transport.transmit(
-                "#unsubscribe",
+                '#unsubscribe',
                 decoratedChannelName,
                 options
             );
@@ -1122,13 +1324,15 @@ export class TGClientSocket
     private _triggerChannelUnsubscribe(
         channel: TGChannel<any>,
         setAsPending?: boolean
-    ): void {
-        let channelName = channel.name;
+    ): void
+    {
+        const channelName = channel.name;
 
         this._cancelPendingSubscribeCallback(channel);
 
-        if (channel.state === TGChannel.SUBSCRIBED) {
-            let stateChangeData = {
+        if (channel.state === TGChannel.SUBSCRIBED)
+        {
+            const stateChangeData = {
                 oldChannelState: channel.state,
                 newChannelState: setAsPending
                     ? TGChannel.PENDING
@@ -1139,25 +1343,29 @@ export class TGClientSocket
                 stateChangeData
             );
             this._channelEventDemux.write(`${channelName}/unsubscribe`, {});
-            this.emit("subscribeStateChange", {
+            this.emit('subscribeStateChange', {
                 channel: channelName,
                 ...stateChangeData,
             });
-            this.emit("unsubscribe", {
+            this.emit('unsubscribe', {
                 channel: channelName,
             } as UnsubscribeData);
         }
 
-        if (setAsPending) {
+        if (setAsPending)
+        {
             channel.state = TGChannel.PENDING;
-        } else {
+        }
+        else
+        {
             delete this._channelMap[channelName];
         }
     }
 
-    private _trySubscribe(channel: TGChannel<any>): void {
-        let meetsAuthRequirements =
-            !channel.options["waitForAuth"] ||
+    private _trySubscribe(channel: TGChannel<any>): void
+    {
+        const meetsAuthRequirements =
+            !channel.options['waitForAuth'] ||
             this.authState === TGClientSocket.AUTHENTICATED;
 
         // We can only ever have one pending subscribe action at any given time on a channel
@@ -1166,30 +1374,36 @@ export class TGClientSocket
             !this.preparingPendingSubscriptions &&
             channel._pendingSubscriptionCid == null &&
             meetsAuthRequirements
-        ) {
-            let options: {[key: string]: any} = {
+        )
+        {
+            const options: { [key: string]: any } = {
                 noTimeout: true,
             };
 
-            let subscriptionOptions: {[key: string]: any} = {};
-            if (channel.options["waitForAuth"]) {
-                options["waitForAuth"] = true;
-                subscriptionOptions["waitForAuth"] = options["waitForAuth"];
+            const subscriptionOptions: { [key: string]: any } = {};
+            if (channel.options['waitForAuth'])
+            {
+                options['waitForAuth'] = true;
+                subscriptionOptions['waitForAuth'] = options['waitForAuth'];
             }
-            if (channel.options["data"]) {
-                subscriptionOptions["data"] = channel.options["data"];
+            if (channel.options['data'])
+            {
+                subscriptionOptions['data'] = channel.options['data'];
             }
 
             channel._pendingSubscriptionCid = this.transport.invokeRaw(
-                "#subscribe",
+                '#subscribe',
                 {
                     channel: this._decorateChannelName(channel.name),
                     ...subscriptionOptions,
                 },
                 options,
-                (err) => {
-                    if (err) {
-                        if (err.name === "BadConnectionError") {
+                (err) =>
+                {
+                    if (err)
+                    {
+                        if (err.name === 'BadConnectionError')
+                        {
                             // In case of a failed connection, keep the subscription
                             // as pending; it will try again on reconnect.
                             return;
@@ -1200,7 +1414,9 @@ export class TGClientSocket
                             channel,
                             subscriptionOptions
                         );
-                    } else {
+                    }
+                    else
+                    {
                         delete channel._pendingSubscriptionCid;
                         this._triggerChannelSubscribe(
                             channel,
@@ -1209,59 +1425,72 @@ export class TGClientSocket
                     }
                 }
             );
-            this.emit("subscribeRequest", {
+            this.emit('subscribeRequest', {
                 channel: channel.name,
                 subscriptionOptions,
             });
         }
     }
 
-    private _cancelBatching(): void {
-        if (this._batchingIntervalId != null) {
+    private _cancelBatching(): void
+    {
+        if (this._batchingIntervalId != null)
+        {
             clearInterval(this._batchingIntervalId);
         }
         this._batchingIntervalId = null;
         this.cancelBatch();
     }
 
-    private _stopBatching(): void {
-        if (this._batchingIntervalId != null) {
+    private _stopBatching(): void
+    {
+        if (this._batchingIntervalId != null)
+        {
             clearInterval(this._batchingIntervalId);
         }
         this._batchingIntervalId = null;
         this.flushBatch();
     }
 
-    private _startBatching(): void {
-        if (this._batchingIntervalId != null) {
+    private _startBatching(): void
+    {
+        if (this._batchingIntervalId != null)
+        {
             return;
         }
         this.startBatch();
-        this._batchingIntervalId = setInterval(() => {
+        this._batchingIntervalId = setInterval(() =>
+        {
             this.flushBatch();
             this.startBatch();
         }, this.options.batchInterval);
     }
 
-    private _undecorateChannelName(decoratedChannelName: string): string {
+    private _undecorateChannelName(decoratedChannelName: string): string
+    {
         if (
             this.channelPrefix &&
             decoratedChannelName.indexOf(this.channelPrefix) === 0
-        ) {
-            return decoratedChannelName.replace(this.channelPrefix, "");
+        )
+        {
+            return decoratedChannelName.replace(this.channelPrefix, '');
         }
         return decoratedChannelName;
     }
 
-    private _decorateChannelName(channelName: string): string {
-        if (this.channelPrefix) {
+    private _decorateChannelName(channelName: string): string
+    {
+        if (this.channelPrefix)
+        {
             channelName = this.channelPrefix + channelName;
         }
         return channelName;
     }
 
-    private _cancelPendingSubscribeCallback(channel: TGChannel<any>) {
-        if (channel._pendingSubscriptionCid != null) {
+    private _cancelPendingSubscribeCallback(channel: TGChannel<any>)
+    {
+        if (channel._pendingSubscriptionCid != null)
+        {
             this.transport.cancelPendingResponse(
                 channel._pendingSubscriptionCid
             );
@@ -1273,21 +1502,23 @@ export class TGClientSocket
         err: Error,
         channel: TGChannel<any>,
         subscriptionOptions: SubscribeOptions
-    ): void {
-        let channelName = channel.name;
-        let meetsAuthRequirements =
-            !channel.options["waitForAuth"] ||
+    ): void
+    {
+        const channelName = channel.name;
+        const meetsAuthRequirements =
+            !channel.options['waitForAuth'] ||
             this.authState === TGClientSocket.AUTHENTICATED;
-        let hasChannel = !!this._channelMap[channelName];
+        const hasChannel = !!this._channelMap[channelName];
 
-        if (hasChannel && meetsAuthRequirements) {
+        if (hasChannel && meetsAuthRequirements)
+        {
             delete this._channelMap[channelName];
 
             this._channelEventDemux.write(`${channelName}/subscribeFail`, {
                 error: err,
                 subscriptionOptions,
             });
-            this.emit("subscribeFail", {
+            this.emit('subscribeFail', {
                 error: err,
                 channel: channelName,
                 subscriptionOptions: subscriptionOptions,
@@ -1298,14 +1529,16 @@ export class TGClientSocket
     private _triggerChannelSubscribe(
         channel: TGChannel<any>,
         subscriptionOptions: SubscribeOptions
-    ): void {
-        let channelName = channel.name;
+    ): void
+    {
+        const channelName = channel.name;
 
-        if (channel.state !== TGChannel.SUBSCRIBED) {
-            let oldChannelState = channel.state;
+        if (channel.state !== TGChannel.SUBSCRIBED)
+        {
+            const oldChannelState = channel.state;
             channel.state = TGChannel.SUBSCRIBED;
 
-            let stateChangeData = {
+            const stateChangeData = {
                 oldChannelState,
                 newChannelState: channel.state,
                 subscriptionOptions,
@@ -1317,11 +1550,11 @@ export class TGClientSocket
             this._channelEventDemux.write(`${channelName}/subscribe`, {
                 subscriptionOptions,
             });
-            this.emit("subscribeStateChange", {
+            this.emit('subscribeStateChange', {
                 channel: channelName,
                 ...stateChangeData,
             });
-            this.emit("subscribe", {
+            this.emit('subscribe', {
                 channel: channelName,
                 subscriptionOptions,
             });
@@ -1333,113 +1566,145 @@ export class TGClientSocket
         data: any,
         options?: { ackTimeout?: number | undefined },
         expectResponse?: boolean
-    ): Promise<any> {
+    ): Promise<any>
+    {
         options = options || {};
 
-        if (this.state === TGClientSocket.CLOSED) {
+        if (this.state === TGClientSocket.CLOSED)
+        {
             this.connect();
         }
-        let eventObject: EventObject = {
+        const eventObject: EventObject = {
             event,
             data: null,
         };
 
         let promise: Promise<any>;
 
-        if (expectResponse) {
-            promise = new Promise((resolve, reject) => {
-                eventObject.callback = (err, data) => {
-                    if (err) {
+        if (expectResponse)
+        {
+            promise = new Promise((resolve, reject) =>
+            {
+                eventObject.callback = (err, data) =>
+                {
+                    if (err)
+                    {
                         reject(err);
                         return;
                     }
                     resolve(data);
                 };
             });
-        } else {
+        }
+        else
+        {
             promise = Promise.resolve();
         }
 
-        let eventNode: any = new Item();
+        const eventNode: any = new Item();
 
-        if (this.options.cloneData) {
+        if (this.options.cloneData)
+        {
             eventObject.data = cloneDeep(data);
-        } else {
+        }
+        else
+        {
             eventObject.data = data;
         }
         eventNode.data = eventObject;
 
-        let ackTimeout =
+        const ackTimeout =
             options.ackTimeout == null ? this.ackTimeout : options.ackTimeout;
 
-        eventObject.timeout = setTimeout(() => {
+        eventObject.timeout = setTimeout(() =>
+        {
             this._handleEventAckTimeout(eventObject, eventNode);
         }, ackTimeout);
 
         this._outboundBuffer.append(eventNode);
-        if (this.state === TGClientSocket.OPEN) {
+        if (this.state === TGClientSocket.OPEN)
+        {
             this._flushOutboundBuffer();
         }
         return promise;
     }
 
-    private _handleEventAckTimeout(eventObject: EventObject, eventNode: any): void {
-        if (eventNode) {
+    private _handleEventAckTimeout(
+        eventObject: EventObject,
+        eventNode: any
+    ): void
+    {
+        if (eventNode)
+        {
             eventNode.detach();
         }
         delete eventObject.timeout;
 
-        let callback = eventObject.callback;
-        if (callback) {
+        const callback = eventObject.callback;
+        if (callback)
+        {
             delete eventObject.callback;
-            let error = new TimeoutError(
+            const error = new TimeoutError(
                 `Event response for "${eventObject.event}" timed out`
             );
             callback.call(eventObject, error, eventObject);
         }
         // Cleanup any pending response callback in the transport layer too.
-        if (eventObject.cid) {
+        if (eventObject.cid)
+        {
             this.transport.cancelPendingResponse(eventObject.cid);
         }
     }
 
-    private _flushOutboundBuffer(): void {
+    private _flushOutboundBuffer(): void
+    {
         let currentNode = this._outboundBuffer.head;
         let nextNode;
 
-        while (currentNode) {
+        while (currentNode)
+        {
             nextNode = currentNode.next;
-            let eventObject = currentNode.data;
+            const eventObject = currentNode.data;
             currentNode.detach();
             this.transport.transmitObject(eventObject);
             currentNode = nextNode;
         }
     }
 
-    private _onInboundInvoke(request: TGRequest): void {
-        let { procedure, data } = request;
-        let handler = this._privateRPCHandlerMap[procedure];
-        if (handler) {
+    private _onInboundInvoke(request: TGRequest): void
+    {
+        const { procedure, data } = request;
+        const handler = this._privateRPCHandlerMap[procedure];
+        if (handler)
+        {
             handler.call(this, data, request);
-        } else {
+        }
+        else
+        {
             this._procedureDemux.write(procedure, request);
         }
     }
 
-    private _onInboundTransmit(event: string, data: any): void {
-        let handler = this._privateDataHandlerMap[event];
-        if (handler) {
+    private _onInboundTransmit(event: string, data: any): void
+    {
+        const handler = this._privateDataHandlerMap[event];
+        if (handler)
+        {
             handler.call(this, data);
-        } else {
+        }
+        else
+        {
             this._receiverDemux.write(event, data);
         }
     }
 
-    private _destroy(code: number, reason?: string, openAbort?: boolean): void {
+    private _destroy(code: number, reason?: string, openAbort?: boolean): void
+    {
         this.id = null;
         this._cancelBatching();
 
-        if (this.transport) {
+        if (this.transport)
+        {
             this.transport.clearAllListeners();
         }
 
@@ -1449,34 +1714,47 @@ export class TGClientSocket
 
         this._suspendSubscriptions();
 
-        if (openAbort) {
-            this.emit("connectAbort", { code, reason });
-        } else {
-            this.emit("disconnect", { code, reason });
+        if (openAbort)
+        {
+            this.emit('connectAbort', { code, reason });
         }
-        this.emit("close", { code, reason });
+        else
+        {
+            this.emit('disconnect', { code, reason });
+        }
+        this.emit('close', { code, reason });
 
-        if (!TGClientSocket.ignoreStatuses[code as keyof SocketProtocolIgnoreStatuses]) {
+        if (
+            !TGClientSocket.ignoreStatuses[
+                code as keyof SocketProtocolIgnoreStatuses
+            ]
+        )
+        {
             let closeMessage;
-            if (reason) {
+            if (reason)
+            {
                 closeMessage =
-                    "Socket connection closed with status code " +
+                    'Socket connection closed with status code ' +
                     code +
-                    " and reason: " +
+                    ' and reason: ' +
                     reason;
-            } else {
-                closeMessage =
-                    "Socket connection closed with status code " + code;
             }
-            let err = new SocketProtocolError(
-                TGClientSocket.errorStatuses[code as keyof SocketProtocolErrorStatuses] || closeMessage,
+            else
+            {
+                closeMessage =
+                    'Socket connection closed with status code ' + code;
+            }
+            const err = new SocketProtocolError(
+                TGClientSocket.errorStatuses[
+                    code as keyof SocketProtocolErrorStatuses
+                ] || closeMessage,
                 code
             );
             this._onError(err);
         }
 
         this._abortAllPendingEventsDueToBadConnection(
-            openAbort ? "connectAbort" : "disconnect"
+            openAbort ? 'connectAbort' : 'disconnect'
         );
 
         // Try to reconnect
@@ -1486,8 +1764,10 @@ export class TGClientSocket
         // or on handshake failure (4003)
         // or on handshake rejection (4008)
         // or on socket hung up (1006)
-        if (this.options.autoReconnect) {
-            if (code === 4000 || code === 4001 || code === 1005) {
+        if (this.options.autoReconnect)
+        {
+            if (code === 4000 || code === 4001 || code === 1005)
+            {
                 // If there is a ping or pong timeout or socket closes without
                 // status, don't wait before trying to reconnect - These could happen
                 // if the client wakes up after a period of inactivity and in this case we
@@ -1496,7 +1776,9 @@ export class TGClientSocket
 
                 // Codes 4500 and above will be treated as permanent disconnects.
                 // Socket will not try to auto-reconnect.
-            } else if (code !== 1000 && code < 4500) {
+            }
+            else if (code !== 1000 && code < 4500)
+            {
                 this._tryReconnect();
             }
         }
@@ -1504,52 +1786,61 @@ export class TGClientSocket
 
     private _abortAllPendingEventsDueToBadConnection(
         failureType: string
-    ): void {
+    ): void
+    {
         let currentNode = this._outboundBuffer.head;
         let nextNode;
 
-        while (currentNode) {
+        while (currentNode)
+        {
             nextNode = currentNode.next;
-            let eventObject = currentNode.data;
+            const eventObject = currentNode.data;
             clearTimeout(eventObject.timeout);
             delete eventObject.timeout;
             currentNode.detach();
             currentNode = nextNode;
 
-            let callback = eventObject.callback;
+            const callback = eventObject.callback;
 
-            if (callback) {
+            if (callback)
+            {
                 delete eventObject.callback;
-                let errorMessage = `Event "${eventObject.event}" was aborted due to a bad connection`;
-                let error = new BadConnectionError(errorMessage, failureType);
+                const errorMessage = `Event "${eventObject.event}" was aborted due to a bad connection`;
+                const error = new BadConnectionError(errorMessage, failureType);
 
                 callback.call(eventObject, error, eventObject);
             }
             // Cleanup any pending response callback in the transport layer too.
-            if (eventObject.cid) {
+            if (eventObject.cid)
+            {
                 this.transport.cancelPendingResponse(eventObject.cid);
             }
         }
     }
 
-    private _suspendSubscriptions(): void {
-        Object.keys(this._channelMap).forEach((channelName) => {
-            let channel = this._channelMap[channelName];
+    private _suspendSubscriptions(): void
+    {
+        Object.keys(this._channelMap).forEach((channelName) =>
+        {
+            const channel = this._channelMap[channelName];
             this._triggerChannelUnsubscribe(channel, true);
         });
     }
 
-    private _onError(error: any): void {
-        this.emit("error", { error });
+    private _onError(error: any): void
+    {
+        this.emit('error', { error });
     }
 
-    private _tryReconnect(initialDelay?: number): void {
-        let exponent = this.connectAttempts++;
-        let reconnectOptions = this.options.autoReconnectOptions;
+    private _tryReconnect(initialDelay?: number): void
+    {
+        const exponent = this.connectAttempts++;
+        const reconnectOptions = this.options.autoReconnectOptions;
         let timeout;
 
-        if (initialDelay == null || exponent > 0) {
-            let initialTimeout = Math.round(
+        if (initialDelay == null || exponent > 0)
+        {
+            const initialTimeout = Math.round(
                 reconnectOptions.initialDelay +
                     (reconnectOptions.randomness || 0) * Math.random()
             );
@@ -1557,11 +1848,14 @@ export class TGClientSocket
             timeout = Math.round(
                 initialTimeout * Math.pow(reconnectOptions.multiplier, exponent)
             );
-        } else {
+        }
+        else
+        {
             timeout = initialDelay;
         }
 
-        if (timeout > reconnectOptions.maxDelay) {
+        if (timeout > reconnectOptions.maxDelay)
+        {
             timeout = reconnectOptions.maxDelay;
         }
 
@@ -1569,33 +1863,46 @@ export class TGClientSocket
 
         this.pendingReconnect = true;
         this.pendingReconnectTimeout = timeout;
-        this._reconnectTimeoutRef = setTimeout(() => {
+        this._reconnectTimeoutRef = setTimeout(() =>
+        {
             this.connect();
         }, timeout);
     }
 
-    private _onOpen(status: any): void {
-        if (this.isBatching) {
+    private _onOpen(status: any): void
+    {
+        if (this.isBatching)
+        {
             this._startBatching();
-        } else if (this.batchOnHandshake) {
+        }
+        else if (this.batchOnHandshake)
+        {
             this._startBatching();
-            setTimeout(() => {
-                if (!this.isBatching) {
+            setTimeout(() =>
+            {
+                if (!this.isBatching)
+                {
                     this._stopBatching();
                 }
             }, this.batchOnHandshakeDuration);
         }
         this.preparingPendingSubscriptions = true;
 
-        if (status) {
+        if (status)
+        {
             this.id = status.id;
             this.pingTimeout = status.pingTimeout;
-            if (status.isAuthenticated) {
+            if (status.isAuthenticated)
+            {
                 this._changeToAuthenticatedState(status.authToken);
-            } else {
+            }
+            else
+            {
                 this._changeToUnauthenticatedStateAndClearTokens();
             }
-        } else {
+        }
+        else
+        {
             // This can happen if auth.loadToken (in transport.js) fails with
             // an error - This means that the signedAuthToken cannot be loaded by
             // the auth engine and therefore, we need to unauthenticate the client.
@@ -1604,148 +1911,183 @@ export class TGClientSocket
 
         this.connectAttempts = 0;
 
-        if (this.options.autoSubscribeOnConnect) {
+        if (this.options.autoSubscribeOnConnect)
+        {
             this.processPendingSubscriptions();
         }
 
         // If the user invokes the callback while in autoSubscribeOnConnect mode, it
         // won't break anything.
-        this.emit("connect", {
+        this.emit('connect', {
             ...status,
-            processPendingSubscriptions: () => {
+            processPendingSubscriptions: () =>
+            {
                 this.processPendingSubscriptions();
             },
         });
 
-        if (this.state === TGClientSocket.OPEN) {
+        if (this.state === TGClientSocket.OPEN)
+        {
             this._flushOutboundBuffer();
         }
     }
 
-    private _extractAuthTokenData(signedAuthToken: string): any {
-        let tokenParts = (signedAuthToken || "").split(".");
-        let encodedTokenData = tokenParts[1];
-        if (encodedTokenData != null) {
+    private _extractAuthTokenData(signedAuthToken: string): any
+    {
+        const tokenParts = (signedAuthToken || '').split('.');
+        const encodedTokenData = tokenParts[1];
+        if (encodedTokenData != null)
+        {
             let tokenData = encodedTokenData;
-            try {
+            try
+            {
                 tokenData = this.decodeBase64(tokenData);
                 return JSON.parse(tokenData);
-            } catch (e) {
+            }
+            catch (e)
+            {
                 return tokenData;
             }
         }
         return null;
     }
 
-    private _changeToAuthenticatedState(signedAuthToken: SignedAuthToken): void {
+    private _changeToAuthenticatedState(
+        signedAuthToken: SignedAuthToken
+    ): void
+    {
         this.signedAuthToken = signedAuthToken;
         this.authToken = this._extractAuthTokenData(signedAuthToken);
 
-        if (this.authState !== TGClientSocket.AUTHENTICATED) {
-            let oldAuthState = this.authState;
+        if (this.authState !== TGClientSocket.AUTHENTICATED)
+        {
+            const oldAuthState = this.authState;
             this.authState = TGClientSocket.AUTHENTICATED;
-            let stateChangeData = {
+            const stateChangeData = {
                 oldAuthState,
                 newAuthState: this.authState,
                 signedAuthToken: signedAuthToken,
                 authToken: this.authToken,
             };
-            if (!this.preparingPendingSubscriptions) {
+            if (!this.preparingPendingSubscriptions)
+            {
                 this.processPendingSubscriptions();
             }
 
-            this.emit("authStateChange", stateChangeData);
+            this.emit('authStateChange', stateChangeData);
         }
-        this.emit("authenticate", {
+        this.emit('authenticate', {
             signedAuthToken,
             authToken: this.authToken,
         });
     }
 
-    private _changeToUnauthenticatedStateAndClearTokens(): void {
-        if (this.authState !== TGClientSocket.UNAUTHENTICATED) {
-            let oldAuthState = this.authState;
-            let oldAuthToken = this.authToken;
-            let oldSignedAuthToken = this.signedAuthToken;
+    private _changeToUnauthenticatedStateAndClearTokens(): void
+    {
+        if (this.authState !== TGClientSocket.UNAUTHENTICATED)
+        {
+            const oldAuthState = this.authState;
+            const oldAuthToken = this.authToken;
+            const oldSignedAuthToken = this.signedAuthToken;
             this.authState = TGClientSocket.UNAUTHENTICATED;
             this.signedAuthToken = null;
             this.authToken = null;
 
-            let stateChangeData = {
+            const stateChangeData = {
                 oldAuthState,
                 newAuthState: this.authState,
             };
-            this.emit("authStateChange", stateChangeData);
-            this.emit("deauthenticate", { oldSignedAuthToken, oldAuthToken });
+            this.emit('authStateChange', stateChangeData);
+            this.emit('deauthenticate', { oldSignedAuthToken, oldAuthToken });
         }
     }
 
-    private async _handleBrowserUnload(): Promise<void> {
-        let unloadHandler = () => {
+    private async _handleBrowserUnload(): Promise<void>
+    {
+        const unloadHandler = () =>
+        {
             this.disconnect();
         };
         let isUnloadHandlerAttached = false;
 
-        let attachUnloadHandler = () => {
-            if (!isUnloadHandlerAttached) {
+        const attachUnloadHandler = () =>
+        {
+            if (!isUnloadHandlerAttached)
+            {
                 isUnloadHandlerAttached = true;
-                global.addEventListener("beforeunload", unloadHandler, false);
+                global.addEventListener('beforeunload', unloadHandler, false);
             }
         };
 
-        let detachUnloadHandler = () => {
-            if (isUnloadHandlerAttached) {
+        const detachUnloadHandler = () =>
+        {
+            if (isUnloadHandlerAttached)
+            {
                 isUnloadHandlerAttached = false;
                 global.removeEventListener(
-                    "beforeunload",
+                    'beforeunload',
                     unloadHandler,
                     false
                 );
             }
         };
 
-        (async () => {
-            let consumer = this.listener("connecting").createConsumer();
-            while (true) {
-                let packet = await consumer.next();
+        (async () =>
+        {
+            const consumer = this.listener('connecting').createConsumer();
+            while (true)
+            {
+                const packet = await consumer.next();
                 if (packet.done) break;
                 attachUnloadHandler();
             }
         })();
 
-        (async () => {
-            let consumer = this.listener("close").createConsumer();
-            while (true) {
-                let packet = await consumer.next();
+        (async () =>
+        {
+            const consumer = this.listener('close').createConsumer();
+            while (true)
+            {
+                const packet = await consumer.next();
                 if (packet.done) break;
                 detachUnloadHandler();
             }
         })();
     }
 
-    private _setAuthToken(data: any) {
+    private _setAuthToken(data: any)
+    {
         this._changeToAuthenticatedState(data.token);
 
-        (async () => {
-            try {
+        (async () =>
+        {
+            try
+            {
                 await this.auth.saveToken(this.authTokenName, data.token, {});
-            } catch (err) {
+            }
+            catch (err)
+            {
                 this._onError(err);
             }
         })();
     }
 
-    private _removeAuthToken(): void {
-        (async () => {
+    private _removeAuthToken(): void
+    {
+        (async () =>
+        {
             let oldAuthToken;
-            try {
+            try
+            {
                 oldAuthToken = await this.auth.removeToken(this.authTokenName);
-            } catch (err) {
+            }
+            catch (err)
+            {
                 // Non-fatal error - Do not close the connection
                 this._onError(err);
                 return;
             }
-            this.emit("removeAuthToken", { oldAuthToken });
+            this.emit('removeAuthToken', { oldAuthToken });
         })();
 
         this._changeToUnauthenticatedStateAndClearTokens();

@@ -2,7 +2,7 @@ export interface ConsumerNode<T> {
     consumerId?: number;
     next: ConsumerNode<T> | null;
     data: {
-        value: T|undefined;
+        value: T | undefined;
         done: boolean;
     };
 }

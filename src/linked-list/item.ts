@@ -1,9 +1,10 @@
-import { LinkedList } from "./list";
+import { LinkedList } from './list';
 
 /**
  * Double linked list item.
  */
-export class Item {
+export class Item 
+{
     next: Item | null;
     prev: Item | null;
     list: LinkedList<Item> | null;
@@ -11,7 +12,8 @@ export class Item {
     /**
      * Create a new linked list item.
      */
-    constructor() {
+    constructor() 
+    {
         this.next = null;
         this.prev = null;
         this.list = null;
@@ -25,17 +27,20 @@ export class Item {
      * Returns `false` when the operated on item is not attached to a list,
      * otherwise the given item.
      */
-    append(item: Item): Item | false {
+    append(item: Item): Item | false 
+    {
         const list = this.list;
 
-        if (!item || !item.append || !item.prepend || !item.detach) {
+        if (!item || !item.append || !item.prepend || !item.detach) 
+        {
             throw new Error(
-                "An argument without append, prepend, or detach methods was given to `Item#append`."
+                'An argument without append, prepend, or detach methods was given to `Item#append`.'
             );
         }
 
         // If self is detached or appending ourselves, return false.
-        if (!list || this === item) {
+        if (!list || this === item) 
+        {
             return false;
         }
 
@@ -43,7 +48,8 @@ export class Item {
         item.detach();
 
         // If self has a next item…
-        if (this.next) {
+        if (this.next) 
+        {
             item.next = this.next;
             this.next.prev = item;
         }
@@ -57,7 +63,8 @@ export class Item {
 
         // If the the parent list has no last item or if self is the parent lists last
         // item, link the lists last item to the appendee.
-        if (this === list.tail || !list.tail) {
+        if (this === list.tail || !list.tail) 
+        {
             list.tail = item;
         }
 
@@ -74,17 +81,20 @@ export class Item {
      * Returns `false` when the operated on item is not attached to a list,
      * otherwise the given item.
      */
-    prepend(item: Item): Item | false {
+    prepend(item: Item): Item | false 
+    {
         const list = this.list;
 
-        if (!item || !item.append || !item.prepend || !item.detach) {
+        if (!item || !item.append || !item.prepend || !item.detach) 
+        {
             throw new Error(
-                "An argument without append, prepend, or detach methods was given to `Item#prepend`."
+                'An argument without append, prepend, or detach methods was given to `Item#prepend`.'
             );
         }
 
         // If self is detached or prepending ourselves, return false.
-        if (!list || this === item) {
+        if (!list || this === item) 
+        {
             return false;
         }
 
@@ -92,7 +102,8 @@ export class Item {
         item.detach();
 
         // If self has a previous item...
-        if (this.prev) {
+        if (this.prev) 
+        {
             item.prev = this.prev;
             this.prev.next = item;
         }
@@ -106,12 +117,14 @@ export class Item {
 
         // If self is the first item in the parent list, link the lists first item to
         // the prependee.
-        if (this === list.head) {
+        if (this === list.head) 
+        {
             list.head = item;
         }
 
         // If the the parent list has no last item, link the lists last item to self.
-        if (!list.tail) {
+        if (!list.tail) 
+        {
             list.tail = this;
         }
 
@@ -129,38 +142,45 @@ export class Item {
      * Returns the operated on item.
      * Even when it was already detached.
      */
-    detach(): Item {
+    detach(): Item 
+    {
         const list = this.list;
 
-        if (!list) {
+        if (!list) 
+        {
             return this;
         }
 
         // If self is the last item in the parent list, link the lists last item to
         // the previous item.
-        if (list.tail === this) {
+        if (list.tail === this) 
+        {
             list.tail = this.prev;
         }
 
         // If self is the first item in the parent list, link the lists first item to
         // the next item.
-        if (list.head === this) {
+        if (list.head === this) 
+        {
             list.head = this.next;
         }
 
         // If both the last and first items in the parent list are the same, remove
         // the link to the last item.
-        if (list.tail === list.head) {
+        if (list.tail === list.head) 
+        {
             list.tail = null;
         }
 
         // If a previous item exists, link its next item to selfs next item.
-        if (this.prev) {
+        if (this.prev) 
+        {
             this.prev.next = this.next;
         }
 
         // If a next item exists, link its previous item to selfs previous item.
-        if (this.next) {
+        if (this.next) 
+        {
             this.next.prev = this.prev;
         }
 

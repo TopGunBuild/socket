@@ -1,7 +1,8 @@
-import { dehydrateError, InvalidActionError } from "../errors/errors";
-import { TGSocket } from "./types";
+import { dehydrateError, InvalidActionError } from '../errors/errors';
+import { TGSocket } from './types';
 
-export class TGRequest {
+export class TGRequest
+{
     readonly id: number;
     socket: TGSocket;
     procedure: any;
@@ -13,34 +14,40 @@ export class TGRequest {
         id: number,
         procedureName: string,
         data: any
-    ) {
-        this.socket = socket;
-        this.id = id;
+    )
+    {
+        this.socket    = socket;
+        this.id        = id;
         this.procedure = procedureName;
-        this.data = data;
-        this.sent = false;
+        this.data      = data;
+        this.sent      = false;
     }
 
-    end(data?: any, options?: any): void {
-        let responseData: any = {
+    end(data?: any, options?: any): void
+    {
+        const responseData: any = {
             rid: this.id,
         };
-        if (data !== undefined) {
+        if (data !== undefined)
+        {
             responseData.data = data;
         }
         this._respond(responseData, options);
     }
 
-    error(error: Error, options?: any): void {
-        let responseData = {
-            rid: this.id,
+    error(error: Error, options?: any): void
+    {
+        const responseData = {
+            rid  : this.id,
             error: dehydrateError(error),
         };
         this._respond(responseData, options);
     }
 
-    private _respond(responseData, options): void {
-        if (this.sent) {
+    private _respond(responseData: any, options: any): void
+    {
+        if (this.sent)
+        {
             throw new InvalidActionError(
                 `Response to request ${this.id} has already been sent`
             );

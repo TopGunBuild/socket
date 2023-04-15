@@ -1,17 +1,18 @@
 import {
     ConsumableStream,
     ConsumableStreamConsumer,
-} from "../consumable-stream";
-import { StreamDemux } from "../stream-demux";
-import { DemuxedConsumableStream } from "../stream-demux/demuxed-consumable-stream";
-import { ConsumerStats } from "../writable-consumable-stream/consumer-stats";
-import { ChannelState } from "./channel-state";
-import { TGChannelClient } from "./client";
+} from '../consumable-stream';
+import { StreamDemux } from '../stream-demux';
+import { DemuxedConsumableStream } from '../stream-demux/demuxed-consumable-stream';
+import { ConsumerStats } from '../writable-consumable-stream/consumer-stats';
+import { ChannelState } from './channel-state';
+import { TGChannelClient } from './client';
 
-export class TGChannel<T> extends ConsumableStream<T> {
-    static PENDING: ChannelState = "pending";
-    static SUBSCRIBED: ChannelState = "subscribed";
-    static UNSUBSCRIBED: ChannelState = "unsubscribed";
+export class TGChannel<T> extends ConsumableStream<T> 
+{
+    static PENDING: ChannelState = 'pending';
+    static SUBSCRIBED: ChannelState = 'subscribed';
+    static UNSUBSCRIBED: ChannelState = 'unsubscribed';
 
     name: string;
     PENDING: ChannelState;
@@ -31,7 +32,8 @@ export class TGChannel<T> extends ConsumableStream<T> {
         client: TGChannelClient,
         eventDemux: StreamDemux<T>,
         dataDemux: StreamDemux<T>
-    ) {
+    ) 
+    {
         super();
         this.PENDING = TGChannel.PENDING;
         this.SUBSCRIBED = TGChannel.SUBSCRIBED;
@@ -48,74 +50,93 @@ export class TGChannel<T> extends ConsumableStream<T> {
     // @ Accessors
     // -----------------------------------------------------------------------------------------------------
 
-    get state(): ChannelState {
+    get state(): ChannelState 
+    {
         return this.client.getChannelState(this.name);
     }
 
-    set state(value) {
-        throw new Error("Cannot directly set channel state");
+    set state(value) 
+    {
+        throw new Error('Cannot directly set channel state');
     }
 
-    get options(): {[key: string]: any} {
+    get options(): { [key: string]: any } 
+    {
         return this.client.getChannelOptions(this.name);
     }
 
-    set options(value) {
-        throw new Error("Cannot directly set channel options");
+    set options(value) 
+    {
+        throw new Error('Cannot directly set channel options');
     }
 
     // -----------------------------------------------------------------------------------------------------
     // @ Public methods
     // -----------------------------------------------------------------------------------------------------
 
-    createConsumer(timeout?: number): ConsumableStreamConsumer<T> {
+    createConsumer(timeout?: number): ConsumableStreamConsumer<T> 
+    {
         return this._dataStream.createConsumer(timeout);
     }
 
-    listener(eventName: string): DemuxedConsumableStream<T> {
+    listener(eventName: string): DemuxedConsumableStream<T> 
+    {
         return this._eventDemux.stream(`${this.name}/${eventName}`);
     }
 
-    close(): void {
+    close(): void 
+    {
         this.client.closeChannel(this.name);
     }
 
-    kill(): void {
+    kill(): void 
+    {
         this.client.killChannel(this.name);
     }
 
-    killOutputConsumer(consumerId: number): void {
-        if (this.hasOutputConsumer(consumerId)) {
+    killOutputConsumer(consumerId: number): void 
+    {
+        if (this.hasOutputConsumer(consumerId)) 
+        {
             this.client.killChannelOutputConsumer(consumerId);
         }
     }
 
-    killListenerConsumer(consumerId: number): void {
-        if (this.hasAnyListenerConsumer(consumerId)) {
+    killListenerConsumer(consumerId: number): void 
+    {
+        if (this.hasAnyListenerConsumer(consumerId)) 
+        {
             this.client.killChannelListenerConsumer(consumerId);
         }
     }
 
-    getOutputConsumerStats(consumerId: number): ConsumerStats | undefined {
-        if (this.hasOutputConsumer(consumerId)) {
+    getOutputConsumerStats(consumerId: number): ConsumerStats | undefined 
+    {
+        if (this.hasOutputConsumer(consumerId)) 
+        {
             return this.client.getChannelOutputConsumerStats(consumerId);
         }
         return undefined;
     }
 
-    getListenerConsumerStats(consumerId: number): ConsumerStats | undefined {
-        if (this.hasAnyListenerConsumer(consumerId)) {
+    getListenerConsumerStats(consumerId: number): ConsumerStats | undefined 
+    {
+        if (this.hasAnyListenerConsumer(consumerId)) 
+        {
             return this.client.getChannelListenerConsumerStats(consumerId);
         }
         return undefined;
     }
 
-    getBackpressure(): number {
+    getBackpressure(): number 
+    {
         return this.client.getChannelBackpressure(this.name);
     }
 
-    getListenerConsumerBackpressure(consumerId: number): number {
-        if (this.hasAnyListenerConsumer(consumerId)) {
+    getListenerConsumerBackpressure(consumerId: number): number 
+    {
+        if (this.hasAnyListenerConsumer(consumerId)) 
+        {
             return this.client.getChannelListenerConsumerBackpressure(
                 consumerId
             );
@@ -123,69 +144,85 @@ export class TGChannel<T> extends ConsumableStream<T> {
         return 0;
     }
 
-    getOutputConsumerBackpressure(consumerId: number): any {
-        if (this.hasOutputConsumer(consumerId)) {
+    getOutputConsumerBackpressure(consumerId: number): any 
+    {
+        if (this.hasOutputConsumer(consumerId)) 
+        {
             return this.client.getChannelOutputConsumerBackpressure(consumerId);
         }
         return 0;
     }
 
-    closeOutput(): void {
+    closeOutput(): void 
+    {
         this.client.channelCloseOutput(this.name);
     }
 
-    closeListener(eventName: string): void {
+    closeListener(eventName: string): void 
+    {
         this.client.channelCloseListener(this.name, eventName);
     }
 
-    closeAllListeners(): void {
+    closeAllListeners(): void 
+    {
         this.client.channelCloseAllListeners(this.name);
     }
 
-    killOutput(): void {
+    killOutput(): void 
+    {
         this.client.channelKillOutput(this.name);
     }
 
-    killListener(eventName: string): void {
+    killListener(eventName: string): void 
+    {
         this.client.channelKillListener(this.name, eventName);
     }
 
-    killAllListeners(): void {
+    killAllListeners(): void 
+    {
         this.client.channelKillAllListeners(this.name);
     }
 
-    getOutputConsumerStatsList(): ConsumerStats[] {
+    getOutputConsumerStatsList(): ConsumerStats[] 
+    {
         return this.client.channelGetOutputConsumerStatsList(this.name);
     }
 
-    getListenerConsumerStatsList(eventName: string): ConsumerStats[] {
+    getListenerConsumerStatsList(eventName: string): ConsumerStats[] 
+    {
         return this.client.channelGetListenerConsumerStatsList(
             this.name,
             eventName
         );
     }
 
-    getAllListenersConsumerStatsList(): ConsumerStats[] {
+    getAllListenersConsumerStatsList(): ConsumerStats[] 
+    {
         return this.client.channelGetAllListenersConsumerStatsList(this.name);
     }
 
-    getOutputBackpressure(): number {
+    getOutputBackpressure(): number 
+    {
         return this.client.channelGetOutputBackpressure(this.name);
     }
 
-    getListenerBackpressure(eventName: string): number {
+    getListenerBackpressure(eventName: string): number 
+    {
         return this.client.channelGetListenerBackpressure(this.name, eventName);
     }
 
-    getAllListenersBackpressure(): number {
+    getAllListenersBackpressure(): number 
+    {
         return this.client.channelGetAllListenersBackpressure(this.name);
     }
 
-    hasOutputConsumer(consumerId: number): boolean {
+    hasOutputConsumer(consumerId: number): boolean 
+    {
         return this.client.channelHasOutputConsumer(this.name, consumerId);
     }
 
-    hasListenerConsumer(eventName: string, consumerId: number): boolean {
+    hasListenerConsumer(eventName: string, consumerId: number): boolean 
+    {
         return this.client.channelHasListenerConsumer(
             this.name,
             eventName,
@@ -193,27 +230,33 @@ export class TGChannel<T> extends ConsumableStream<T> {
         );
     }
 
-    hasAnyListenerConsumer(consumerId: number): boolean {
+    hasAnyListenerConsumer(consumerId: number): boolean 
+    {
         return this.client.channelHasAnyListenerConsumer(this.name, consumerId);
     }
 
-    subscribe(options?: any): void {
+    subscribe(options?: any): void 
+    {
         this.client.subscribe(this.name, options);
     }
 
-    unsubscribe(): void {
+    unsubscribe(): void 
+    {
         this.client.unsubscribe(this.name);
     }
 
-    isSubscribed(includePending?: boolean): boolean {
+    isSubscribed(includePending?: boolean): boolean 
+    {
         return this.client.isSubscribed(this.name, includePending);
     }
 
-    transmitPublish(data: any): Promise<void> {
+    transmitPublish(data: any): Promise<void> 
+    {
         return this.client.transmitPublish(this.name, data);
     }
 
-    invokePublish(data: any): Promise<void> {
+    invokePublish(data: any): Promise<void> 
+    {
         return this.client.invokePublish(this.name, data);
     }
 }

@@ -1,19 +1,20 @@
-import { AuthTokenExpiredError, InvalidActionError } from "../errors/errors";
-import { AuthToken } from "../types";
-import { TGServerSocket } from "./server-socket";
-import { IncomingMessage } from "./types";
+import { AuthTokenExpiredError, InvalidActionError } from '../errors/errors';
+import { AuthToken } from '../types';
+import { TGServerSocket } from './server-socket';
+import { IncomingMessage } from './types';
 
-const HANDSHAKE_WS = "handshakeWS";
-const HANDSHAKE_SC = "handshakeSC";
-const MESSAGE = "message";
-const TRANSMIT = "transmit";
-const INVOKE = "invoke";
-const SUBSCRIBE = "subscribe";
-const PUBLISH_IN = "publishIn";
-const PUBLISH_OUT = "publishOut";
-const AUTHENTICATE = "authenticate";
+const HANDSHAKE_WS = 'handshakeWS';
+const HANDSHAKE_SC = 'handshakeSC';
+const MESSAGE = 'message';
+const TRANSMIT = 'transmit';
+const INVOKE = 'invoke';
+const SUBSCRIBE = 'subscribe';
+const PUBLISH_IN = 'publishIn';
+const PUBLISH_OUT = 'publishOut';
+const AUTHENTICATE = 'authenticate';
 
-export class TGAction {
+export class TGAction 
+{
     static HANDSHAKE_WS: ActionType = HANDSHAKE_WS;
     static HANDSHAKE_SC: ActionType = HANDSHAKE_SC;
     static MESSAGE: ActionType = MESSAGE;
@@ -45,7 +46,7 @@ export class TGAction {
     readonly PUBLISH_OUT: typeof PUBLISH_OUT;
     readonly AUTHENTICATE: typeof AUTHENTICATE;
 
-    outcome: null | "allowed" | "blocked";
+    outcome: null | 'allowed' | 'blocked';
     promise: Promise<any>;
     private _resolve: (value?: PromiseLike<any> | any) => void;
     private _reject: (reason?: any) => void;
@@ -53,7 +54,8 @@ export class TGAction {
     /**
      * Constructor
      */
-    constructor() {
+    constructor() 
+    {
         this.outcome = null;
 
         this.HANDSHAKE_WS = HANDSHAKE_WS;
@@ -66,7 +68,8 @@ export class TGAction {
         this.PUBLISH_OUT = PUBLISH_OUT;
         this.AUTHENTICATE = AUTHENTICATE;
 
-        this.promise = new Promise((resolve, reject) => {
+        this.promise = new Promise((resolve, reject) => 
+        {
             this._resolve = resolve;
             this._reject = reject;
         });
@@ -76,23 +79,27 @@ export class TGAction {
     // @ Public methods
     // -----------------------------------------------------------------------------------------------------
 
-    allow(packet: any): void {
-        if (this.outcome) {
+    allow(packet: any): void 
+    {
+        if (this.outcome) 
+        {
             throw new InvalidActionError(
                 `AGAction ${this.type} has already been ${this.outcome}; cannot allow`
             );
         }
-        this.outcome = "allowed";
+        this.outcome = 'allowed';
         this._resolve(packet);
     }
 
-    block(error: Error): void {
-        if (this.outcome) {
+    block(error: Error): void 
+    {
+        if (this.outcome) 
+        {
             throw new InvalidActionError(
                 `AGAction ${this.type} has already been ${this.outcome}; cannot block`
             );
         }
-        this.outcome = "blocked";
+        this.outcome = 'blocked';
         this._reject(error);
     }
 }
@@ -119,7 +126,7 @@ export interface TGActionBase {
     readonly PUBLISH_OUT: typeof PUBLISH_OUT;
     readonly AUTHENTICATE: typeof AUTHENTICATE;
 
-    outcome: null | "allowed" | "blocked";
+    outcome: null | 'allowed' | 'blocked';
     promise: Promise<any>;
 
     allow(packet?: any): void;

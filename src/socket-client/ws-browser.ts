@@ -1,4 +1,4 @@
-import { getGlobal } from "../utils/global";
+import { getGlobal } from '../utils/global';
 
 const global = getGlobal();
 const WebSocket = global?.WebSocket || global?.MozWebSocket;
@@ -12,21 +12,25 @@ const WebSocket = global?.WebSocket || global?.MozWebSocket;
  *
  * @param {String} uri
  * @param {Array} protocols (optional)
- * @param {Object} opts (optional)
  * @api public
  */
 
-function ws(uri: string, protocols?: string[], opts?: any) {
+function ws(uri: string, protocols?: string[]): WebSocket
+{
     let instance;
-    if (protocols) {
+    if (protocols)
+    {
         instance = new WebSocket(uri, protocols);
-    } else {
+    }
+    else
+    {
         instance = new WebSocket(uri);
     }
     return instance;
 }
 
-if (WebSocket) {
+if (WebSocket)
+{
     ws.prototype = WebSocket.prototype;
 }
 

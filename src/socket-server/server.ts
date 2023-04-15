@@ -45,11 +45,11 @@ import {
 
 export class TGServerSocketGateway extends AsyncStreamEmitter<any>
 {
-    static MIDDLEWARE_HANDSHAKE: Middlewares   = MIDDLEWARE_HANDSHAKE;
+    static MIDDLEWARE_HANDSHAKE: Middlewares = MIDDLEWARE_HANDSHAKE;
     static MIDDLEWARE_INBOUND_RAW: Middlewares = MIDDLEWARE_INBOUND_RAW;
-    static MIDDLEWARE_INBOUND: Middlewares     = MIDDLEWARE_INBOUND;
-    static MIDDLEWARE_OUTBOUND: Middlewares    = MIDDLEWARE_OUTBOUND;
-    static SYMBOL_MIDDLEWARE_HANDSHAKE_STREAM  = Symbol('handshakeStream');
+    static MIDDLEWARE_INBOUND: Middlewares = MIDDLEWARE_INBOUND;
+    static MIDDLEWARE_OUTBOUND: Middlewares = MIDDLEWARE_OUTBOUND;
+    static SYMBOL_MIDDLEWARE_HANDSHAKE_STREAM = Symbol('handshakeStream');
 
     options: TGServerSocketGatewayOptions;
     origins: string;
@@ -59,17 +59,17 @@ export class TGServerSocketGateway extends AsyncStreamEmitter<any>
     pingTimeout: number;
     pingTimeoutDisabled: boolean;
     allowClientPublish: boolean;
-    perMessageDeflate?: boolean|any;
+    perMessageDeflate?: boolean | any;
     httpServer: any;
     socketChannelLimit?: number;
-    protocolVersion: 1|2;
+    protocolVersion: 1 | 2;
     strictHandshake: boolean;
     brokerEngine: TGSimpleBroker;
     middlewareEmitFailures: boolean;
     isReady: boolean;
     signatureKey?: Secret;
     verificationKey?: Secret;
-    defaultVerificationOptions: JwtVerifyOptions|JwtAlgorithm;
+    defaultVerificationOptions: JwtVerifyOptions | JwtAlgorithm;
     defaultSignatureOptions: {
         expiresIn: number;
         algorithm?: string;
@@ -89,7 +89,7 @@ export class TGServerSocketGateway extends AsyncStreamEmitter<any>
     auth: AuthEngineType;
     wsServer: any;
     codec: CodecEngine;
-    private readonly _middleware: {[key: string]: any};
+    private readonly _middleware: { [key: string]: any };
     private readonly _allowAllOrigins: boolean;
     private readonly _path: string;
 
@@ -100,58 +100,58 @@ export class TGServerSocketGateway extends AsyncStreamEmitter<any>
     {
         super();
 
-        let opts: TGServerSocketGatewayOptions = {
-            brokerEngine            : new TGSimpleBroker(),
-            wsEngine                : 'ws',
-            wsEngineServerOptions   : {},
-            maxPayload              : null,
-            allowClientPublish      : true,
-            ackTimeout              : 10000,
-            handshakeTimeout        : 10000,
-            strictHandshake         : true,
-            pingTimeout             : 20000,
-            pingTimeoutDisabled     : false,
-            pingInterval            : 8000,
-            origins                 : '*:*',
-            path                    : '/topgunsocket/',
-            protocolVersion         : 2,
-            authDefaultExpiry       : 86400,
-            batchOnHandshake        : false,
+        const opts: TGServerSocketGatewayOptions = {
+            brokerEngine: new TGSimpleBroker(),
+            wsEngine: 'ws',
+            wsEngineServerOptions: {},
+            maxPayload: null,
+            allowClientPublish: true,
+            ackTimeout: 10000,
+            handshakeTimeout: 10000,
+            strictHandshake: true,
+            pingTimeout: 20000,
+            pingTimeoutDisabled: false,
+            pingInterval: 8000,
+            origins: '*:*',
+            path: '/topgunsocket/',
+            protocolVersion: 2,
+            authDefaultExpiry: 86400,
+            batchOnHandshake: false,
             batchOnHandshakeDuration: 400,
-            batchInterval           : 50,
-            middlewareEmitFailures  : true,
-            socketStreamCleanupMode : 'kill',
-            cloneData               : false,
-            isNode                  : isNode(),
+            batchInterval: 50,
+            middlewareEmitFailures: true,
+            socketStreamCleanupMode: 'kill',
+            cloneData: false,
+            isNode: isNode(),
         };
 
         this.options = Object.assign(opts, options);
 
         this._middleware = {};
 
-        this.origins          = this.options.origins;
+        this.origins = this.options.origins;
         this._allowAllOrigins = this.origins.indexOf('*:*') !== -1;
 
-        this.ackTimeout          = this.options.ackTimeout;
-        this.handshakeTimeout    = this.options.handshakeTimeout;
-        this.pingInterval        = this.options.pingInterval;
-        this.pingTimeout         = this.options.pingTimeout;
+        this.ackTimeout = this.options.ackTimeout;
+        this.handshakeTimeout = this.options.handshakeTimeout;
+        this.pingInterval = this.options.pingInterval;
+        this.pingTimeout = this.options.pingTimeout;
         this.pingTimeoutDisabled = this.options.pingTimeoutDisabled;
-        this.allowClientPublish  = this.options.allowClientPublish;
-        this.perMessageDeflate   = this.options.perMessageDeflate;
-        this.httpServer          = this.options.httpServer;
-        this.socketChannelLimit  = this.options.socketChannelLimit;
-        this.protocolVersion     = this.options.protocolVersion;
-        this.strictHandshake     = this.options.strictHandshake;
+        this.allowClientPublish = this.options.allowClientPublish;
+        this.perMessageDeflate = this.options.perMessageDeflate;
+        this.httpServer = this.options.httpServer;
+        this.socketChannelLimit = this.options.socketChannelLimit;
+        this.protocolVersion = this.options.protocolVersion;
+        this.strictHandshake = this.options.strictHandshake;
 
-        this.brokerEngine           = this.options.brokerEngine;
+        this.brokerEngine = this.options.brokerEngine;
         this.middlewareEmitFailures = this.options.middlewareEmitFailures;
 
         this._path = opts.path;
 
         (async () =>
         {
-            for await (let { error } of this.brokerEngine.listener('error'))
+            for await (const { error } of this.brokerEngine.listener('error'))
             {
                 this.emitWarning(error);
             }
@@ -177,10 +177,10 @@ export class TGServerSocketGateway extends AsyncStreamEmitter<any>
         {
             throw new InvalidOptionsError(
                 'The wsEngine option must be a path or module name which points ' +
-                'to a valid WebSocket engine module with a compatible interface'
+                    'to a valid WebSocket engine module with a compatible interface'
             );
         }
-        let WSServer = this.options.wsEngine;
+        const WSServer: any = this.options.wsEngine;
 
         if (
             this.options.authPrivateKey != null ||
@@ -199,7 +199,7 @@ export class TGServerSocketGateway extends AsyncStreamEmitter<any>
                     'The authPublicKey option must be specified if authPrivateKey is specified'
                 );
             }
-            this.signatureKey    = this.options.authPrivateKey;
+            this.signatureKey = this.options.authPrivateKey;
             this.verificationKey = this.options.authPublicKey;
         }
         else
@@ -208,7 +208,7 @@ export class TGServerSocketGateway extends AsyncStreamEmitter<any>
             {
                 this.options.authKey = randomBytes(32).toString();
             }
-            this.signatureKey    = this.options.authKey;
+            this.signatureKey = this.options.authKey;
             this.verificationKey = this.options.authKey;
         }
 
@@ -254,14 +254,14 @@ export class TGServerSocketGateway extends AsyncStreamEmitter<any>
         this.brokerEngine.setCodecEngine(this.codec);
         this.exchange = this.brokerEngine.exchange();
 
-        this.clients      = {};
+        this.clients = {};
         this.clientsCount = 0;
 
-        this.pendingClients      = {};
+        this.pendingClients = {};
         this.pendingClientsCount = 0;
 
-        let wsServerOptions          = this.options.wsEngineServerOptions || {};
-        wsServerOptions.server       = this.httpServer;
+        const wsServerOptions = this.options.wsEngineServerOptions || {};
+        wsServerOptions.server = this.httpServer;
         wsServerOptions.verifyClient = this.verifyHandshake.bind(this);
 
         if (wsServerOptions.path == null && this._path != null)
@@ -293,7 +293,6 @@ export class TGServerSocketGateway extends AsyncStreamEmitter<any>
 
         if (this.options.isNode)
         {
-            // @ts-ignore
             this.wsServer = new WSServer(wsServerOptions);
 
             this.wsServer.on('error', this._handleServerError.bind(this));
@@ -331,9 +330,9 @@ export class TGServerSocketGateway extends AsyncStreamEmitter<any>
         this.brokerEngine.setCodecEngine(codecEngine);
     }
 
-    emit(eventName: 'error', data: {error: Error}): void;
-    emit(eventName: 'warning', data: {warning: Error}): void;
-    emit(eventName: 'handshake', data: {socket: TGServerSocket}): void;
+    emit(eventName: 'error', data: { error: Error }): void;
+    emit(eventName: 'warning', data: { warning: Error }): void;
+    emit(eventName: 'handshake', data: { socket: TGServerSocket }): void;
     emit(
         eventName: 'authenticationStateChange',
         data: AuthStateChangeData
@@ -353,11 +352,11 @@ export class TGServerSocketGateway extends AsyncStreamEmitter<any>
         return super.emit(eventName, data);
     }
 
-    listener(eventName: 'error'): ConsumableStream<{error: Error}>;
-    listener(eventName: 'warning'): ConsumableStream<{warning: Error}>;
+    listener(eventName: 'error'): ConsumableStream<{ error: Error }>;
+    listener(eventName: 'warning'): ConsumableStream<{ warning: Error }>;
     listener(
         eventName: 'handshake'
-    ): ConsumableStream<{socket: TGServerSocket}>;
+    ): ConsumableStream<{ socket: TGServerSocket }>;
     listener(
         eventName: 'authenticationStateChange'
     ): ConsumableStream<AuthStateChangeData>;
@@ -408,7 +407,7 @@ export class TGServerSocketGateway extends AsyncStreamEmitter<any>
             });
             if (!keepSocketsOpen)
             {
-                for (let socket of Object.values(this.clients))
+                for (const socket of Object.values(this.clients))
                 {
                     socket.terminate();
                 }
@@ -476,13 +475,13 @@ export class TGServerSocketGateway extends AsyncStreamEmitter<any>
 
     async verifyHandshake(info: any, callback: any): Promise<any>
     {
-        let req    = info.req;
+        const req = info.req;
         let origin = info.origin;
         if (origin === 'null' || origin == null)
         {
             origin = '*';
         }
-        let ok: boolean|number = false;
+        let ok: boolean | number = false;
 
         if (this._allowAllOrigins)
         {
@@ -493,35 +492,34 @@ export class TGServerSocketGateway extends AsyncStreamEmitter<any>
             try
             {
                 const parser = new URL(origin);
-                const port   =
-                          parser.port || (parser.protocol === 'https:' ? 443 : 80);
-                ok           =
+                const port =
+                    parser.port || (parser.protocol === 'https:' ? 443 : 80);
+                ok =
                     ~this.origins.indexOf(parser.hostname + ':' + port) ||
                     ~this.origins.indexOf(parser.hostname + ':*') ||
                     ~this.origins.indexOf('*:' + port);
             }
             catch (e)
-            {
-            }
+            {}
         }
 
-        let middlewareHandshakeStream  = new WritableConsumableStream();
+        const middlewareHandshakeStream = new WritableConsumableStream();
         middlewareHandshakeStream.type =
             TGServerSocketGateway.MIDDLEWARE_HANDSHAKE;
 
         req[TGServerSocketGateway.SYMBOL_MIDDLEWARE_HANDSHAKE_STREAM] =
             middlewareHandshakeStream;
 
-        let handshakeMiddleware =
-                this._middleware[TGServerSocketGateway.MIDDLEWARE_HANDSHAKE];
+        const handshakeMiddleware =
+            this._middleware[TGServerSocketGateway.MIDDLEWARE_HANDSHAKE];
         if (handshakeMiddleware)
         {
             handshakeMiddleware(middlewareHandshakeStream);
         }
 
-        let action     = new TGAction();
+        const action = new TGAction();
         action.request = req;
-        action.type    = TGAction.HANDSHAKE_WS;
+        action.type = TGAction.HANDSHAKE_WS;
 
         try
         {
@@ -547,7 +545,7 @@ export class TGServerSocketGateway extends AsyncStreamEmitter<any>
             return;
         }
 
-        let error = new ServerProtocolError(
+        const error = new ServerProtocolError(
             `Failed to authorize socket handshake - Invalid origin: ${origin}`
         );
         this.emitWarning(error);
@@ -560,7 +558,7 @@ export class TGServerSocketGateway extends AsyncStreamEmitter<any>
         middlewareStream: any,
         action: TGAction,
         socket?: any
-    ): Promise<{data: any; options: any}>
+    ): Promise<{ data: any; options: any }>
     {
         if (!this.hasMiddleware(middlewareStream.type))
         {
@@ -572,7 +570,7 @@ export class TGServerSocketGateway extends AsyncStreamEmitter<any>
         let options = null;
         try
         {
-            let result = await action.promise;
+            const result = await action.promise;
             if (result)
             {
                 newData = result.data;
@@ -584,7 +582,7 @@ export class TGServerSocketGateway extends AsyncStreamEmitter<any>
             let clientError;
             if (!error)
             {
-                error       = new SilentMiddlewareBlockedError(
+                error = new SilentMiddlewareBlockedError(
                     `The ${action.type} AGAction was blocked by ${middlewareStream.type} middleware`,
                     middlewareStream.type
                 );
@@ -653,8 +651,8 @@ export class TGServerSocketGateway extends AsyncStreamEmitter<any>
             wsSocket.upgradeReq = upgradeReq;
         }
 
-        const socketId    = this.generateId();
-        const agSocket    = new TGServerSocket(
+        const socketId = this.generateId();
+        const agSocket = new TGServerSocket(
             socketId,
             this,
             wsSocket,
@@ -662,22 +660,22 @@ export class TGServerSocketGateway extends AsyncStreamEmitter<any>
         );
         agSocket.exchange = this.exchange;
 
-        let inboundRawMiddleware =
-                this._middleware[TGServerSocketGateway.MIDDLEWARE_INBOUND_RAW];
+        const inboundRawMiddleware =
+            this._middleware[TGServerSocketGateway.MIDDLEWARE_INBOUND_RAW];
         if (inboundRawMiddleware)
         {
             inboundRawMiddleware(agSocket.middlewareInboundRawStream);
         }
 
-        let inboundMiddleware =
-                this._middleware[TGServerSocketGateway.MIDDLEWARE_INBOUND];
+        const inboundMiddleware =
+            this._middleware[TGServerSocketGateway.MIDDLEWARE_INBOUND];
         if (inboundMiddleware)
         {
             inboundMiddleware(agSocket.middlewareInboundStream);
         }
 
-        let outboundMiddleware =
-                this._middleware[TGServerSocketGateway.MIDDLEWARE_OUTBOUND];
+        const outboundMiddleware =
+            this._middleware[TGServerSocketGateway.MIDDLEWARE_OUTBOUND];
         if (outboundMiddleware)
         {
             outboundMiddleware(agSocket.middlewareOutboundStream);

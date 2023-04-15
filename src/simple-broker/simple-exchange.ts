@@ -1,11 +1,12 @@
-import { AsyncStreamEmitter } from "../async-stream-emitter";
-import { TGChannel } from "../channel/channel";
-import { ChannelState } from "../channel/channel-state";
-import { TGChannelClient } from "../channel/client";
-import { StreamDemux } from "../stream-demux";
-import { ConsumerStats } from "../writable-consumable-stream/consumer-stats";
-import { TGSimpleBroker } from "./simple-broker";
+import { AsyncStreamEmitter } from '../async-stream-emitter';
+import { TGChannel } from '../channel/channel';
+import { ChannelState } from '../channel/channel-state';
+import { TGChannelClient } from '../channel/client';
+import { StreamDemux } from '../stream-demux';
+import { ConsumerStats } from '../writable-consumable-stream/consumer-stats';
+import { TGSimpleBroker } from './simple-broker';
 
+/* eslint-disable @typescript-eslint/no-unused-vars */
 export class SimpleExchange
     extends AsyncStreamEmitter<any>
     implements TGChannelClient
@@ -19,9 +20,10 @@ export class SimpleExchange
     /**
      * Constructor
      */
-    constructor(broker: TGSimpleBroker) {
+    constructor(broker: TGSimpleBroker)
+    {
         super();
-        this.id = "exchange";
+        this.id = 'exchange';
         this._broker = broker;
         this._channelMap = {};
         this._channelEventDemux = new StreamDemux();
@@ -32,35 +34,43 @@ export class SimpleExchange
     // @ Public methods
     // -----------------------------------------------------------------------------------------------------
 
-    transmit(event: string, packet: any): void {
-        if (event === "#publish") {
+    transmit(event: string, packet: any): void
+    {
+        if (event === '#publish')
+        {
             this._channelDataDemux.write(packet.channel, packet.data);
         }
     }
 
-    getBackpressure(): number {
+    getBackpressure(): number
+    {
         return Math.max(
             this.getAllListenersBackpressure(),
             this.getAllChannelsBackpressure()
         );
     }
 
-    destroy(): void {
+    destroy(): void
+    {
         this._broker.closeAllListeners();
     }
 
-    async transmitPublish(channelName: string, data: any): Promise<void> {
+    async transmitPublish(channelName: string, data: any): Promise<void>
+    {
         return this._broker.transmitPublish(channelName, data);
     }
 
-    async invokePublish(channelName: string, data: any): Promise<void> {
+    async invokePublish(channelName: string, data: any): Promise<void>
+    {
         return this._broker.invokePublish(channelName, data);
     }
 
-    subscribe(channelName: string): TGChannel<any> {
+    subscribe(channelName: string): TGChannel<any>
+    {
         let channel = this._channelMap[channelName];
 
-        if (!channel) {
+        if (!channel)
+        {
             channel = {
                 name: channelName,
                 state: TGChannel.PENDING,
@@ -69,7 +79,7 @@ export class SimpleExchange
             this._triggerChannelSubscribe(channel);
         }
 
-        let channelIterable = new TGChannel(
+        const channelIterable = new TGChannel(
             channelName,
             this,
             this._channelEventDemux,
@@ -79,18 +89,21 @@ export class SimpleExchange
         return channelIterable;
     }
 
-    async unsubscribe(channelName: string): Promise<void> {
-        let channel = this._channelMap[channelName];
+    async unsubscribe(channelName: string): Promise<void>
+    {
+        const channel = this._channelMap[channelName];
 
-        if (channel) {
+        if (channel)
+        {
             this._triggerChannelUnsubscribe(channel);
         }
     }
 
-    channel(channelName: string): TGChannel<any> {
+    channel(channelName: string): TGChannel<any>
+    {
         // let currentChannel = this._channelMap[channelName];
 
-        let channelIterable = new TGChannel(
+        const channelIterable = new TGChannel(
             channelName,
             this,
             this._channelEventDemux,
@@ -100,156 +113,187 @@ export class SimpleExchange
         return channelIterable;
     }
 
-    closeChannel(channelName: string): void {
+    closeChannel(channelName: string): void
+    {
         this.channelCloseOutput(channelName);
         this.channelCloseAllListeners(channelName);
     }
 
-    closeAllChannelOutputs(): void {
+    closeAllChannelOutputs(): void
+    {
         this._channelDataDemux.closeAll();
     }
 
-    closeAllChannelListeners(): void {
+    closeAllChannelListeners(): void
+    {
         this._channelEventDemux.closeAll();
     }
 
-    closeAllChannels(): void {
+    closeAllChannels(): void
+    {
         this.closeAllChannelOutputs();
         this.closeAllChannelListeners();
     }
 
-    killChannel(channelName: string): void {
+    killChannel(channelName: string): void
+    {
         this.channelKillOutput(channelName);
         this.channelKillAllListeners(channelName);
     }
 
-    killAllChannelOutputs(): void {
+    killAllChannelOutputs(): void
+    {
         this._channelDataDemux.killAll();
     }
 
-    killAllChannelListeners(): void {
+    killAllChannelListeners(): void
+    {
         this._channelEventDemux.killAll();
     }
 
-    killAllChannels(): void {
+    killAllChannels(): void
+    {
         this.killAllChannelOutputs();
         this.killAllChannelListeners();
     }
 
-    killChannelOutputConsumer(consumerId: number): void {
+    killChannelOutputConsumer(consumerId: number): void
+    {
         this._channelDataDemux.killConsumer(consumerId);
     }
 
-    killChannelListenerConsumer(consumerId: number): void {
+    killChannelListenerConsumer(consumerId: number): void
+    {
         this._channelEventDemux.killConsumer(consumerId);
     }
 
-    getChannelOutputConsumerStats(consumerId: number): ConsumerStats {
+    getChannelOutputConsumerStats(consumerId: number): ConsumerStats
+    {
         return this._channelDataDemux.getConsumerStats(consumerId);
     }
 
-    getChannelListenerConsumerStats(consumerId: number): ConsumerStats {
+    getChannelListenerConsumerStats(consumerId: number): ConsumerStats
+    {
         return this._channelEventDemux.getConsumerStats(consumerId);
     }
 
-    getAllChannelOutputsConsumerStatsList(): ConsumerStats[] {
+    getAllChannelOutputsConsumerStatsList(): ConsumerStats[]
+    {
         return this._channelDataDemux.getConsumerStatsListAll();
     }
 
-    getAllChannelListenersConsumerStatsList(): ConsumerStats[] {
+    getAllChannelListenersConsumerStatsList(): ConsumerStats[]
+    {
         return this._channelEventDemux.getConsumerStatsListAll();
     }
 
-    getChannelBackpressure(channelName: string): number {
+    getChannelBackpressure(channelName: string): number
+    {
         return Math.max(
             this.channelGetOutputBackpressure(channelName),
             this.channelGetAllListenersBackpressure(channelName)
         );
     }
 
-    getAllChannelOutputsBackpressure(): number {
+    getAllChannelOutputsBackpressure(): number
+    {
         return this._channelDataDemux.getBackpressureAll();
     }
 
-    getAllChannelListenersBackpressure(): number {
+    getAllChannelListenersBackpressure(): number
+    {
         return this._channelEventDemux.getBackpressureAll();
     }
 
-    getAllChannelsBackpressure(): number {
+    getAllChannelsBackpressure(): number
+    {
         return Math.max(
             this.getAllChannelOutputsBackpressure(),
             this.getAllChannelListenersBackpressure()
         );
     }
 
-    getChannelListenerConsumerBackpressure(consumerId: number): number {
+    getChannelListenerConsumerBackpressure(consumerId: number): number
+    {
         return this._channelEventDemux.getConsumerBackpressure(consumerId);
     }
 
-    getChannelOutputConsumerBackpressure(consumerId: number): number {
+    getChannelOutputConsumerBackpressure(consumerId: number): number
+    {
         return this._channelDataDemux.getConsumerBackpressure(consumerId);
     }
 
-    hasAnyChannelOutputConsumer(consumerId: number): boolean {
+    hasAnyChannelOutputConsumer(consumerId: number): boolean
+    {
         return this._channelDataDemux.hasConsumerAll(consumerId);
     }
 
-    hasAnyChannelListenerConsumer(consumerId: number): boolean {
+    hasAnyChannelListenerConsumer(consumerId: number): boolean
+    {
         return this._channelEventDemux.hasConsumerAll(consumerId);
     }
 
-    getChannelState(channelName: string): ChannelState {
-        let channel = this._channelMap[channelName];
-        if (channel) {
+    getChannelState(channelName: string): ChannelState
+    {
+        const channel = this._channelMap[channelName];
+        if (channel)
+        {
             return channel.state;
         }
         return TGChannel.UNSUBSCRIBED;
     }
 
-    getChannelOptions(channelName: string): object {
+    getChannelOptions(channelName?: string): object
+    {
         return {};
     }
 
-    channelCloseOutput(channelName: string): void {
+    channelCloseOutput(channelName: string): void
+    {
         this._channelDataDemux.close(channelName);
     }
 
-    channelCloseListener(channelName: string, eventName: string): void {
+    channelCloseListener(channelName: string, eventName: string): void
+    {
         this._channelEventDemux.close(`${channelName}/${eventName}`);
     }
 
-    channelCloseAllListeners(channelName: string): void {
-        this._getAllChannelStreamNames(
-            channelName
-        ).forEach((streamName) => {
+    channelCloseAllListeners(channelName: string): void
+    {
+        this._getAllChannelStreamNames(channelName).forEach((streamName) =>
+        {
             this._channelEventDemux.close(streamName);
         });
     }
 
-    channelKillOutput(channelName: string): void {
+    channelKillOutput(channelName: string): void
+    {
         this._channelDataDemux.kill(channelName);
     }
 
-    channelKillListener(channelName: string, eventName: string): void {
+    channelKillListener(channelName: string, eventName: string): void
+    {
         this._channelEventDemux.kill(`${channelName}/${eventName}`);
     }
 
-    channelKillAllListeners(channelName: string): void {
-        this._getAllChannelStreamNames(
-            channelName
-        ).forEach((streamName) => {
+    channelKillAllListeners(channelName: string): void
+    {
+        this._getAllChannelStreamNames(channelName).forEach((streamName) =>
+        {
             this._channelEventDemux.kill(streamName);
         });
     }
 
-    channelGetOutputConsumerStatsList(channelName: string): ConsumerStats[] {
+    channelGetOutputConsumerStatsList(channelName: string): ConsumerStats[]
+    {
         return this._channelDataDemux.getConsumerStatsList(channelName);
     }
 
     channelGetListenerConsumerStatsList(
         channelName: string,
         eventName: string
-    ): ConsumerStats[] {
+    ): ConsumerStats[]
+    {
         return this._channelEventDemux.getConsumerStatsList(
             `${channelName}/${eventName}`
         );
@@ -257,42 +301,51 @@ export class SimpleExchange
 
     channelGetAllListenersConsumerStatsList(
         channelName: string
-    ): ConsumerStats[] {
+    ): ConsumerStats[]
+    {
         return this._getAllChannelStreamNames(channelName)
-            .map((streamName) => {
+            .map((streamName) =>
+            {
                 return this._channelEventDemux.getConsumerStatsList(streamName);
             })
-            .reduce((accumulator, statsList) => {
-                statsList.forEach((stats) => {
+            .reduce((accumulator, statsList) =>
+            {
+                statsList.forEach((stats) =>
+                {
                     accumulator.push(stats);
                 });
                 return accumulator;
             }, []);
     }
 
-    channelGetOutputBackpressure(channelName: string): number {
+    channelGetOutputBackpressure(channelName: string): number
+    {
         return this._channelDataDemux.getBackpressure(channelName);
     }
 
     channelGetListenerBackpressure(
         channelName: string,
         eventName: string
-    ): number {
+    ): number
+    {
         return this._channelEventDemux.getBackpressure(
             `${channelName}/${eventName}`
         );
     }
 
-    channelGetAllListenersBackpressure(channelName: string): number {
-        let listenerStreamBackpressures = this._getAllChannelStreamNames(
+    channelGetAllListenersBackpressure(channelName: string): number
+    {
+        const listenerStreamBackpressures = this._getAllChannelStreamNames(
             channelName
-        ).map((streamName) => {
+        ).map((streamName) =>
+        {
             return this._channelEventDemux.getBackpressure(streamName);
         });
         return Math.max(...listenerStreamBackpressures.concat(0));
     }
 
-    channelHasOutputConsumer(channelName: string, consumerId: number): boolean {
+    channelHasOutputConsumer(channelName: string, consumerId: number): boolean
+    {
         return this._channelDataDemux.hasConsumer(channelName, consumerId);
     }
 
@@ -300,7 +353,8 @@ export class SimpleExchange
         channelName: string,
         eventName: string,
         consumerId: number
-    ): boolean {
+    ): boolean
+    {
         return this._channelEventDemux.hasConsumer(
             `${channelName}/${eventName}`,
             consumerId
@@ -310,9 +364,11 @@ export class SimpleExchange
     channelHasAnyListenerConsumer(
         channelName: string,
         consumerId: number
-    ): boolean {
+    ): boolean
+    {
         return this._getAllChannelStreamNames(channelName).some(
-            (streamName) => {
+            (streamName) =>
+            {
                 return this._channelEventDemux.hasConsumer(
                     streamName,
                     consumerId
@@ -321,22 +377,27 @@ export class SimpleExchange
         );
     }
 
-    subscriptions(includePending?: boolean): string[] {
+    subscriptions(includePending?: boolean): string[]
+    {
         const subs: string[] = [];
-        Object.keys(this._channelMap).forEach((channelName) => {
+        Object.keys(this._channelMap).forEach((channelName) =>
+        {
             if (
                 includePending ||
                 this._channelMap[channelName].state === TGChannel.SUBSCRIBED
-            ) {
+            )
+            {
                 subs.push(channelName);
             }
         });
         return subs;
     }
 
-    isSubscribed(channelName: string, includePending?: boolean): boolean {
-        let channel = this._channelMap[channelName];
-        if (includePending) {
+    isSubscribed(channelName: string, includePending?: boolean): boolean
+    {
+        const channel = this._channelMap[channelName];
+        if (includePending)
+        {
             return !!channel;
         }
         return !!channel && channel.state === TGChannel.SUBSCRIBED;
@@ -346,34 +407,40 @@ export class SimpleExchange
     // @ Private methods
     // -----------------------------------------------------------------------------------------------------
 
-    private _triggerChannelSubscribe(channel: TGChannel<any>): void {
-        let channelName = channel.name;
+    private _triggerChannelSubscribe(channel: TGChannel<any>): void
+    {
+        const channelName = channel.name;
 
         channel.state = TGChannel.SUBSCRIBED;
 
         this._channelEventDemux.write(`${channelName}/subscribe`, {});
         this._broker.subscribeClient(this, channelName);
-        this.emit("subscribe", { channel: channelName });
+        this.emit('subscribe', { channel: channelName });
     }
 
-    private _triggerChannelUnsubscribe(channel: TGChannel<any>): void {
-        let channelName = channel.name;
+    private _triggerChannelUnsubscribe(channel: TGChannel<any>): void
+    {
+        const channelName = channel.name;
 
         delete this._channelMap[channelName];
-        if (channel.state === TGChannel.SUBSCRIBED) {
+        if (channel.state === TGChannel.SUBSCRIBED)
+        {
             this._channelEventDemux.write(`${channelName}/unsubscribe`, {});
             this._broker.unsubscribeClient(this, channelName);
-            this.emit("unsubscribe", { channel: channelName });
+            this.emit('unsubscribe', { channel: channelName });
         }
     }
 
-    private _getAllChannelStreamNames(channelName: string): string[] {
-        let streamNamesLookup = this._channelEventDemux
+    private _getAllChannelStreamNames(channelName: string): string[]
+    {
+        const streamNamesLookup = this._channelEventDemux
             .getConsumerStatsListAll()
-            .filter((stats) => {
+            .filter((stats) =>
+            {
                 return stats.stream.indexOf(`${channelName}/`) === 0;
             })
-            .reduce((accumulator: {[key: string]: boolean}, stats: any) => {
+            .reduce((accumulator: { [key: string]: boolean }, stats: any) =>
+            {
                 accumulator[stats.stream] = true;
                 return accumulator;
             }, {});

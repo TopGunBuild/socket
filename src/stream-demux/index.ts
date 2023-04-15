@@ -3,16 +3,17 @@ import { Consumer } from '../writable-consumable-stream/consumer';
 import { ConsumerStats } from '../writable-consumable-stream/consumer-stats';
 import { DemuxedConsumableStream } from './demuxed-consumable-stream';
 
-interface StreamDemuxValue<T>
-{
+interface StreamDemuxValue<T> {
     stream?: string;
     consumerId?: number;
-    data: {value: T; done: boolean};
+    data: { value: T; done: boolean };
 }
+
+/* eslint-disable prefer-rest-params */
 
 export class StreamDemux<T>
 {
-    private _mainStream: WritableConsumableStream<StreamDemuxValue<T>|T>;
+    private _mainStream: WritableConsumableStream<StreamDemuxValue<T> | T>;
 
     /**
      * Constructor
@@ -26,7 +27,7 @@ export class StreamDemux<T>
     {
         this._mainStream.write({
             stream: streamName,
-            data  : {
+            data: {
                 value,
                 done: false,
             },
@@ -37,7 +38,7 @@ export class StreamDemux<T>
     {
         this._mainStream.write({
             stream: streamName,
-            data  : {
+            data: {
                 value,
                 done: true,
             },
@@ -78,7 +79,7 @@ export class StreamDemux<T>
 
     getConsumerStatsList(streamName: string): ConsumerStats[]
     {
-        let consumerList = this._mainStream.getConsumerStatsList();
+        const consumerList = this._mainStream.getConsumerStatsList();
         return consumerList.filter((consumerStats) =>
         {
             return consumerStats.stream === streamName;
@@ -92,8 +93,8 @@ export class StreamDemux<T>
 
     kill(streamName: string, value?: T): void
     {
-        let consumerList = this.getConsumerStatsList(streamName);
-        let len          = consumerList.length;
+        const consumerList = this.getConsumerStatsList(streamName);
+        const len = consumerList.length;
         for (let i = 0; i < len; i++)
         {
             this.killConsumer(consumerList[i].id, value);
@@ -112,13 +113,13 @@ export class StreamDemux<T>
 
     getBackpressure(streamName: string): number
     {
-        let consumerList = this.getConsumerStatsList(streamName);
-        let len          = consumerList.length;
+        const consumerList = this.getConsumerStatsList(streamName);
+        const len = consumerList.length;
 
         let maxBackpressure = 0;
         for (let i = 0; i < len; i++)
         {
-            let consumer = consumerList[i];
+            const consumer = consumerList[i];
             if (consumer.backpressure > maxBackpressure)
             {
                 maxBackpressure = consumer.backpressure;
@@ -139,7 +140,7 @@ export class StreamDemux<T>
 
     hasConsumer(streamName: string, consumerId: number): boolean
     {
-        let consumerStats = this._mainStream.getConsumerStats(consumerId);
+        const consumerStats = this._mainStream.getConsumerStats(consumerId);
         return !!consumerStats && consumerStats.stream === streamName;
     }
 
@@ -161,17 +162,17 @@ export class StreamDemux<T>
     createConsumer(
         streamName: string,
         timeout: any
-    ): Consumer<StreamDemuxValue<T>|T>
+    ): Consumer<StreamDemuxValue<T> | T>
     {
-        let mainStreamConsumer = this._mainStream.createConsumer(timeout);
+        const mainStreamConsumer = this._mainStream.createConsumer(timeout);
 
-        let consumerNext        = mainStreamConsumer.next;
+        const consumerNext = mainStreamConsumer.next;
         mainStreamConsumer.next = async function ()
         {
             while (true)
             {
                 const argumentsTyped: any = arguments;
-                const packet              = await consumerNext.apply(this, argumentsTyped);
+                const packet = await consumerNext.apply(this, argumentsTyped);
                 if (packet.value)
                 {
                     if (
@@ -193,16 +194,16 @@ export class StreamDemux<T>
             }
         };
 
-        let consumerGetStats        = mainStreamConsumer.getStats;
+        const consumerGetStats = mainStreamConsumer.getStats;
         mainStreamConsumer.getStats = function ()
         {
             const argumentsTyped: any = arguments;
-            const stats               = consumerGetStats.apply(this, argumentsTyped);
-            stats.stream              = streamName;
+            const stats = consumerGetStats.apply(this, argumentsTyped);
+            stats.stream = streamName;
             return stats;
         };
 
-        let consumerApplyBackpressure        = mainStreamConsumer.applyBackpressure;
+        const consumerApplyBackpressure = mainStreamConsumer.applyBackpressure;
         mainStreamConsumer.applyBackpressure = function (packet)
         {
             const argumentsTyped: any = arguments;
@@ -225,7 +226,8 @@ export class StreamDemux<T>
             }
         };
 
-        let consumerReleaseBackpressure        = mainStreamConsumer.releaseBackpressure;
+        const consumerReleaseBackpressure =
+            mainStreamConsumer.releaseBackpressure;
         mainStreamConsumer.releaseBackpressure = function (packet)
         {
             const argumentsTyped: any = arguments;

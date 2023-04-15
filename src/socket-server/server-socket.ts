@@ -42,7 +42,8 @@ import {
     ConnectData,
     DeauthenticateData,
     DisconnectData,
-    IncomingMessage, IncomingMessageKey,
+    IncomingMessage,
+    IncomingMessageKey,
     SocketState,
     StateChangeData,
     SubscribeData,
@@ -53,16 +54,16 @@ const HANDSHAKE_REJECTION_STATUS_CODE = 4008;
 
 export class TGServerSocket extends AsyncStreamEmitter<any>
 {
-    static CONNECTING: SocketState    = 'connecting';
-    static OPEN: SocketState          = 'open';
-    static CLOSED: SocketState        = 'closed';
-    static AUTHENTICATED: AuthState   = 'authenticated';
+    static CONNECTING: SocketState = 'connecting';
+    static OPEN: SocketState = 'open';
+    static CLOSED: SocketState = 'closed';
+    static AUTHENTICATED: AuthState = 'authenticated';
     static UNAUTHENTICATED: AuthState = 'unauthenticated';
 
     static ignoreStatuses: SocketProtocolIgnoreStatuses =
-               socketProtocolIgnoreStatuses;
-    static errorStatuses: SocketProtocolErrorStatuses   =
-               socketProtocolErrorStatuses;
+        socketProtocolIgnoreStatuses;
+    static errorStatuses: SocketProtocolErrorStatuses =
+        socketProtocolErrorStatuses;
 
     id: string;
     server: TGServerSocketGateway;
@@ -112,7 +113,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
     private _batchBuffer: any[];
     private _batchingIntervalId: any = null;
     private _cid: number;
-    private readonly _callbackMap: {[key: string]: any};
+    private readonly _callbackMap: { [key: string]: any };
     private readonly _sendPing: () => void;
     private readonly _pingIntervalTicker: any;
     private readonly _handshakeTimeoutRef: any;
@@ -129,23 +130,23 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
     )
     {
         super();
-        this.id              = id;
-        this.server          = server;
-        this.socket          = socket;
-        this.state           = TGServerSocket.CONNECTING;
-        this.authState       = TGServerSocket.UNAUTHENTICATED;
+        this.id = id;
+        this.server = server;
+        this.socket = socket;
+        this.state = TGServerSocket.CONNECTING;
+        this.authState = TGServerSocket.UNAUTHENTICATED;
         this.protocolVersion = protocolVersion;
 
-        this._receiverDemux  = new StreamDemux();
+        this._receiverDemux = new StreamDemux();
         this._procedureDemux = new StreamDemux();
 
         this.request = this.socket['upgradeReq'];
 
-        this.inboundReceivedMessageCount  = 0;
+        this.inboundReceivedMessageCount = 0;
         this.inboundProcessedMessageCount = 0;
 
         this.outboundPreparedMessageCount = 0;
-        this.outboundSentMessageCount     = 0;
+        this.outboundSentMessageCount = 0;
 
         this.cloneData = this.server.options.cloneData;
 
@@ -155,50 +156,53 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
         this.middlewareHandshakeStream =
             this.request[
                 TGServerSocketGateway.SYMBOL_MIDDLEWARE_HANDSHAKE_STREAM as unknown as keyof IncomingMessage
-                ];
+            ];
 
-        this.middlewareInboundRawStream      = new WritableConsumableStream();
+        this.middlewareInboundRawStream = new WritableConsumableStream();
         this.middlewareInboundRawStream.type =
             TGServerSocketGateway.MIDDLEWARE_INBOUND_RAW;
 
-        this.middlewareInboundStream      = new WritableConsumableStream();
+        this.middlewareInboundStream = new WritableConsumableStream();
         this.middlewareInboundStream.type =
             TGServerSocketGateway.MIDDLEWARE_INBOUND;
 
-        this.middlewareOutboundStream      = new WritableConsumableStream();
+        this.middlewareOutboundStream = new WritableConsumableStream();
         this.middlewareOutboundStream.type =
             TGServerSocketGateway.MIDDLEWARE_OUTBOUND;
 
         if (this.request['connection' as IncomingMessageKey])
         {
-            this.remoteAddress = this.request['connection' as IncomingMessageKey].remoteAddress;
-            this.remoteFamily  = this.request['connection' as IncomingMessageKey].remoteFamily;
-            this.remotePort    = this.request['connection' as IncomingMessageKey].remotePort;
+            this.remoteAddress =
+                this.request['connection' as IncomingMessageKey].remoteAddress;
+            this.remoteFamily =
+                this.request['connection' as IncomingMessageKey].remoteFamily;
+            this.remotePort =
+                this.request['connection' as IncomingMessageKey].remotePort;
         }
         else
         {
             this.remoteAddress = this.request.remoteAddress;
-            this.remoteFamily  = this.request.remoteFamily;
-            this.remotePort    = this.request.remotePort;
+            this.remoteFamily = this.request.remoteFamily;
+            this.remotePort = this.request.remotePort;
         }
         if (this.request.forwardedForAddress)
         {
             this.forwardedForAddress = this.request.forwardedForAddress;
         }
 
-        this.isBufferingBatch         = false;
-        this.isBatching               = false;
-        this.batchOnHandshake         = this.server.options.batchOnHandshake;
+        this.isBufferingBatch = false;
+        this.isBatching = false;
+        this.batchOnHandshake = this.server.options.batchOnHandshake;
         this.batchOnHandshakeDuration =
             this.server.options.batchOnHandshakeDuration;
-        this.batchInterval            = this.server.options.batchInterval;
-        this._batchBuffer             = [];
+        this.batchInterval = this.server.options.batchInterval;
+        this._batchBuffer = [];
 
         this._batchingIntervalId = null;
-        this._cid                = 1;
-        this._callbackMap        = {};
+        this._cid = 1;
+        this._callbackMap = {};
 
-        this.channelSubscriptions      = {};
+        this.channelSubscriptions = {};
         this.channelSubscriptionsCount = 0;
 
         this._on('error', async (err) =>
@@ -208,14 +212,14 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
 
         this._on('close', async (code, reasonBuffer) =>
         {
-            let reason = reasonBuffer && reasonBuffer.toString();
+            const reason = reasonBuffer && reasonBuffer.toString();
             this._destroy(code, reason);
         });
 
         let pongMessage: string;
         if (this.protocolVersion === 1)
         {
-            pongMessage    = '#2';
+            pongMessage = '#2';
             this._sendPing = () =>
             {
                 if (this.state !== TGServerSocket.CLOSED)
@@ -226,7 +230,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
         }
         else
         {
-            pongMessage    = '';
+            pongMessage = '';
             this._sendPing = () =>
             {
                 if (this.state !== TGServerSocket.CLOSED)
@@ -262,7 +266,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
             let message = isBinary ? messageBuffer : messageBuffer.toString();
             this.inboundReceivedMessageCount++;
 
-            let isPong = message === pongMessage;
+            const isPong = message === pongMessage;
 
             if (isPong)
             {
@@ -275,19 +279,19 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
                 )
             )
             {
-                let action    = new TGAction();
+                const action = new TGAction();
                 action.socket = this;
-                action.type   = TGAction.MESSAGE;
-                action.data   = message;
+                action.type = TGAction.MESSAGE;
+                action.data = message;
 
                 try
                 {
-                    let { data } = await this.server.processMiddlewareAction(
+                    const { data } = await this.server.processMiddlewareAction(
                         this.middlewareInboundRawStream,
                         action,
                         this
                     );
-                    message      = data;
+                    message = data;
                 }
                 catch (error)
                 {
@@ -475,13 +479,13 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
     }
 
     emit(
-        eventName: 'message'|'raw',
-        data: {message: {data: any; type: string; target: WebSocket}}
+        eventName: 'message' | 'raw',
+        data: { message: { data: any; type: string; target: WebSocket } }
     ): void;
-    emit(eventName: 'error', data: {error: Error}): void;
+    emit(eventName: 'error', data: { error: Error }): void;
     emit(eventName: 'authStateChange', data: StateChangeData): void;
     emit(eventName: 'authenticate', data: AuthenticateData): void;
-    emit(eventName: 'authTokenSigned', data: {signedAuthToken: string}): void;
+    emit(eventName: 'authTokenSigned', data: { signedAuthToken: string }): void;
     emit(eventName: 'deauthenticate', data: DeauthenticateData): void;
     emit(eventName: 'badAuthToken', data: BadAuthTokenData): void;
     emit(eventName: 'connect', data: ConnectData): void;
@@ -490,15 +494,15 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
     emit(eventName: 'connectAbort', data: ConnectAbortData): void;
     emit(eventName: 'disconnect', data: DisconnectData): void;
     emit(eventName: 'close', data: CloseData): void;
-    emit(eventName: 'message'|'raw'): ConsumableStream<{
-        message: {data: any; type: string; target: WebSocket};
+    emit(eventName: 'message' | 'raw'): ConsumableStream<{
+        message: { data: any; type: string; target: WebSocket };
     }>;
-    emit(eventName: 'error'): ConsumableStream<{error: Error}>;
+    emit(eventName: 'error'): ConsumableStream<{ error: Error }>;
     emit(eventName: 'authStateChange'): ConsumableStream<StateChangeData>;
     emit(eventName: 'authenticate'): ConsumableStream<AuthenticateData>;
     emit(
         eventName: 'authTokenSigned'
-    ): ConsumableStream<{signedAuthToken: string}>;
+    ): ConsumableStream<{ signedAuthToken: string }>;
     emit(eventName: 'deauthenticate'): ConsumableStream<DeauthenticateData>;
     emit(eventName: 'badAuthToken'): ConsumableStream<BadAuthTokenData>;
     emit(eventName: 'connect'): ConsumableStream<ConnectData>;
@@ -603,7 +607,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
 
         if (typeof code !== 'number')
         {
-            let err = new InvalidArgumentsError(
+            const err = new InvalidArgumentsError(
                 'If specified, the code argument must be a number'
             );
             this.emitError(err);
@@ -668,7 +672,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
     startBatch(): void
     {
         this.isBufferingBatch = true;
-        this._batchBuffer     = [];
+        this._batchBuffer = [];
     }
 
     flushBatch(): void
@@ -678,15 +682,15 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
         {
             return;
         }
-        let serializedBatch = this.serializeObject(this._batchBuffer);
-        this._batchBuffer   = [];
+        const serializedBatch = this.serializeObject(this._batchBuffer);
+        this._batchBuffer = [];
         this.send(serializedBatch);
     }
 
     cancelBatch(): void
     {
         this.isBufferingBatch = false;
-        this._batchBuffer     = [];
+        this._batchBuffer = [];
     }
 
     startBatching(): void
@@ -729,7 +733,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
             this._batchBuffer.push(object);
             return;
         }
-        let str = this.serializeObject(object);
+        const str = this.serializeObject(object);
         if (str != null)
         {
             this.send(str);
@@ -740,7 +744,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
     {
         if (this.state !== TGServerSocket.OPEN)
         {
-            let error = new BadConnectionError(
+            const error = new BadConnectionError(
                 `Socket transmit "${event}" was aborted due to a bad connection`,
                 'connectAbort'
             );
@@ -754,7 +758,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
     {
         if (this.state !== TGServerSocket.OPEN)
         {
-            let error = new BadConnectionError(
+            const error = new BadConnectionError(
                 `Socket invoke "${event}" was aborted due to a bad connection`,
                 'connectAbort'
             );
@@ -782,9 +786,9 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
     {
         if (oldAuthState !== TGServerSocket.AUTHENTICATED)
         {
-            let stateChangeData: StateChangeData = {
-                oldState : oldAuthState,
-                newState : this.authState,
+            const stateChangeData: StateChangeData = {
+                oldState: oldAuthState,
+                newState: this.authState,
                 authToken: this.authToken,
             };
             this.emit('authStateChange', stateChangeData);
@@ -795,7 +799,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
         }
         this.emit('authenticate', { authToken: this.authToken });
         this.server.emit('authentication', {
-            socket   : this,
+            socket: this,
             authToken: this.authToken,
         });
     }
@@ -807,16 +811,16 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
     {
         if (this.state === TGServerSocket.CONNECTING)
         {
-            let err = new InvalidActionError(
+            const err = new InvalidActionError(
                 'Cannot call setAuthToken before completing the handshake'
             );
             this.emitError(err);
             throw err;
         }
 
-        let authToken    = cloneDeep(data);
-        let oldAuthState = this.authState;
-        this.authState   = TGServerSocket.AUTHENTICATED;
+        const authToken = cloneDeep(data);
+        const oldAuthState = this.authState;
+        this.authState = TGServerSocket.AUTHENTICATED;
 
         if (options == null)
         {
@@ -828,7 +832,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
             if (options.algorithm != null)
             {
                 delete options.algorithm;
-                let err = new InvalidArgumentsError(
+                const err = new InvalidArgumentsError(
                     'Cannot change auth token algorithm at runtime - It must be specified as a config option on launch'
                 );
                 this.emitError(err);
@@ -836,9 +840,9 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
         }
 
         // options.mutatePayload      = true;
-        let rejectOnFailedDelivery = options.rejectOnFailedDelivery;
+        const rejectOnFailedDelivery = options.rejectOnFailedDelivery;
         delete options.rejectOnFailedDelivery;
-        let defaultSignatureOptions = this.server.defaultSignatureOptions;
+        const defaultSignatureOptions = this.server.defaultSignatureOptions;
 
         // We cannot have the exp claim on the token and the expiresIn option
         // set at the same time or else auth.signToken will throw an error.
@@ -901,7 +905,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
 
         this.triggerAuthenticationEvents(oldAuthState);
 
-        let tokenData = {
+        const tokenData = {
             token: signedAuthToken,
         };
 
@@ -913,7 +917,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
             }
             catch (err)
             {
-                let error = new AuthError(
+                const error = new AuthError(
                     `Failed to deliver auth token to client - ${err}`
                 );
                 this.emitError(error);
@@ -931,14 +935,14 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
 
     deauthenticateSelf(): void
     {
-        let oldAuthState     = this.authState;
-        let oldAuthToken     = this.authToken;
+        const oldAuthState = this.authState;
+        const oldAuthToken = this.authToken;
         this.signedAuthToken = null;
-        this.authToken       = null;
-        this.authState       = TGServerSocket.UNAUTHENTICATED;
+        this.authToken = null;
+        this.authState = TGServerSocket.UNAUTHENTICATED;
         if (oldAuthState !== TGServerSocket.UNAUTHENTICATED)
         {
-            let stateChangeData: StateChangeData = {
+            const stateChangeData: StateChangeData = {
                 oldState: oldAuthState,
                 newState: this.authState,
             };
@@ -981,7 +985,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
 
     kickOut(channel?: string, message?: string): any
     {
-        let channels: string|string[] = channel;
+        let channels: string | string[] = channel;
         if (!channels)
         {
             channels = Object.keys(this.channelSubscriptions);
@@ -1013,8 +1017,8 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
     {
         if (token && token.exp != null)
         {
-            let currentTime        = Date.now();
-            let expiryMilliseconds = token.exp * 1000;
+            const currentTime = Date.now();
+            const expiryMilliseconds = token.exp * 1000;
             return currentTime > expiryMilliseconds;
         }
         return false;
@@ -1025,17 +1029,16 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
     // -----------------------------------------------------------------------------------------------------
 
     private async _processAuthentication({
-                                             signedAuthToken,
-                                             authTokenError,
-                                             authToken,
-                                             authState,
-                                         }: any): Promise<any>
+        signedAuthToken,
+        authTokenError,
+        authToken,
+    }: any): Promise<any>
     {
         if (authTokenError)
         {
             this.signedAuthToken = null;
-            this.authToken       = null;
-            this.authState       = TGServerSocket.UNAUTHENTICATED;
+            this.authToken = null;
+            this.authState = TGServerSocket.UNAUTHENTICATED;
 
             // If the error is related to the JWT being badly formatted, then we will
             // treat the error as a socket error.
@@ -1054,14 +1057,14 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
         }
 
         this.signedAuthToken = signedAuthToken;
-        this.authToken       = authToken;
-        this.authState       = TGServerSocket.AUTHENTICATED;
+        this.authToken = authToken;
+        this.authState = TGServerSocket.AUTHENTICATED;
 
-        let action             = new TGAction();
-        action.socket          = this;
-        action.type            = TGAction.AUTHENTICATE;
+        const action = new TGAction();
+        action.socket = this;
+        action.type = TGAction.AUTHENTICATE;
         action.signedAuthToken = this.signedAuthToken;
-        action.authToken       = this.authToken;
+        action.authToken = this.authToken;
 
         try
         {
@@ -1086,11 +1089,11 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
 
     private async _validateAuthToken(signedAuthToken: string): Promise<any>
     {
-        let verificationOptions = Object.assign(
+        const verificationOptions = Object.assign(
             {},
             this.server.defaultVerificationOptions,
             {
-                socket    : this,
+                socket: this,
                 throwError: true,
             }
         );
@@ -1106,7 +1109,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
         }
         catch (error)
         {
-            let authTokenError = this._processTokenError(error as Error);
+            const authTokenError = this._processTokenError(error as Error);
             return {
                 signedAuthToken,
                 authTokenError,
@@ -1119,18 +1122,21 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
             signedAuthToken,
             authTokenError: null,
             authToken,
-            authState     : TGServerSocket.AUTHENTICATED,
+            authState: TGServerSocket.AUTHENTICATED,
         };
     }
 
-    private _emitBadAuthTokenError(error: Error, signedAuthToken: string): void
+    private _emitBadAuthTokenError(
+        error: Error,
+        signedAuthToken: string
+    ): void
     {
         this.emit('badAuthToken', {
             authError: error,
             signedAuthToken,
         });
         this.server.emit('badSocketAuthToken', {
-            socket   : this,
+            socket: this,
             authError: error,
             signedAuthToken,
         });
@@ -1142,7 +1148,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
         {
             if (err.message === 'TokenExpiredError')
             {
-                let authError        = new AuthTokenExpiredError(
+                const authError = new AuthTokenExpiredError(
                     err.message,
                     (err as AuthTokenError).expiredAt
                 );
@@ -1151,13 +1157,13 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
             }
             if (err.message === 'ParseError')
             {
-                let authError        = new AuthTokenInvalidError(err.message);
+                const authError = new AuthTokenInvalidError(err.message);
                 authError.isBadToken = true;
                 return authError;
             }
             if (err.message === 'NotYetValid')
             {
-                let authError        = new AuthTokenNotBeforeError(
+                const authError = new AuthTokenNotBeforeError(
                     err.message,
                     (err as AuthTokenError).date
                 );
@@ -1165,7 +1171,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
                 authError.isBadToken = false;
                 return authError;
             }
-            let authError        = new AuthTokenError(err.message);
+            const authError = new AuthTokenError(err.message);
             authError.isBadToken = true;
             return authError;
         }
@@ -1174,7 +1180,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
 
     private _processAuthTokenExpiry(): any
     {
-        let token = this.getAuthToken();
+        const token = this.getAuthToken();
         if (this.isAuthTokenExpired(token))
         {
             this.deauthenticate();
@@ -1197,7 +1203,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
 
         return new Promise((resolve, reject) =>
         {
-            let eventObject: any = {
+            const eventObject: any = {
                 event,
                 cid: this._nextCallId(),
             };
@@ -1206,14 +1212,14 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
                 eventObject.data = data;
             }
 
-            let ackTimeout =
-                    options.ackTimeout == null
-                        ? this.server.ackTimeout
-                        : options.ackTimeout;
+            const ackTimeout =
+                options.ackTimeout == null
+                    ? this.server.ackTimeout
+                    : options.ackTimeout;
 
-            let timeout = setTimeout(() =>
+            const timeout = setTimeout(() =>
             {
-                let error = new TimeoutError(
+                const error = new TimeoutError(
                     `Event response for "${event}" timed out`
                 );
                 delete this._callbackMap[eventObject.cid];
@@ -1250,22 +1256,26 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
         });
     }
 
-    private async _processTransmit(event: string, data: any, options: any): Promise<void>
+    private async _processTransmit(
+        event: string,
+        data: any,
+        options: any
+    ): Promise<void>
     {
         let newData;
-        let useCache  = options ? options.useCache : false;
-        let packet    = { event, data };
-        let isPublish = event === '#publish';
+        let useCache = options ? options.useCache : false;
+        const packet = { event, data };
+        const isPublish = event === '#publish';
         if (isPublish)
         {
-            let action    = new TGAction();
+            const action = new TGAction();
             action.socket = this;
-            action.type   = TGAction.PUBLISH_OUT;
+            action.type = TGAction.PUBLISH_OUT;
 
             if (data !== undefined)
             {
                 action.channel = data.channel;
-                action.data    = data.data;
+                action.data = data.data;
             }
             useCache = !this.server.hasMiddleware(
                 this.middlewareOutboundStream.type
@@ -1273,14 +1283,14 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
 
             try
             {
-                let { data, options } =
-                        await this.server.processMiddlewareAction(
-                            this.middlewareOutboundStream,
-                            action,
-                            this
-                        );
-                newData               = data;
-                useCache              = options == null ? useCache : options.useCache;
+                const { data, options } =
+                    await this.server.processMiddlewareAction(
+                        this.middlewareOutboundStream,
+                        action,
+                        this
+                    );
+                newData = data;
+                useCache = options == null ? useCache : options.useCache;
             }
             catch (error)
             {
@@ -1304,12 +1314,12 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
         }
         else
         {
-            let eventObject: any = {
+            const eventObject: any = {
                 event,
             };
             if (isPublish)
             {
-                eventObject.data      = data || {};
+                eventObject.data = data || {};
                 eventObject.data.data = newData;
             }
             else
@@ -1341,7 +1351,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
 
     private async _handleOutboundPacketStream(): Promise<void>
     {
-        for await (let packet of this.outboundPacketStream)
+        for await (const packet of this.outboundPacketStream)
         {
             if (packet.resolve)
             {
@@ -1424,12 +1434,20 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
         }
         else
         {
-            if (!reason && TGServerSocket.errorStatuses[code as keyof SocketProtocolErrorStatuses])
+            if (
+                !reason &&
+                TGServerSocket.errorStatuses[
+                    code as keyof SocketProtocolErrorStatuses
+                ]
+            )
             {
-                reason = TGServerSocket.errorStatuses[code as keyof SocketProtocolErrorStatuses];
+                reason =
+                    TGServerSocket.errorStatuses[
+                        code as keyof SocketProtocolErrorStatuses
+                    ];
             }
-            let prevState = this.state;
-            this.state    = TGServerSocket.CLOSED;
+            const prevState = this.state;
+            this.state = TGServerSocket.CLOSED;
             if (prevState === TGServerSocket.CONNECTING)
             {
                 this._abortAllPendingEventsDueToBadConnection('connectAbort');
@@ -1459,7 +1477,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
             });
 
             clearTimeout(this._handshakeTimeoutRef);
-            let isClientFullyConnected = !!this.server.clients[this.id];
+            const isClientFullyConnected = !!this.server.clients[this.id];
 
             if (isClientFullyConnected)
             {
@@ -1467,14 +1485,18 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
                 this.server.clientsCount--;
             }
 
-            let isClientPending = !!this.server.pendingClients[this.id];
+            const isClientPending = !!this.server.pendingClients[this.id];
             if (isClientPending)
             {
                 delete this.server.pendingClients[this.id];
                 this.server.pendingClientsCount--;
             }
 
-            if (!TGServerSocket.ignoreStatuses[code as keyof SocketProtocolIgnoreStatuses])
+            if (
+                !TGServerSocket.ignoreStatuses[
+                    code as keyof SocketProtocolIgnoreStatuses
+                ]
+            )
             {
                 let closeMessage;
                 if (reason)
@@ -1501,8 +1523,10 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
                 {
                     closeMessage = `Socket connection closed with status code ${code}`;
                 }
-                let err = new SocketProtocolError(
-                    TGServerSocket.errorStatuses[code as keyof SocketProtocolErrorStatuses] || closeMessage,
+                const err = new SocketProtocolError(
+                    TGServerSocket.errorStatuses[
+                        code as keyof SocketProtocolErrorStatuses
+                    ] || closeMessage,
                     code
                 );
                 this.emitError(err);
@@ -1510,7 +1534,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
 
             await this._unsubscribeFromAllChannels();
 
-            let cleanupMode = this.server.options.socketStreamCleanupMode;
+            const cleanupMode = this.server.options.socketStreamCleanupMode;
             if (cleanupMode === 'kill')
             {
                 (async () =>
@@ -1538,19 +1562,19 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
     {
         Object.keys(this._callbackMap || {}).forEach((i) =>
         {
-            let eventObject = this._callbackMap[i];
+            const eventObject = this._callbackMap[i];
             delete this._callbackMap[i];
 
             clearTimeout(eventObject.timeout);
             delete eventObject.timeout;
 
-            let errorMessage       = `Event "${eventObject.event}" was aborted due to a bad connection`;
-            let badConnectionError = new BadConnectionError(
+            const errorMessage = `Event "${eventObject.event}" was aborted due to a bad connection`;
+            const badConnectionError = new BadConnectionError(
                 errorMessage,
                 failureType
             );
 
-            let callback = eventObject.callback;
+            const callback = eventObject.callback;
             delete eventObject.callback;
 
             callback.call(eventObject, badConnectionError, eventObject);
@@ -1559,10 +1583,10 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
 
     private async _handleInboundMessageStream(pongMessage: any): Promise<void>
     {
-        for await (let message of this.inboundMessageStream)
+        for await (const message of this.inboundMessageStream)
         {
             this.inboundProcessedMessageCount++;
-            let isPong = message === pongMessage;
+            const isPong = message === pongMessage;
 
             if (isPong)
             {
@@ -1575,7 +1599,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
                     this.socket.close(4009);
                     continue;
                 }
-                let token = this.getAuthToken();
+                const token = this.getAuthToken();
                 if (this.isAuthTokenExpired(token))
                 {
                     this.deauthenticate();
@@ -1608,7 +1632,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
 
             if (Array.isArray(packet))
             {
-                let len = packet.length;
+                const len = packet.length;
                 for (let i = 0; i < len; i++)
                 {
                     await this._processInboundPacket(packet[i], message);
@@ -1628,17 +1652,17 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
 
     private async _processHandshakeRequest(request: TGRequest): Promise<void>
     {
-        let data            = request.data || {};
-        let signedAuthToken = data.authToken || null;
+        const data = request.data || {};
+        const signedAuthToken = data.authToken || null;
         clearTimeout(this._handshakeTimeoutRef);
 
-        let authInfo = await this._validateAuthToken(signedAuthToken);
+        const authInfo = await this._validateAuthToken(signedAuthToken);
 
-        let action     = new TGAction();
+        const action = new TGAction();
         action.request = this.request;
-        action.socket  = this;
-        action.type    = TGAction.HANDSHAKE_SC;
-        action.data    = authInfo;
+        action.socket = this;
+        action.type = TGAction.HANDSHAKE_SC;
+        action.data = authInfo;
 
         try
         {
@@ -1658,18 +1682,18 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
             return;
         }
 
-        let clientSocketStatus: ConnectData = {
-            id             : this.id,
-            pingTimeout    : this.server.pingTimeout,
+        const clientSocketStatus: ConnectData = {
+            id: this.id,
+            pingTimeout: this.server.pingTimeout,
             isAuthenticated: false,
         };
-        let serverSocketStatus: ConnectData = {
-            id             : this.id,
-            pingTimeout    : this.server.pingTimeout,
+        const serverSocketStatus: ConnectData = {
+            id: this.id,
+            pingTimeout: this.server.pingTimeout,
             isAuthenticated: false,
         };
 
-        let oldAuthState = this.authState;
+        const oldAuthState = this.authState;
         try
         {
             await this._processAuthentication(authInfo);
@@ -1747,9 +1771,9 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
         request: TGRequest
     ): Promise<void>
     {
-        let signedAuthToken = request.data;
-        let oldAuthState    = this.authState;
-        let authInfo        = await this._validateAuthToken(signedAuthToken);
+        const signedAuthToken = request.data;
+        const oldAuthState = this.authState;
+        const authInfo = await this._validateAuthToken(signedAuthToken);
         try
         {
             await this._processAuthentication(authInfo);
@@ -1766,7 +1790,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
 
             request.end({
                 isAuthenticated: !!this.authToken,
-                authError      :
+                authError:
                     signedAuthToken == null ? null : dehydrateError(error),
             });
 
@@ -1775,7 +1799,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
         this.triggerAuthenticationEvents(oldAuthState);
         request.end({
             isAuthenticated: !!this.authToken,
-            authError      : null,
+            authError: null,
         });
     }
 
@@ -1833,7 +1857,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
             subscriptionOptions,
         });
         this.server.emit('subscription', {
-            socket : this,
+            socket: this,
             channel: channelName,
             subscriptionOptions,
         });
@@ -1841,8 +1865,8 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
 
     private async _processSubscribeRequest(request: TGRequest): Promise<void>
     {
-        let subscriptionOptions = Object.assign({}, request.data);
-        let channelName         = subscriptionOptions.channel;
+        const subscriptionOptions = Object.assign({}, request.data);
+        const channelName = subscriptionOptions.channel;
         delete subscriptionOptions.channel;
 
         if (this.state === TGServerSocket.OPEN)
@@ -1853,7 +1877,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
             }
             catch (err)
             {
-                let error = new BrokerError(
+                const error = new BrokerError(
                     `Failed to subscribe socket to the ${channelName} channel - ${err}`
                 );
                 this.emitError(error);
@@ -1868,7 +1892,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
         }
         // This is an invalid state; it means the client tried to subscribe before
         // having completed the handshake.
-        let error = new InvalidActionError(
+        const error = new InvalidActionError(
             'Cannot subscribe socket to a channel before it has completed the handshake'
         );
         this.emitError(error);
@@ -1879,7 +1903,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
     {
         const channels = Object.keys(this.channelSubscriptions);
         return Promise.all(
-            channels.map((channel) => this._unsubscribe(channel))
+            channels.map(channel => this._unsubscribe(channel))
         );
     }
 
@@ -1922,14 +1946,14 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
         packet: EventObject
     ): Promise<void>
     {
-        let channel = packet.data;
+        const channel = packet.data;
         try
         {
             await this._unsubscribe(channel);
         }
         catch (err)
         {
-            let error = new BrokerError(
+            const error = new BrokerError(
                 `Failed to unsubscribe socket from the ${channel} channel - ${err}`
             );
             this.emitError(error);
@@ -1940,14 +1964,14 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
         request: TGRequest
     ): Promise<void>
     {
-        let channel = request.data;
+        const channel = request.data;
         try
         {
             await this._unsubscribe(channel);
         }
         catch (err)
         {
-            let error = new BrokerError(
+            const error = new BrokerError(
                 `Failed to unsubscribe socket from the ${channel} channel - ${err}`
             );
             this.emitError(error);
@@ -1961,10 +1985,10 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
         packet: EventObject
     ): Promise<void>
     {
-        let data = packet.data || {};
+        const data = packet.data || {};
         if (typeof data.channel !== 'string')
         {
-            let error = new InvalidActionError(
+            const error = new InvalidActionError(
                 `Socket ${this.id} tried to invoke publish to an invalid "${data.channel}" channel`
             );
             this.emitError(error);
@@ -1984,10 +2008,10 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
         request: TGRequest
     ): Promise<void>
     {
-        let data = request.data || {};
+        const data = request.data || {};
         if (typeof data.channel !== 'string')
         {
-            let error = new InvalidActionError(
+            const error = new InvalidActionError(
                 `Socket ${this.id} tried to transmit publish to an invalid "${data.channel}" channel`
             );
             this.emitError(error);
@@ -2014,12 +2038,12 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
     {
         if (packet && packet.event != null)
         {
-            let eventName = packet.event;
-            let isRPC     = packet.cid != null;
+            const eventName = packet.event;
+            const isRPC = packet.cid != null;
 
             if (eventName === '#handshake')
             {
-                let request = new TGRequest(
+                const request = new TGRequest(
                     this,
                     packet.cid,
                     eventName,
@@ -2043,7 +2067,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
             if (eventName === '#authenticate')
             {
                 // Let AGServer handle these events.
-                let request = new TGRequest(
+                const request = new TGRequest(
                     this,
                     packet.cid,
                     eventName,
@@ -2062,31 +2086,31 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
                 return;
             }
 
-            let action    = new TGAction();
+            const action = new TGAction();
             action.socket = this;
 
-            let tokenExpiredError = this._processAuthTokenExpiry();
+            const tokenExpiredError = this._processAuthTokenExpiry();
             if (tokenExpiredError)
             {
                 action.authTokenExpiredError = tokenExpiredError;
             }
 
-            let isPublish     = eventName === '#publish';
-            let isSubscribe   = eventName === '#subscribe';
-            let isUnsubscribe = eventName === '#unsubscribe';
+            const isPublish = eventName === '#publish';
+            const isSubscribe = eventName === '#subscribe';
+            const isUnsubscribe = eventName === '#unsubscribe';
 
             if (isPublish)
             {
                 if (!this.server.allowClientPublish)
                 {
-                    let error = new InvalidActionError(
+                    const error = new InvalidActionError(
                         'Client publish feature is disabled'
                     );
                     this.emitError(error);
 
                     if (isRPC)
                     {
-                        let request = new TGRequest(
+                        const request = new TGRequest(
                             this,
                             packet.cid,
                             eventName,
@@ -2100,7 +2124,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
                 if (packet.data)
                 {
                     action.channel = packet.data.channel;
-                    action.data    = packet.data.data;
+                    action.data = packet.data.data;
                 }
             }
             else if (isSubscribe)
@@ -2109,14 +2133,14 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
                 if (packet.data)
                 {
                     action.channel = packet.data.channel;
-                    action.data    = packet.data.data;
+                    action.data = packet.data.data;
                 }
             }
             else if (isUnsubscribe)
             {
                 if (isRPC)
                 {
-                    let request = new TGRequest(
+                    const request = new TGRequest(
                         this,
                         packet.cid,
                         eventName,
@@ -2134,7 +2158,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
             {
                 if (isRPC)
                 {
-                    action.type      = TGAction.INVOKE;
+                    action.type = TGAction.INVOKE;
                     action.procedure = packet.event;
                     if (packet.data !== undefined)
                     {
@@ -2143,7 +2167,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
                 }
                 else
                 {
-                    action.type     = TGAction.TRANSMIT;
+                    action.type = TGAction.TRANSMIT;
                     action.receiver = packet.event;
                     if (packet.data !== undefined)
                     {
@@ -2156,7 +2180,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
 
             if (isRPC)
             {
-                let request = new TGRequest(
+                const request = new TGRequest(
                     this,
                     packet.cid,
                     eventName,
@@ -2164,12 +2188,12 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
                 );
                 try
                 {
-                    let { data } = await this.server.processMiddlewareAction(
+                    const { data } = await this.server.processMiddlewareAction(
                         this.middlewareInboundStream,
                         action,
                         this
                     );
-                    newData      = data;
+                    newData = data;
                 }
                 catch (error)
                 {
@@ -2208,12 +2232,12 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
 
             try
             {
-                let { data } = await this.server.processMiddlewareAction(
+                const { data } = await this.server.processMiddlewareAction(
                     this.middlewareInboundStream,
                     action,
                     this
                 );
-                newData      = data;
+                newData = data;
             }
             catch (error)
             {
@@ -2249,12 +2273,12 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
         if (packet && packet.rid != null)
         {
             // If incoming message is a response to a previously sent message
-            let ret = this._callbackMap[packet.rid];
+            const ret = this._callbackMap[packet.rid];
             if (ret)
             {
                 clearTimeout(ret.timeout);
                 delete this._callbackMap[packet.rid];
-                let rehydratedError = hydrateError(packet.error);
+                const rehydratedError = hydrateError(packet.error);
                 ret.callback(rehydratedError, packet.data);
             }
             return;
@@ -2295,7 +2319,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
     ): void;
     private _on(event: 'error', cb: (error: any) => Promise<any>): void;
     private _on(
-        event: 'message'|'close'|'error',
+        event: 'message' | 'close' | 'error',
         cb: (arg1: any, arg2?: any) => Promise<any>
     ): void
     {
@@ -2307,17 +2331,17 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
         {
             switch (event)
             {
-                case 'message':
-                    this.socket['addEventListener'](event, (event: any) =>
-                        cb(event.data)
-                    );
-                    break;
-                case 'close':
-                case 'error':
-                    this.socket['addEventListener'](event, (event: any) =>
-                        cb(event)
-                    );
-                    break;
+            case 'message':
+                this.socket['addEventListener'](event, (event: any) =>
+                    cb(event.data)
+                );
+                break;
+            case 'close':
+            case 'error':
+                this.socket['addEventListener'](event, (event: any) =>
+                    cb(event)
+                );
+                break;
             }
         }
     }

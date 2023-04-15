@@ -1,5 +1,5 @@
-import { CodecEngine } from "../socket-server/types";
-import { AuthToken } from "../types";
+import { CodecEngine } from '../socket-server/types';
+import { AuthToken } from '../types';
 
 export interface TGAuthEngine {
     saveToken(
@@ -94,7 +94,7 @@ export interface ClientOptions {
     protocolScheme?: string | undefined | null;
 
     // A map of key-value pairs which will be used as query parameters for the initial HTTP handshake which will initiate the WebSocket connection.
-    query?: string | { [key: string]: (string|number) } | undefined;
+    query?: string | { [key: string]: string | number } | undefined;
 
     // (milliseconds) - This is the timeout for getting a response to a AGClientSocket invoke action.
     ackTimeout?: number | undefined;
@@ -212,7 +212,7 @@ export interface SubscribeOptions {
     data?: any;
 }
 
-export type AuthStates = "authenticated" | "unauthenticated";
-export type States = "connecting" | "open" | "closed";
+export type AuthStates = 'authenticated' | 'unauthenticated';
+export type States = 'connecting' | 'open' | 'closed';
 export type ProtocolVersions = 1 | 2;
 export type CallIdGenerator = () => number;

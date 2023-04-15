@@ -1,4 +1,4 @@
-import { JwtPayload } from "../jwt";
+import { JwtPayload } from '../jwt';
 
 export interface AuthToken extends JwtPayload {
     [x: string]: any;
