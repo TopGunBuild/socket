@@ -1,7 +1,0 @@
-{
-    "name": "topgun-socket/client",
-    "typings": "../dist/client.d.ts",
-    "main": "../dist/client.js",
-    "module": "../dist/client.mjs",
-    "sideEffects": false
-}

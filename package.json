@@ -7,6 +7,7 @@
     },
     "scripts": {
         "build": "tsup",
+        "build:package": "node ./tools/prepare-package.js",
         "test": "jest",
         "format": "prettier --write \"src/**/*.ts\"",
         "lint": "eslint \"src/**/*.ts\" --fix",

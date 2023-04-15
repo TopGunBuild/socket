@@ -71,8 +71,8 @@ jobs:
             - run: npm i -g pnpm
             - run: pnpm i
 
-            - name: Move folders
-              run: cp -a ./prepare-package/. ./
+            - name: Build packages
+              run: pnpm build:package
             - name: Run semantic release and publish package
               run: pnpm semantic-release
               env:
