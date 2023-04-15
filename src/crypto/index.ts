@@ -6,24 +6,24 @@ const crypto = WebCrypto;
 export function randomBytes(
     randomBytesLength = 9,
     callback?: (error: Error, bytes: Uint8Array) => void
-): string 
+): string
 {
     const randomBytes = new Uint8Array(randomBytesLength);
 
-    try 
+    try
     {
         crypto.getRandomValues(randomBytes);
-        if (callback) 
+        if (callback)
         {
             callback(null, randomBytes);
         }
         return toHEX(randomBytes); // btoa(String.fromCharCode(...randomBytes));
     }
-    catch (e) 
+    catch (e)
     {
-        if (callback) 
+        if (callback)
         {
-            callback(e, randomBytes);
+            callback(e as Error, randomBytes);
         }
         return null;
     }
