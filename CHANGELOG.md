@@ -1,3 +1,10 @@
+## [1.1.4](https://github.com/topgunjs/topgun-socket/compare/v1.1.3...v1.1.4) (2023-04-15)
+
+
+### Bug Fixes
+
+* remove unused property, bump version ([ad4aecc](https://github.com/topgunjs/topgun-socket/commit/ad4aecc822126fd01e21b7b27c4fa7e540542aba))
+
 ## [1.1.3](https://github.com/topgunjs/topgun-socket/compare/v1.1.2...v1.1.3) (2023-04-15)
 
 
