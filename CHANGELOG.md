@@ -1,3 +1,10 @@
+## [1.1.8](https://github.com/topgunjs/topgun-socket/compare/v1.1.7...v1.1.8) (2023-04-15)
+
+
+### Bug Fixes
+
+* add static packages ([119026d](https://github.com/topgunjs/topgun-socket/commit/119026dbccc3c138cb44b01ad720baa3165c3e4c))
+
 ## [1.1.7](https://github.com/topgunjs/topgun-socket/compare/v1.1.6...v1.1.7) (2023-04-15)
 
 
