@@ -17,15 +17,15 @@ export function decycle(object: any)
     // property.
 
     const objects: any[]  = [], // Keep a reference to each unique object or array
-          paths: string[] = []; // Keep the path to each unique object or array
+    paths: string[] = []; // Keep the path to each unique object or array
 
     return (function derez(value, path)
     {
         // The derez recurses through the object, producing the deep copy.
 
         let i, // The loop counter
-            name, // Property name
-            nu: {[key: (number|string)]: any}|any[]; // The new object or array
+        name, // Property name
+        nu: {[key: (number|string)]: any}|any[]; // The new object or array
 
         // typeof null === 'object', so go on if this value is really an object but not
         // one of the weird builtin objects.
