@@ -7,7 +7,6 @@
     },
     "scripts": {
         "build": "tsup",
-        "prepublishOnly": "pnpm run build",
         "test": "jest",
         "format": "prettier --write \"src/**/*.ts\"",
         "lint": "eslint \"src/**/*.ts\" --fix",
