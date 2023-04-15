@@ -62,9 +62,13 @@
             ]
         }
     },
-    "files": [
-        "dist"
-    ],
+    "directories": {
+        "dist": "./dist",
+        "channel": "./prepare-package/channel",
+        "client": "./prepare-package/client",
+        "server": "./prepare-package/server",
+        "writable-consumable-stream": "./prepare-package/writable-consumable-stream"
+    },
     "keywords": [
         "websocket",
         "realtime",
