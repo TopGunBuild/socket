@@ -1,3 +1,10 @@
+## [1.1.5](https://github.com/topgunjs/topgun-socket/compare/v1.1.4...v1.1.5) (2023-04-15)
+
+
+### Bug Fixes
+
+* bump new version, bug in npm registry ([f90663f](https://github.com/topgunjs/topgun-socket/commit/f90663fcb3796d79bcf190d17509395f2cbdb2ff))
+
 ## [1.1.4](https://github.com/topgunjs/topgun-socket/compare/v1.1.3...v1.1.4) (2023-04-15)
 
 
