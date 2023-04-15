@@ -18,27 +18,31 @@
     "exports": {
         "./client": {
             "types": "./dist/client.d.ts",
+            "node": "./dist/client.js",
             "require": "./dist/client.js",
             "import": "./dist/client.mjs",
-            "default": "./dist/client.js"
+            "default": "./dist/client.mjs"
         },
         "./server": {
             "types": "./dist/server.d.ts",
+            "node": "./dist/server.js",
             "require": "./dist/server.js",
             "import": "./dist/server.mjs",
-            "default": "./dist/server.js"
+            "default": "./dist/server.mjs"
         },
         "./channel": {
             "types": "./dist/channel.d.ts",
+            "node": "./dist/channel.js",
             "require": "./dist/channel.js",
             "import": "./dist/channel.mjs",
-            "default": "./dist/channel.js"
+            "default": "./dist/channel.mjs"
         },
         "./writable-consumable-stream": {
             "types": "./dist/writable-consumable-stream.d.ts",
+            "node": "./dist/writable-consumable-stream.js",
             "require": "./dist/writable-consumable-stream.js",
             "import": "./dist/writable-consumable-stream.mjs",
-            "default": "./dist/writable-consumable-stream.js"
+            "default": "./dist/writable-consumable-stream.mjs"
         },
         "./package.json": "./package.json"
     },
