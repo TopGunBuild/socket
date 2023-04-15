@@ -74,10 +74,7 @@ jobs:
             - name: Copy json file to dist dir
               run: cp package.json ./dist
             - name: Run semantic release and publish package
-              run: |
-                  cd ./dist
-                  pwd
-                  pnpm semantic-release
+              run: pnpm semantic-release
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
