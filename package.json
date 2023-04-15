@@ -62,9 +62,6 @@
             ]
         }
     },
-    "files": [
-        "dist"
-    ],
     "keywords": [
         "websocket",
         "realtime",
