@@ -1,3 +1,10 @@
+## [1.1.10](https://github.com/topgunjs/topgun-socket/compare/v1.1.9...v1.1.10) (2023-04-15)
+
+
+### Bug Fixes
+
+* build packages dynamically ([4540f17](https://github.com/topgunjs/topgun-socket/commit/4540f1711972c192f9788db9fd312c62afe7ab3d))
+
 ## [1.1.9](https://github.com/topgunjs/topgun-socket/compare/v1.1.8...v1.1.9) (2023-04-15)
 
 
