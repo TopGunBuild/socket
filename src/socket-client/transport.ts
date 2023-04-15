@@ -1,14 +1,14 @@
-import ws from "ws";
+import ws from 'ws';
 import {
     BadConnectionError,
     hydrateError,
     socketProtocolErrorStatuses,
     TimeoutError,
-} from "../errors/errors";
-import { TGRequest } from "../request/request";
-import { CodecEngine } from "../socket-server/types";
-import { EventObject, EventObjectCallback } from "../types";
-import { getGlobal } from "../utils/global";
+} from '../errors/errors';
+import { TGRequest } from '../request/request';
+import { CodecEngine } from '../socket-server/types';
+import { EventObject, EventObjectCallback } from '../types';
+import { getGlobal } from '../utils/global';
 import {
     CallIdGenerator,
     ClientOptions,
@@ -25,34 +25,41 @@ import {
     TGAuthEngine,
     TransmitOptions,
     TransportHandlers,
-} from "./types";
+} from './types';
+import { SocketProtocolErrorStatuses } from '../errors';
 
 const global = getGlobal();
-let WebSocket;
-let createWebSocket;
+let WebSocket: any;
+let createWebSocket: (uri: string, options: any) => any;
 
-if (global?.WebSocket) {
-    WebSocket = global.WebSocket;
-    createWebSocket = function (uri, options) {
+if (global?.WebSocket)
+{
+    WebSocket       = global.WebSocket;
+    createWebSocket = function (uri, options)
+    {
         return new WebSocket(uri);
     };
-} else {
-    WebSocket = ws;
-    createWebSocket = function (uri, options) {
+}
+else
+{
+    WebSocket       = ws;
+    createWebSocket = function (uri, options)
+    {
         return new WebSocket(uri, [], options);
     };
 }
 
-export class TGTransport {
-    static CONNECTING: States = "connecting";
-    static OPEN: States = "open";
-    static CLOSED: States = "closed";
+export class TGTransport
+{
+    static CONNECTING: States = 'connecting';
+    static OPEN: States       = 'open';
+    static CLOSED: States     = 'closed';
 
     state: States;
     auth: TGAuthEngine;
     codec: CodecEngine;
     options: ClientOptions;
-    wsOptions?: ClientOptions | undefined;
+    wsOptions?: ClientOptions|undefined;
     protocolVersion: ProtocolVersions;
     connectTimeout: number;
     pingTimeout: number;
@@ -62,7 +69,7 @@ export class TGTransport {
     isBufferingBatch: boolean;
     socket: WebSocket;
     private _pingTimeoutTicker: any;
-    private _callbackMap: { [key: string]: any };
+    private _callbackMap: {[key: string]: any};
     private _batchBuffer: any[];
     private _onOpenHandler: (value?: OnOpenValue) => void;
     private _onOpenAbortHandler: (value: OnOpenAbortValue) => void;
@@ -72,7 +79,7 @@ export class TGTransport {
     private _onInboundInvokeHandler: (value: OnInboundInvokeValue) => void;
     private _onInboundTransmitHandler: (value: OnInboundTransmitValue) => void;
     private _connectTimeoutRef: any;
-    private _handlePing: (message) => boolean;
+    private _handlePing: (message: any) => boolean;
 
     /**
      * Constructor
@@ -83,103 +90,137 @@ export class TGTransport {
         options: ClientOptions,
         wsOptions?: ClientOptions,
         handlers?: TransportHandlers
-    ) {
-        this.state = TGTransport.CLOSED;
-        this.auth = authEngine;
-        this.codec = codecEngine;
-        this.options = options;
-        this.wsOptions = wsOptions;
-        this.protocolVersion = options.protocolVersion;
-        this.connectTimeout = options.connectTimeout;
-        this.pingTimeout = options.pingTimeout;
+    )
+    {
+        this.state               = TGTransport.CLOSED;
+        this.auth                = authEngine;
+        this.codec               = codecEngine;
+        this.options             = options;
+        this.wsOptions           = wsOptions;
+        this.protocolVersion     = options.protocolVersion;
+        this.connectTimeout      = options.connectTimeout;
+        this.pingTimeout         = options.pingTimeout;
         this.pingTimeoutDisabled = !!options.pingTimeoutDisabled;
-        this.callIdGenerator = options.callIdGenerator;
-        this.authTokenName = options.authTokenName;
-        this.isBufferingBatch = false;
+        this.callIdGenerator     = options.callIdGenerator;
+        this.authTokenName       = options.authTokenName;
+        this.isBufferingBatch    = false;
 
         this._pingTimeoutTicker = null;
-        this._callbackMap = {};
-        this._batchBuffer = [];
+        this._callbackMap       = {};
+        this._batchBuffer       = [];
 
-        if (!handlers) {
+        if (!handlers)
+        {
             handlers = {};
         }
 
-        this._onOpenHandler = handlers.onOpen || function () {};
-        this._onOpenAbortHandler = handlers.onOpenAbort || function () {};
-        this._onCloseHandler = handlers.onClose || function () {};
-        this._onEventHandler = handlers.onEvent || function () {};
-        this._onErrorHandler = handlers.onError || function () {};
-        this._onInboundInvokeHandler =
-            handlers.onInboundInvoke || function () {};
+        this._onOpenHandler            = handlers.onOpen || function ()
+        {
+        };
+        this._onOpenAbortHandler       = handlers.onOpenAbort || function ()
+        {
+        };
+        this._onCloseHandler           = handlers.onClose || function ()
+        {
+        };
+        this._onEventHandler           = handlers.onEvent || function ()
+        {
+        };
+        this._onErrorHandler           = handlers.onError || function ()
+        {
+        };
+        this._onInboundInvokeHandler   =
+            handlers.onInboundInvoke || function ()
+            {
+            };
         this._onInboundTransmitHandler =
-            handlers.onInboundTransmit || function () {};
+            handlers.onInboundTransmit || function ()
+            {
+            };
 
         // Open the connection.
 
         this.state = TGTransport.CONNECTING;
-        let uri = this.uri();
+        let uri    = this.uri();
 
-        let wsSocket = createWebSocket(uri, wsOptions);
+        let wsSocket        = createWebSocket(uri, wsOptions);
         wsSocket.binaryType = this.options.binaryType;
 
         this.socket = wsSocket;
 
-        wsSocket.onopen = () => {
+        wsSocket.onopen = () =>
+        {
             this._onOpen();
         };
 
-        wsSocket.onclose = async (event) => {
+        wsSocket.onclose = async (event: any) =>
+        {
             let code;
-            if (event.code == null) {
+            if (event.code == null)
+            {
                 // This is to handle an edge case in React Native whereby
                 // event.code is undefined when the mobile device is locked.
                 // TODO: This is not ideal since this condition could also apply to
                 // an abnormal close (no close control frame) which would be a 1006.
                 code = 1005;
-            } else {
+            }
+            else
+            {
                 code = event.code;
             }
             this._destroy(code, event.reason);
         };
 
-        wsSocket.onmessage = (message, flags) => {
+        wsSocket.onmessage = (message: any, flags?: any) =>
+        {
             this._onMessage(message.data);
         };
 
-        wsSocket.onerror = (error) => {
+        wsSocket.onerror = (error: Error) =>
+        {
             // The onclose event will be called automatically after the onerror event
             // if the socket is connected - Otherwise, if it's in the middle of
             // connecting, we want to close it manually with a 1006 - This is necessary
             // to prevent inconsistent behavior when running the client in Node.js
             // vs in a browser.
-            if (this.state === TGTransport.CONNECTING) {
+            if (this.state === TGTransport.CONNECTING)
+            {
                 this._destroy(1006);
             }
         };
 
-        this._connectTimeoutRef = setTimeout(() => {
+        this._connectTimeoutRef = setTimeout(() =>
+        {
             this._destroy(4007);
             this.socket.close(4007);
         }, this.connectTimeout);
 
-        if (this.protocolVersion === 1) {
-            this._handlePing = (message) => {
-                if (message === "#1") {
+        if (this.protocolVersion === 1)
+        {
+            this._handlePing = (message) =>
+            {
+                if (message === '#1')
+                {
                     this._resetPingTimeout();
-                    if (this.socket.readyState === this.socket.OPEN) {
-                        this.send("#2");
+                    if (this.socket.readyState === this.socket.OPEN)
+                    {
+                        this.send('#2');
                     }
                     return true;
                 }
                 return false;
             };
-        } else {
-            this._handlePing = (message) => {
-                if (message === "") {
+        }
+        else
+        {
+            this._handlePing = (message) =>
+            {
+                if (message === '')
+                {
                     this._resetPingTimeout();
-                    if (this.socket.readyState === this.socket.OPEN) {
-                        this.send("");
+                    if (this.socket.readyState === this.socket.OPEN)
+                    {
+                        this.send('');
                     }
                     return true;
                 }
@@ -192,114 +233,156 @@ export class TGTransport {
     // @ Public methods
     // -----------------------------------------------------------------------------------------------------
 
-    uri(): string {
-        let query = this.options.query || {};
+    uri(): string
+    {
+        let query: string|{[key: string]: (string|number)} = this.options.query || {};
         let scheme;
-        if (this.options.protocolScheme == null) {
-            scheme = this.options.secure ? "wss" : "ws";
-        } else {
+        if (this.options.protocolScheme == null)
+        {
+            scheme = this.options.secure ? 'wss' : 'ws';
+        }
+        else
+        {
             scheme = this.options.protocolScheme;
         }
 
-        if (this.options.timestampRequests) {
-            query[this.options.timestampParam] = new Date().getTime();
+        if (this.options.timestampRequests)
+        {
+            (query as {[key: string]: (string|number)})[this.options.timestampParam] = new Date().getTime();
         }
 
         let searchParams = new URLSearchParams();
-        for (let [key, value] of Object.entries(query)) {
-            if (Array.isArray(value)) {
-                for (let item of value) {
+        for (let [key, value] of Object.entries(query))
+        {
+            if (Array.isArray(value))
+            {
+                for (let item of value)
+                {
                     searchParams.append(key, item);
                 }
-            } else {
-                searchParams.set(key, value);
+            }
+            else
+            {
+                searchParams.set(key, `${value}`);
             }
         }
 
         query = searchParams.toString();
 
-        if (query.length) {
-            query = "?" + query;
+        if (query.length)
+        {
+            query = '?' + query;
         }
 
         let host;
         let path;
-        if (this.options.socketPath == null) {
-            if (this.options.host) {
+        if (this.options.socketPath == null)
+        {
+            if (this.options.host)
+            {
                 host = this.options.host;
-            } else {
-                let port = "";
+            }
+            else
+            {
+                let port = '';
 
                 if (
                     this.options.port &&
-                    ((scheme === "wss" && this.options.port !== 443) ||
-                        (scheme === "ws" && this.options.port !== 80))
-                ) {
-                    port = ":" + this.options.port;
+                    ((scheme === 'wss' && this.options.port !== 443) ||
+                        (scheme === 'ws' && this.options.port !== 80))
+                )
+                {
+                    port = ':' + this.options.port;
                 }
                 host = this.options.hostname + port;
             }
             path = this.options.path;
-        } else {
+        }
+        else
+        {
             host = this.options.socketPath;
             path = `:${this.options.path}`;
         }
-        return scheme + "://" + host + path + query;
+        return scheme + '://' + host + path + query;
     }
 
-    clearAllListeners(): void {
-        this._onOpenHandler = function () {};
-        this._onOpenAbortHandler = function () {};
-        this._onCloseHandler = function () {};
-        this._onEventHandler = function () {};
-        this._onErrorHandler = function () {};
-        this._onInboundInvokeHandler = function () {};
-        this._onInboundTransmitHandler = function () {};
+    clearAllListeners(): void
+    {
+        this._onOpenHandler            = function ()
+        {
+        };
+        this._onOpenAbortHandler       = function ()
+        {
+        };
+        this._onCloseHandler           = function ()
+        {
+        };
+        this._onEventHandler           = function ()
+        {
+        };
+        this._onErrorHandler           = function ()
+        {
+        };
+        this._onInboundInvokeHandler   = function ()
+        {
+        };
+        this._onInboundTransmitHandler = function ()
+        {
+        };
     }
 
-    startBatch(): void {
+    startBatch(): void
+    {
         this.isBufferingBatch = true;
-        this._batchBuffer = [];
+        this._batchBuffer     = [];
     }
 
-    flushBatch(): void {
+    flushBatch(): void
+    {
         this.isBufferingBatch = false;
-        if (!this._batchBuffer.length) {
+        if (!this._batchBuffer.length)
+        {
             return;
         }
         let serializedBatch = this.serializeObject(this._batchBuffer);
-        this._batchBuffer = [];
+        this._batchBuffer   = [];
         this.send(serializedBatch);
     }
 
-    cancelBatch(): void {
+    cancelBatch(): void
+    {
         this.isBufferingBatch = false;
-        this._batchBuffer = [];
+        this._batchBuffer     = [];
     }
 
-    getBytesReceived(): any {
-        return this.socket["bytesReceived"];
+    getBytesReceived(): any
+    {
+        return (this.socket as any)['bytesReceived'];
     }
 
-    close(code?: number, reason?: string): void {
+    close(code?: number, reason?: string): void
+    {
         if (
             this.state === TGTransport.OPEN ||
             this.state === TGTransport.CONNECTING
-        ) {
+        )
+        {
             code = code || 1000;
             this._destroy(code, reason);
             this.socket.close(code, reason);
         }
     }
 
-    transmitObject(eventObject: EventObject): number | null {
+    transmitObject(eventObject: EventObject): number|null
+    {
         let simpleEventObject: EventObject = {
             event: eventObject.event,
-            data: eventObject.data,
+            data : eventObject.data,
         };
 
-        if (eventObject.callback) {
-            simpleEventObject.cid = eventObject.cid = this.callIdGenerator();
+        if (eventObject.callback)
+        {
+            simpleEventObject.cid              = eventObject.cid = this.callIdGenerator();
             this._callbackMap[eventObject.cid] = eventObject;
         }
 
@@ -312,13 +395,15 @@ export class TGTransport {
         event: string,
         data: any,
         options: TransmitOptions
-    ): Promise<void> {
+    ): Promise<void>
+    {
         let eventObject = {
             event,
             data,
         };
 
-        if (this.state === TGTransport.OPEN || options.force) {
+        if (this.state === TGTransport.OPEN || options.force)
+        {
             this.transmitObject(eventObject);
         }
         return Promise.resolve();
@@ -329,20 +414,24 @@ export class TGTransport {
         data: any,
         options: InvokeOptions,
         callback?: EventObjectCallback
-    ): number | null {
+    ): number|null
+    {
         let eventObject: EventObject = {
             event,
             data,
             callback,
         };
 
-        if (!options.noTimeout) {
-            eventObject.timeout = setTimeout(() => {
+        if (!options.noTimeout)
+        {
+            eventObject.timeout = setTimeout(() =>
+            {
                 this._handleEventAckTimeout(eventObject);
             }, this.options.ackTimeout);
         }
         let cid = null;
-        if (this.state === TGTransport.OPEN || options.force) {
+        if (this.state === TGTransport.OPEN || options.force)
+        {
             cid = this.transmitObject(eventObject);
         }
         return cid;
@@ -352,10 +441,14 @@ export class TGTransport {
         event: string,
         data: T,
         options: InvokeOptions
-    ): Promise<EventObject> {
-        return new Promise((resolve, reject) => {
-            this.invokeRaw(event, data, options, (err, data) => {
-                if (err) {
+    ): Promise<EventObject>
+    {
+        return new Promise((resolve, reject) =>
+        {
+            this.invokeRaw(event, data, options, (err, data) =>
+            {
+                if (err)
+                {
                     reject(err);
                     return;
                 }
@@ -364,44 +457,58 @@ export class TGTransport {
         });
     }
 
-    cancelPendingResponse(cid: number): void {
+    cancelPendingResponse(cid: number): void
+    {
         delete this._callbackMap[cid];
     }
 
-    decode(message: any): any {
+    decode(message: any): any
+    {
         return this.codec.decode(message);
     }
 
-    encode(object: any): any {
+    encode(object: any): any
+    {
         return this.codec.encode(object);
     }
 
-    send(data: any): void {
-        if (this.socket.readyState !== this.socket.OPEN) {
+    send(data: any): void
+    {
+        if (this.socket.readyState !== this.socket.OPEN)
+        {
             this._destroy(1005);
-        } else {
+        }
+        else
+        {
             this.socket.send(data);
         }
     }
 
-    serializeObject(object: any): any {
+    serializeObject(object: any): any
+    {
         let str;
-        try {
+        try
+        {
             str = this.encode(object);
-        } catch (error) {
+        }
+        catch (error)
+        {
             this._onError(error);
             return null;
         }
         return str;
     }
 
-    sendObject(object: any): void {
-        if (this.isBufferingBatch) {
+    sendObject(object: any): void
+    {
+        if (this.isBufferingBatch)
+        {
             this._batchBuffer.push(object);
             return;
         }
         let str = this.serializeObject(object);
-        if (str != null) {
+        if (str != null)
+        {
             this.send(str);
         }
     }
@@ -410,14 +517,17 @@ export class TGTransport {
     // @ Private methods
     // -----------------------------------------------------------------------------------------------------
 
-    private _handleEventAckTimeout(eventObject: EventObject): void {
-        if (eventObject.cid) {
+    private _handleEventAckTimeout(eventObject: EventObject): void
+    {
+        if (eventObject.cid)
+        {
             delete this._callbackMap[eventObject.cid];
         }
         delete eventObject.timeout;
 
         let callback = eventObject.callback;
-        if (callback) {
+        if (callback)
+        {
             delete eventObject.callback;
             let error = new TimeoutError(
                 `Event response for "${eventObject.event}" timed out`
@@ -426,16 +536,21 @@ export class TGTransport {
         }
     }
 
-    private async _onOpen(): Promise<void> {
+    private async _onOpen(): Promise<void>
+    {
         clearTimeout(this._connectTimeoutRef);
         this._resetPingTimeout();
 
-        let status;
+        let status: any;
 
-        try {
+        try
+        {
             status = await this._handshake();
-        } catch (err) {
-            if (err.statusCode == null) {
+        }
+        catch (err: any)
+        {
+            if (err.statusCode == null)
+            {
                 err.statusCode = 4003;
             }
             this._onError(err);
@@ -445,52 +560,59 @@ export class TGTransport {
         }
 
         this.state = TGTransport.OPEN;
-        if (status) {
+        if (status)
+        {
             this.pingTimeout = status.pingTimeout;
         }
         this._resetPingTimeout();
         this._onOpenHandler(status);
     }
 
-    private async _handshake() {
+    private async _handshake()
+    {
         let token = await this.auth.loadToken(this.authTokenName);
         // Don't wait for this.state to be 'open'.
         // The underlying WebSocket (this.socket) is already open.
         let options = {
             force: true,
         };
-        let status = await this.invoke(
-            "#handshake",
+        let status  = await this.invoke(
+            '#handshake',
             { authToken: token },
             options
         );
-        if (status) {
+        if (status)
+        {
             // Add the token which was used as part of authentication attempt
             // to the status object.
             status.authToken = token;
-            if (status.authError) {
+            if (status.authError)
+            {
                 status.authError = hydrateError(status.authError);
             }
         }
         return status;
     }
 
-    private _abortAllPendingEventsDueToBadConnection(failureType): void {
-        Object.keys(this._callbackMap || {}).forEach((i) => {
+    private _abortAllPendingEventsDueToBadConnection(failureType: string): void
+    {
+        Object.keys(this._callbackMap || {}).forEach((i) =>
+        {
             let eventObject = this._callbackMap[i];
             delete this._callbackMap[i];
 
             clearTimeout(eventObject.timeout);
             delete eventObject.timeout;
 
-            let errorMessage = `Event "${eventObject.event}" was aborted due to a bad connection`;
+            let errorMessage       = `Event "${eventObject.event}" was aborted due to a bad connection`;
             let badConnectionError = new BadConnectionError(
                 errorMessage,
                 failureType
             );
 
             let callback = eventObject.callback;
-            if (callback) {
+            if (callback)
+            {
                 delete eventObject.callback;
 
                 callback.call(eventObject, badConnectionError, eventObject);
@@ -498,10 +620,12 @@ export class TGTransport {
         });
     }
 
-    private _destroy(code?: number, reason?: any): void {
-        let protocolReason = socketProtocolErrorStatuses[code];
-        if (!reason && socketProtocolErrorStatuses[code]) {
-            reason = socketProtocolErrorStatuses[code];
+    private _destroy(code?: number, reason?: any): void
+    {
+        // let protocolReason = socketProtocolErrorStatuses[code as keyof SocketProtocolErrorStatuses];
+        if (!reason && socketProtocolErrorStatuses[code as keyof SocketProtocolErrorStatuses])
+        {
+            reason = socketProtocolErrorStatuses[code as keyof SocketProtocolErrorStatuses];
         }
         delete this.socket.onopen;
         delete this.socket.onclose;
@@ -511,24 +635,34 @@ export class TGTransport {
         clearTimeout(this._connectTimeoutRef);
         clearTimeout(this._pingTimeoutTicker);
 
-        if (this.state === TGTransport.OPEN) {
+        if (this.state === TGTransport.OPEN)
+        {
             this.state = TGTransport.CLOSED;
-            this._abortAllPendingEventsDueToBadConnection("disconnect");
+            this._abortAllPendingEventsDueToBadConnection('disconnect');
             this._onCloseHandler({ code, reason });
-        } else if (this.state === TGTransport.CONNECTING) {
+        }
+        else if (this.state === TGTransport.CONNECTING)
+        {
             this.state = TGTransport.CLOSED;
-            this._abortAllPendingEventsDueToBadConnection("connectAbort");
+            this._abortAllPendingEventsDueToBadConnection('connectAbort');
             this._onOpenAbortHandler({ code, reason });
-        } else if (this.state === TGTransport.CLOSED) {
-            this._abortAllPendingEventsDueToBadConnection("connectAbort");
+        }
+        else if (this.state === TGTransport.CLOSED)
+        {
+            this._abortAllPendingEventsDueToBadConnection('connectAbort');
         }
     }
 
-    private _processInboundPacket(packet, message): void {
-        if (packet && packet.event != null) {
-            if (packet.cid == null) {
+    private _processInboundPacket(packet: any, message: any): void
+    {
+        if (packet && packet.event != null)
+        {
+            if (packet.cid == null)
+            {
                 this._onInboundTransmitHandler({ ...packet });
-            } else {
+            }
+            else
+            {
                 let request = new TGRequest(
                     this,
                     packet.cid,
@@ -537,54 +671,70 @@ export class TGTransport {
                 );
                 this._onInboundInvokeHandler(request);
             }
-        } else if (packet && packet.rid != null) {
+        }
+        else if (packet && packet.rid != null)
+        {
             let eventObject = this._callbackMap[packet.rid];
-            if (eventObject) {
+            if (eventObject)
+            {
                 clearTimeout(eventObject.timeout);
                 delete eventObject.timeout;
                 delete this._callbackMap[packet.rid];
 
-                if (eventObject.callback) {
+                if (eventObject.callback)
+                {
                     let rehydratedError = hydrateError(packet.error);
                     eventObject.callback(rehydratedError, packet.data);
                 }
             }
-        } else {
-            this._onEventHandler({ event: "raw", data: { message } });
+        }
+        else
+        {
+            this._onEventHandler({ event: 'raw', data: { message } });
         }
     }
 
-    private _onMessage(message): void {
-        this._onEventHandler({ event: "message", data: { message } });
+    private _onMessage(message: any): void
+    {
+        this._onEventHandler({ event: 'message', data: { message } });
 
-        if (this._handlePing(message)) {
+        if (this._handlePing(message))
+        {
             return;
         }
 
         let packet = this.decode(message);
 
-        if (Array.isArray(packet)) {
+        if (Array.isArray(packet))
+        {
             let len = packet.length;
-            for (let i = 0; i < len; i++) {
+            for (let i = 0; i < len; i++)
+            {
                 this._processInboundPacket(packet[i], message);
             }
-        } else {
+        }
+        else
+        {
             this._processInboundPacket(packet, message);
         }
     }
 
-    private _onError(error): void {
+    private _onError(error: any): void
+    {
         this._onErrorHandler({ error });
     }
 
-    private _resetPingTimeout(): void {
-        if (this.pingTimeoutDisabled) {
+    private _resetPingTimeout(): void
+    {
+        if (this.pingTimeoutDisabled)
+        {
             return;
         }
 
-        let now = new Date().getTime();
+        // let now = new Date().getTime();
         clearTimeout(this._pingTimeoutTicker);
-        this._pingTimeoutTicker = setTimeout(() => {
+        this._pingTimeoutTicker = setTimeout(() =>
+        {
             this._destroy(4000);
             this.socket.close(4000);
         }, this.pingTimeout);

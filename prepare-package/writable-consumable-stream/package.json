@@ -1,0 +1,7 @@
+{
+    "name": "topgun-socket/writable-consumable-stream",
+    "typings": "../dist/writable-consumable-stream.d.ts",
+    "main": "../dist/writable-consumable-stream.js",
+    "module": "../dist/writable-consumable-stream.mjs",
+    "sideEffects": false
+}

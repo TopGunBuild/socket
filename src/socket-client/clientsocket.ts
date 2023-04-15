@@ -15,8 +15,8 @@ import {
 } from "../errors/errors";
 import {
     SocketProtocolErrorStatuses,
-    SocketProtocolIgnoreStatuses,
-} from "../errors/types";
+    SocketProtocolIgnoreStatuses
+} from '../errors/types';
 import { formatter } from "../formatter";
 import { Item, LinkedList } from "../linked-list";
 import { CodecEngine } from "../socket-server/types";
@@ -42,6 +42,7 @@ import {
     TGAuthEngine,
     TransmitOptions,
 } from "./types";
+import { TGRequest } from '../request';
 
 const isBrowser = typeof window !== "undefined";
 const global = getGlobal();
@@ -118,8 +119,8 @@ export class TGClientSocket
     private _cid: number;
     private _reconnectTimeoutRef: any;
 
-    private _privateDataHandlerMap = {
-        "#publish": (data) => {
+    private _privateDataHandlerMap: {[key: string]: (...params: any[]) => void} = {
+        "#publish": (data: any) => {
             let undecoratedChannelName = this._undecorateChannelName(
                 data.channel
             );
@@ -129,7 +130,7 @@ export class TGClientSocket
                 this._channelDataDemux.write(undecoratedChannelName, data.data);
             }
         },
-        "#kickOut": (data) => {
+        "#kickOut": (data: any) => {
             let undecoratedChannelName = this._undecorateChannelName(
                 data.channel
             );
@@ -146,18 +147,18 @@ export class TGClientSocket
                 this._triggerChannelUnsubscribe(channel);
             }
         },
-        "#setAuthToken": (data) => {
+        "#setAuthToken": (data: any) => {
             if (data) {
                 this._setAuthToken(data);
             }
         },
-        "#removeAuthToken": (data) => {
-            this._removeAuthToken(data);
+        "#removeAuthToken": (data: any) => {
+            this._removeAuthToken();
         },
     };
 
-    private _privateRPCHandlerMap = {
-        "#setAuthToken": (data, request) => {
+    private _privateRPCHandlerMap: {[key: string]: (...params: any[]) => void} = {
+        "#setAuthToken": (data: any, request: any) => {
             if (data) {
                 this._setAuthToken(data);
 
@@ -170,8 +171,8 @@ export class TGClientSocket
                 );
             }
         },
-        "#removeAuthToken": (data, request) => {
-            this._removeAuthToken(data);
+        "#removeAuthToken": (data: any, request: any) => {
+            this._removeAuthToken();
             request.end();
         },
     };
@@ -210,7 +211,7 @@ export class TGClientSocket
 
         this.id = null;
         this.version = opts.version || null;
-        this.protocolVersion = opts.protocolVersion;
+        this.protocolVersion = opts.protocolVersion as ProtocolVersions;
         this.state = TGClientSocket.CLOSED;
         this.authState = TGClientSocket.UNAUTHENTICATED;
         this.signedAuthToken = null;
@@ -236,8 +237,8 @@ export class TGClientSocket
 
         let maxTimeout = Math.pow(2, 31) - 1;
 
-        let verifyDuration = (propertyName) => {
-            if (this[propertyName] > maxTimeout) {
+        let verifyDuration = (propertyName: string) => {
+            if ((this as any)[propertyName] > maxTimeout) {
                 throw new InvalidArgumentsError(
                     `The ${propertyName} value provided exceeded the maximum amount allowed`
                 );
@@ -311,7 +312,7 @@ export class TGClientSocket
             this.codec = formatter;
         }
 
-        if (this.options["protocol"]) {
+        if ((this.options as any)["protocol"]) {
             let protocolOptionError = new InvalidArgumentsError(
                 'The "protocol" option does not affect socketcluster-client - ' +
                     'If you want to utilize SSL/TLS, use "secure" option instead'
@@ -322,7 +323,7 @@ export class TGClientSocket
         this.options.query = opts.query || {};
         if (typeof this.options.query === "string") {
             let searchParams = new URLSearchParams(this.options.query);
-            let queryObject = {};
+            let queryObject: {[key: string]: any} = {};
 
             searchParams.forEach((value, key) => {
                 let currentValue = queryObject[key];
@@ -415,32 +416,32 @@ export class TGClientSocket
             }
 
             let transportHandlers = {
-                onOpen: (value) => {
+                onOpen: (value: any) => {
                     this.state = TGClientSocket.OPEN;
                     this._onOpen(value);
                 },
-                onOpenAbort: (value) => {
+                onOpenAbort: (value: any) => {
                     if (this.state !== TGClientSocket.CLOSED) {
                         this.state = TGClientSocket.CLOSED;
                         this._destroy(value.code, value.reason, true);
                     }
                 },
-                onClose: (value) => {
+                onClose: (value: any) => {
                     if (this.state !== TGClientSocket.CLOSED) {
                         this.state = TGClientSocket.CLOSED;
                         this._destroy(value.code, value.reason);
                     }
                 },
-                onEvent: (value) => {
+                onEvent: (value: any) => {
                     this.emit(value.event, value.data);
                 },
-                onError: (value) => {
+                onError: (value: any) => {
                     this._onError(value.error);
                 },
-                onInboundInvoke: (value) => {
+                onInboundInvoke: (value: any) => {
                     this._onInboundInvoke(value);
                 },
-                onInboundTransmit: (value) => {
+                onInboundTransmit: (value: any) => {
                     this._onInboundTransmit(value.event, value.data);
                 },
             };
@@ -507,8 +508,8 @@ export class TGClientSocket
             authStatus = await this.invoke("#authenticate", signedAuthToken);
         } catch (err) {
             if (
-                err.name !== "BadConnectionError" &&
-                err.name !== "TimeoutError"
+                (err as Error).name !== "BadConnectionError" &&
+                (err as Error).name !== "TimeoutError"
             ) {
                 // In case of a bad/closed connection or a timeout, we maintain the last
                 // known auth state since those errors don't mean that the token is invalid.
@@ -666,7 +667,7 @@ export class TGClientSocket
         return channelIterable;
     }
 
-    async unsubscribe(channelName): Promise<void> {
+    async unsubscribe(channelName: string): Promise<void> {
         let channel = this._channelMap[channelName];
 
         if (channel) {
@@ -794,7 +795,7 @@ export class TGClientSocket
     // ---- Channel logic ----
 
     channel(channelName: string): TGChannel<any> {
-        let currentChannel = this._channelMap[channelName];
+        // let currentChannel = this._channelMap[channelName];
 
         let channelIterable = new TGChannel(
             channelName,
@@ -929,7 +930,7 @@ export class TGClientSocket
     }
 
     channelCloseAllListeners(channelName: string): void {
-        let listenerStreams = this._getAllChannelStreamNames(
+        this._getAllChannelStreamNames(
             channelName
         ).forEach((streamName) => {
             this._channelEventDemux.close(streamName);
@@ -945,7 +946,7 @@ export class TGClientSocket
     }
 
     channelKillAllListeners(channelName: string): void {
-        let listenerStreams = this._getAllChannelStreamNames(
+        this._getAllChannelStreamNames(
             channelName
         ).forEach((streamName) => {
             this._channelEventDemux.kill(streamName);
@@ -1032,7 +1033,7 @@ export class TGClientSocket
     }
 
     subscriptions(includePending?: boolean): string[] {
-        let subs = [];
+        let subs: string[] = [];
         Object.keys(this._channelMap).forEach((channelName) => {
             if (
                 includePending ||
@@ -1054,7 +1055,7 @@ export class TGClientSocket
 
     processPendingSubscriptions(): void {
         this.preparingPendingSubscriptions = false;
-        let pendingChannels = [];
+        let pendingChannels: any[] = [];
 
         Object.keys(this._channelMap).forEach((channelName) => {
             let channel = this._channelMap[channelName];
@@ -1090,7 +1091,7 @@ export class TGClientSocket
             .filter((stats) => {
                 return stats.stream.indexOf(`${channelName}/`) === 0;
             })
-            .reduce((accumulator, stats) => {
+            .reduce((accumulator: any, stats: any) => {
                 accumulator[stats.stream] = true;
                 return accumulator;
             }, {});
@@ -1166,11 +1167,11 @@ export class TGClientSocket
             channel._pendingSubscriptionCid == null &&
             meetsAuthRequirements
         ) {
-            let options = {
+            let options: {[key: string]: any} = {
                 noTimeout: true,
             };
 
-            let subscriptionOptions = {};
+            let subscriptionOptions: {[key: string]: any} = {};
             if (channel.options["waitForAuth"]) {
                 options["waitForAuth"] = true;
                 subscriptionOptions["waitForAuth"] = options["waitForAuth"];
@@ -1332,7 +1333,7 @@ export class TGClientSocket
         data: any,
         options?: { ackTimeout?: number | undefined },
         expectResponse?: boolean
-    ): Promise<void> {
+    ): Promise<any> {
         options = options || {};
 
         if (this.state === TGClientSocket.CLOSED) {
@@ -1343,7 +1344,7 @@ export class TGClientSocket
             data: null,
         };
 
-        let promise;
+        let promise: Promise<any>;
 
         if (expectResponse) {
             promise = new Promise((resolve, reject) => {
@@ -1382,7 +1383,7 @@ export class TGClientSocket
         return promise;
     }
 
-    private _handleEventAckTimeout(eventObject: EventObject, eventNode): void {
+    private _handleEventAckTimeout(eventObject: EventObject, eventNode: any): void {
         if (eventNode) {
             eventNode.detach();
         }
@@ -1415,7 +1416,7 @@ export class TGClientSocket
         }
     }
 
-    private _onInboundInvoke(request): void {
+    private _onInboundInvoke(request: TGRequest): void {
         let { procedure, data } = request;
         let handler = this._privateRPCHandlerMap[procedure];
         if (handler) {
@@ -1425,7 +1426,7 @@ export class TGClientSocket
         }
     }
 
-    private _onInboundTransmit(event: string, data): void {
+    private _onInboundTransmit(event: string, data: any): void {
         let handler = this._privateDataHandlerMap[event];
         if (handler) {
             handler.call(this, data);
@@ -1455,7 +1456,7 @@ export class TGClientSocket
         }
         this.emit("close", { code, reason });
 
-        if (!TGClientSocket.ignoreStatuses[code]) {
+        if (!TGClientSocket.ignoreStatuses[code as keyof SocketProtocolIgnoreStatuses]) {
             let closeMessage;
             if (reason) {
                 closeMessage =
@@ -1468,7 +1469,7 @@ export class TGClientSocket
                     "Socket connection closed with status code " + code;
             }
             let err = new SocketProtocolError(
-                TGClientSocket.errorStatuses[code] || closeMessage,
+                TGClientSocket.errorStatuses[code as keyof SocketProtocolErrorStatuses] || closeMessage,
                 code
             );
             this._onError(err);
@@ -1538,7 +1539,7 @@ export class TGClientSocket
         });
     }
 
-    private _onError(error): void {
+    private _onError(error: any): void {
         this.emit("error", { error });
     }
 
@@ -1573,7 +1574,7 @@ export class TGClientSocket
         }, timeout);
     }
 
-    private _onOpen(status): void {
+    private _onOpen(status: any): void {
         if (this.isBatching) {
             this._startBatching();
         } else if (this.batchOnHandshake) {
@@ -1636,7 +1637,7 @@ export class TGClientSocket
         return null;
     }
 
-    private _changeToAuthenticatedState(signedAuthToken): void {
+    private _changeToAuthenticatedState(signedAuthToken: SignedAuthToken): void {
         this.signedAuthToken = signedAuthToken;
         this.authToken = this._extractAuthTokenData(signedAuthToken);
 
@@ -1722,7 +1723,7 @@ export class TGClientSocket
         })();
     }
 
-    private _setAuthToken(data) {
+    private _setAuthToken(data: any) {
         this._changeToAuthenticatedState(data.token);
 
         (async () => {
@@ -1734,7 +1735,7 @@ export class TGClientSocket
         })();
     }
 
-    private _removeAuthToken(data): void {
+    private _removeAuthToken(): void {
         (async () => {
             let oldAuthToken;
             try {

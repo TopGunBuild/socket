@@ -88,7 +88,7 @@ export class SimpleExchange
     }
 
     channel(channelName: string): TGChannel<any> {
-        let currentChannel = this._channelMap[channelName];
+        // let currentChannel = this._channelMap[channelName];
 
         let channelIterable = new TGChannel(
             channelName,
@@ -219,7 +219,7 @@ export class SimpleExchange
     }
 
     channelCloseAllListeners(channelName: string): void {
-        let listenerStreams = this._getAllChannelStreamNames(
+        this._getAllChannelStreamNames(
             channelName
         ).forEach((streamName) => {
             this._channelEventDemux.close(streamName);
@@ -235,7 +235,7 @@ export class SimpleExchange
     }
 
     channelKillAllListeners(channelName: string): void {
-        let listenerStreams = this._getAllChannelStreamNames(
+        this._getAllChannelStreamNames(
             channelName
         ).forEach((streamName) => {
             this._channelEventDemux.kill(streamName);
@@ -322,7 +322,7 @@ export class SimpleExchange
     }
 
     subscriptions(includePending?: boolean): string[] {
-        let subs = [];
+        const subs: string[] = [];
         Object.keys(this._channelMap).forEach((channelName) => {
             if (
                 includePending ||
@@ -346,7 +346,7 @@ export class SimpleExchange
     // @ Private methods
     // -----------------------------------------------------------------------------------------------------
 
-    private _triggerChannelSubscribe(channel): void {
+    private _triggerChannelSubscribe(channel: TGChannel<any>): void {
         let channelName = channel.name;
 
         channel.state = TGChannel.SUBSCRIBED;
@@ -356,7 +356,7 @@ export class SimpleExchange
         this.emit("subscribe", { channel: channelName });
     }
 
-    private _triggerChannelUnsubscribe(channel): void {
+    private _triggerChannelUnsubscribe(channel: TGChannel<any>): void {
         let channelName = channel.name;
 
         delete this._channelMap[channelName];
@@ -373,7 +373,7 @@ export class SimpleExchange
             .filter((stats) => {
                 return stats.stream.indexOf(`${channelName}/`) === 0;
             })
-            .reduce((accumulator, stats) => {
+            .reduce((accumulator: {[key: string]: boolean}, stats: any) => {
                 accumulator[stats.stream] = true;
                 return accumulator;
             }, {});

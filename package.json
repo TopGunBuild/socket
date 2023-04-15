@@ -12,7 +12,8 @@
         "format": "prettier --write \"src/**/*.ts\"",
         "lint": "eslint \"src/**/*.ts\" --fix",
         "prepare": "simple-git-hooks",
-        "semantic-release": "semantic-release"
+        "semantic-release": "semantic-release",
+        "build:client": "node build/client.esbuild.js"
     },
     "browser": "dist/client.global.js",
     "exports": {
@@ -94,6 +95,7 @@
         "@semantic-release/release-notes-generator": "^10.0.3",
         "@types/jest": "^29.5.0",
         "@types/node": "^18.15.11",
+        "@types/ws": "^8.5.4",
         "@typescript-eslint/eslint-plugin": "^5.58.0",
         "@typescript-eslint/parser": "^5.58.0",
         "eslint": "^8.38.0",

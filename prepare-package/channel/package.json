@@ -1,0 +1,7 @@
+{
+    "name": "topgun-socket/channel",
+    "typings": "../dist/channel.d.ts",
+    "main": "../dist/channel.js",
+    "module": "../dist/channel.mjs",
+    "sideEffects": false
+}

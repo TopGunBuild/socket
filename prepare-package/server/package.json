@@ -1,0 +1,7 @@
+{
+    "name": "topgun-socket/server",
+    "typings": "../dist/server.d.ts",
+    "main": "../dist/server.js",
+    "module": "../dist/server.mjs",
+    "sideEffects": false
+}

@@ -4,12 +4,12 @@ import { Consumer } from "./consumer";
 import { ConsumerStats } from "./consumer-stats";
 
 export class WritableConsumableStream<T> extends ConsumableStream<T> {
-    type: Middlewares;
+    type?: Middlewares;
     private nextConsumerId: number;
     private _consumers: Map<any, any>;
     private _tailNode: {
         next: null;
-        data: { value: undefined; done: boolean };
+        data: { value: T|undefined; done: boolean };
     };
 
     /**
@@ -98,7 +98,7 @@ export class WritableConsumableStream<T> extends ConsumableStream<T> {
         return this._consumers.delete(consumerId);
     }
 
-    getConsumerStats(consumerId: number): ConsumerStats {
+    getConsumerStats(consumerId: number): ConsumerStats|undefined {
         let consumer = this._consumers.get(consumerId);
         if (consumer) {
             return consumer.getStats();
@@ -135,7 +135,7 @@ export class WritableConsumableStream<T> extends ConsumableStream<T> {
     // @ Private methods
     // -----------------------------------------------------------------------------------------------------
 
-    private _write(value: T, done: boolean, consumerId?: number) {
+    private _write(value: T|undefined, done: boolean, consumerId?: number) {
         let dataNode: any = {
             data: { value, done },
             next: null,

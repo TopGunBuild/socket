@@ -74,7 +74,7 @@ export interface InvokeOptions {
 }
 
 export interface ClientOptions {
-    socketPath?: string | undefined;
+    socketPath?: string | undefined | null;
 
     host?: string | undefined;
 
@@ -91,10 +91,10 @@ export interface ClientOptions {
     path?: string | undefined;
 
     // The protocol scheme for the transport. Defaults to 'ws' or 'wss', depending upon the valur of secure.
-    protocolScheme?: string | undefined;
+    protocolScheme?: string | undefined | null;
 
     // A map of key-value pairs which will be used as query parameters for the initial HTTP handshake which will initiate the WebSocket connection.
-    query?: string | { [key: string]: string } | undefined;
+    query?: string | { [key: string]: (string|number) } | undefined;
 
     // (milliseconds) - This is the timeout for getting a response to a AGClientSocket invoke action.
     ackTimeout?: number | undefined;

@@ -56,7 +56,7 @@ export class TGChannel<T> extends ConsumableStream<T> {
         throw new Error("Cannot directly set channel state");
     }
 
-    get options(): object {
+    get options(): {[key: string]: any} {
         return this.client.getChannelOptions(this.name);
     }
 

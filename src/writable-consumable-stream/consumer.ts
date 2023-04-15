@@ -7,12 +7,12 @@ export class Consumer<T> implements ConsumableStreamConsumer<T> {
     readonly id: number;
     readonly timeout: number;
     stream: WritableConsumableStream<T>;
-    currentNode: ConsumerNode<T>;
+    currentNode?: ConsumerNode<T>;
     isAlive: boolean;
     private _backpressure: number;
     private _timeoutId: any;
     private _resolve: any;
-    private _killPacket: { value: any; done: boolean };
+    private _killPacket?: { value: any; done: boolean };
 
     /**
      * Constructor
@@ -21,7 +21,7 @@ export class Consumer<T> implements ConsumableStreamConsumer<T> {
         stream: WritableConsumableStream<T>,
         id: number,
         startNode: ConsumerNode<T>,
-        timeout: number
+        timeout: number = 0
     ) {
         this.id = id;
         this._backpressure = 0;
@@ -89,7 +89,7 @@ export class Consumer<T> implements ConsumableStreamConsumer<T> {
         this.stream.setConsumer(this.id, this);
 
         while (true) {
-            if (!this.currentNode.next) {
+            if (this.currentNode && !this.currentNode.next) {
                 try {
                     await this._waitForNextItem(this.timeout);
                 } catch (error) {
@@ -105,21 +105,24 @@ export class Consumer<T> implements ConsumableStreamConsumer<T> {
                 return killPacket;
             }
 
-            this.currentNode = this.currentNode.next;
-            this.releaseBackpressure(this.currentNode.data);
+            if (this.currentNode)
+            {
+                this.currentNode = this.currentNode.next as ConsumerNode<T>;
+                this.releaseBackpressure(this.currentNode.data);
 
-            if (
-                this.currentNode.consumerId &&
-                this.currentNode.consumerId !== this.id
-            ) {
-                continue;
+                if (
+                    this.currentNode.consumerId &&
+                    this.currentNode.consumerId !== this.id
+                ) {
+                    continue;
+                }
+
+                if (this.currentNode.data.done) {
+                    this._destroy();
+                }
+
+                return this.currentNode.data as IteratorResult<T, any>;
             }
-
-            if (this.currentNode.data.done) {
-                this._destroy();
-            }
-
-            return this.currentNode.data;
         }
     }
 
