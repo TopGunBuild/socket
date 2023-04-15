@@ -1,3 +1,10 @@
+## [1.1.2](https://github.com/topgunjs/topgun-socket/compare/v1.1.1...v1.1.2) (2023-04-15)
+
+
+### Bug Fixes
+
+* package structure changed ([adbe0c3](https://github.com/topgunjs/topgun-socket/commit/adbe0c356f67c806f570898d08e8565485e1aa3e))
+
 ## [1.1.1](https://github.com/topgunjs/topgun-socket/compare/v1.1.0...v1.1.1) (2023-04-15)
 
 
