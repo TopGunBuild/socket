@@ -1,3 +1,10 @@
+## [1.1.7](https://github.com/topgunjs/topgun-socket/compare/v1.1.6...v1.1.7) (2023-04-15)
+
+
+### Bug Fixes
+
+* using "directories" instead of "files" ([be66248](https://github.com/topgunjs/topgun-socket/commit/be66248348e5c41227afee92eb6015efd2e0b06b))
+
 ## [1.1.6](https://github.com/topgunjs/topgun-socket/compare/v1.1.5...v1.1.6) (2023-04-15)
 
 
