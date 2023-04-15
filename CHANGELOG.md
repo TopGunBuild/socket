@@ -1,3 +1,10 @@
+## [1.1.6](https://github.com/topgunjs/topgun-socket/compare/v1.1.5...v1.1.6) (2023-04-15)
+
+
+### Bug Fixes
+
+* add script for creating packages ([3e4be29](https://github.com/topgunjs/topgun-socket/commit/3e4be29c847c7917646f2cd6544819092e71127a))
+
 ## [1.1.5](https://github.com/topgunjs/topgun-socket/compare/v1.1.4...v1.1.5) (2023-04-15)
 
 
