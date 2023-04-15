@@ -70,7 +70,7 @@ jobs:
                       ${{ runner.os }}-
             - run: npm i -g pnpm
             - run: pnpm i
-            - run: pnpm copyPackage
+            - run: pnpm run build
             - run: pnpm semantic-release
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
