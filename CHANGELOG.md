@@ -1,3 +1,10 @@
+## [1.1.11](https://github.com/topgunjs/topgun-socket/compare/v1.1.10...v1.1.11) (2023-04-16)
+
+
+### Bug Fixes
+
+* **socket-client:** fix types and imports ([cdc5d73](https://github.com/topgunjs/topgun-socket/commit/cdc5d73e82528ff19a8d8b3dc0931644d5fa54dd))
+
 ## [1.1.10](https://github.com/topgunjs/topgun-socket/compare/v1.1.9...v1.1.10) (2023-04-15)
 
 

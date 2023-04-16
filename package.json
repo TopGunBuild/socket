@@ -1,6 +1,6 @@
 {
     "name": "topgun-socket",
-    "version": "1.1.10",
+    "version": "1.1.11",
     "description": "Scalable realtime pub/sub and RPC serverless framework",
     "publishConfig": {
         "access": "public"
