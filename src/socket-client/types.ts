@@ -128,7 +128,7 @@ export interface ClientOptions {
     authTokenName?: string | undefined;
 
     // The type to use to represent binary on the client. Defaults to 'arraybuffer'.
-    binaryType?: string | undefined;
+    binaryType?: string | undefined | BinaryType;
 
     // If you set this to true, any data/objects/arrays that you pass to the client socket will be cloned before being sent/queued up. If the socket
     // is disconnected and you emit an event, it will be added to a queue which will be processed upon reconnection. The cloneData option is false

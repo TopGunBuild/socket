@@ -1,4 +1,4 @@
-import { Buffer } from 'buffer/';
+import Buffer from 'buffer/';
 import { AsyncStreamEmitter } from '../async-stream-emitter';
 import { TGChannel } from '../channel/channel';
 import { ChannelState } from '../channel/channel-state';
@@ -45,7 +45,8 @@ import {
 import { TGRequest } from '../request';
 
 const isBrowser = typeof window !== 'undefined';
-const global = getGlobal();
+const global    = getGlobal();
+// const Buffer    = _Buffer.Buffer;
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 export class TGClientSocket
@@ -53,37 +54,37 @@ export class TGClientSocket
     implements TGChannelClient
 {
     static readonly CONNECTING: States = 'connecting';
-    static readonly OPEN: States = 'open';
-    static readonly CLOSED: States = 'closed';
+    static readonly OPEN: States       = 'open';
+    static readonly CLOSED: States     = 'closed';
 
-    static readonly AUTHENTICATED: AuthStates = 'authenticated';
+    static readonly AUTHENTICATED: AuthStates   = 'authenticated';
     static readonly UNAUTHENTICATED: AuthStates = 'unauthenticated';
 
-    static readonly SUBSCRIBED = 'subscribed';
-    static readonly PENDING = 'pending';
+    static readonly SUBSCRIBED   = 'subscribed';
+    static readonly PENDING      = 'pending';
     static readonly UNSUBSCRIBED = 'unsubscribed';
 
     static readonly ignoreStatuses: SocketProtocolIgnoreStatuses =
-        socketProtocolIgnoreStatuses;
-    static readonly errorStatuses: SocketProtocolErrorStatuses =
-        socketProtocolErrorStatuses;
+                        socketProtocolIgnoreStatuses;
+    static readonly errorStatuses: SocketProtocolErrorStatuses   =
+                        socketProtocolErrorStatuses;
 
     options: ClientOptions;
 
-    id: string | null;
-    clientId?: string | undefined;
+    id: string|null;
+    clientId?: string|undefined;
 
-    version: string | null;
+    version: string|null;
     protocolVersion: ProtocolVersions;
 
     state: States;
 
     authState: AuthStates;
-    signedAuthToken: SignedAuthToken | null;
-    authToken: AuthToken | null;
+    signedAuthToken: SignedAuthToken|null;
+    authToken: AuthToken|null;
     authTokenName: string;
 
-    wsOptions?: ClientOptions | undefined;
+    wsOptions?: ClientOptions|undefined;
 
     pendingReconnect: boolean;
     pendingReconnectTimeout: number;
@@ -96,7 +97,7 @@ export class TGClientSocket
     pingTimeout: number;
     pingTimeoutDisabled: boolean;
 
-    channelPrefix: string | null;
+    channelPrefix: string|null;
     disconnectOnUnload: boolean;
 
     connectAttempts: number;
@@ -107,12 +108,12 @@ export class TGClientSocket
 
     auth: TGAuthEngine;
     codec: CodecEngine;
-    transport?: TGTransport | undefined;
+    transport?: TGTransport|undefined;
 
-    poolIndex?: number | undefined;
+    poolIndex?: number|undefined;
     private _batchingIntervalId: any;
     private _outboundBuffer: LinkedList<any>;
-    private _channelMap: { [key: string]: any };
+    private _channelMap: {[key: string]: any};
     private _channelEventDemux: StreamDemux<unknown>;
     private _channelDataDemux: StreamDemux<unknown>;
     private _receiverDemux: StreamDemux<unknown>;
@@ -123,76 +124,76 @@ export class TGClientSocket
     private _privateDataHandlerMap: {
         [key: string]: (...params: any[]) => void;
     } = {
-            '#publish': (data: any) =>
-            {
-                const undecoratedChannelName = this._undecorateChannelName(
-                    data.channel
-                );
-                const isSubscribed = this.isSubscribed(undecoratedChannelName, true);
+        '#publish'        : (data: any) =>
+        {
+            const undecoratedChannelName = this._undecorateChannelName(
+                data.channel
+            );
+            const isSubscribed           = this.isSubscribed(undecoratedChannelName, true);
 
-                if (isSubscribed)
-                {
-                    this._channelDataDemux.write(undecoratedChannelName, data.data);
-                }
-            },
-            '#kickOut': (data: any) =>
+            if (isSubscribed)
             {
-                const undecoratedChannelName = this._undecorateChannelName(
-                    data.channel
+                this._channelDataDemux.write(undecoratedChannelName, data.data);
+            }
+        },
+        '#kickOut'        : (data: any) =>
+        {
+            const undecoratedChannelName = this._undecorateChannelName(
+                data.channel
+            );
+            const channel                = this._channelMap[undecoratedChannelName];
+            if (channel)
+            {
+                this.emit('kickOut', {
+                    channel: undecoratedChannelName,
+                    message: data.message,
+                } as KickOutData);
+                this._channelEventDemux.write(
+                    `${undecoratedChannelName}/kickOut`,
+                    { message: data.message }
                 );
-                const channel = this._channelMap[undecoratedChannelName];
-                if (channel)
-                {
-                    this.emit('kickOut', {
-                        channel: undecoratedChannelName,
-                        message: data.message,
-                    } as KickOutData);
-                    this._channelEventDemux.write(
-                        `${undecoratedChannelName}/kickOut`,
-                        { message: data.message }
-                    );
-                    this._triggerChannelUnsubscribe(channel);
-                }
-            },
-            '#setAuthToken': (data: any) =>
+                this._triggerChannelUnsubscribe(channel);
+            }
+        },
+        '#setAuthToken'   : (data: any) =>
+        {
+            if (data)
             {
-                if (data)
-                {
-                    this._setAuthToken(data);
-                }
-            },
-            '#removeAuthToken': (data: any) =>
-            {
-                this._removeAuthToken();
-            },
-        };
+                this._setAuthToken(data);
+            }
+        },
+        '#removeAuthToken': (data: any) =>
+        {
+            this._removeAuthToken();
+        },
+    };
 
     private _privateRPCHandlerMap: {
         [key: string]: (...params: any[]) => void;
     } = {
-            '#setAuthToken': (data: any, request: any) =>
+        '#setAuthToken'   : (data: any, request: any) =>
+        {
+            if (data)
             {
-                if (data)
-                {
-                    this._setAuthToken(data);
+                this._setAuthToken(data);
 
-                    request.end();
-                }
-                else
-                {
-                    request.error(
-                        new InvalidMessageError(
-                            'No token data provided by #setAuthToken event'
-                        )
-                    );
-                }
-            },
-            '#removeAuthToken': (data: any, request: any) =>
-            {
-                this._removeAuthToken();
                 request.end();
-            },
-        };
+            }
+            else
+            {
+                request.error(
+                    new InvalidMessageError(
+                        'No token data provided by #setAuthToken event'
+                    )
+                );
+            }
+        },
+        '#removeAuthToken': (data: any, request: any) =>
+        {
+            this._removeAuthToken();
+            request.end();
+        },
+    };
 
     /**
      * Constructor
@@ -202,55 +203,55 @@ export class TGClientSocket
         super();
 
         const defaultOptions: ClientOptions = {
-            path: '/topgunsocket/',
-            secure: false,
-            protocolScheme: null,
-            socketPath: null,
-            autoConnect: true,
-            autoReconnect: true,
-            autoSubscribeOnConnect: true,
-            connectTimeout: 20000,
-            ackTimeout: 10000,
-            timestampRequests: false,
-            timestampParam: 't',
-            authTokenName: 'topgunsocket.authToken',
-            binaryType: 'arraybuffer',
-            batchOnHandshake: false,
+            path                    : '/topgunsocket/',
+            secure                  : false,
+            protocolScheme          : null,
+            socketPath              : null,
+            autoConnect             : true,
+            autoReconnect           : true,
+            autoSubscribeOnConnect  : true,
+            connectTimeout          : 20000,
+            ackTimeout              : 10000,
+            timestampRequests       : false,
+            timestampParam          : 't',
+            authTokenName           : 'topgunsocket.authToken',
+            binaryType              : 'arraybuffer',
+            batchOnHandshake        : false,
             batchOnHandshakeDuration: 100,
-            batchInterval: 50,
-            protocolVersion: 2,
-            wsOptions: {},
-            cloneData: false,
+            batchInterval           : 50,
+            protocolVersion         : 2,
+            wsOptions               : {},
+            cloneData               : false,
         };
-        const opts: ClientOptions = Object.assign(
+        const opts: ClientOptions           = Object.assign(
             defaultOptions,
             socketOptions
         );
 
-        this.id = null;
-        this.version = opts.version || null;
-        this.protocolVersion = opts.protocolVersion as ProtocolVersions;
-        this.state = TGClientSocket.CLOSED;
-        this.authState = TGClientSocket.UNAUTHENTICATED;
-        this.signedAuthToken = null;
-        this.authToken = null;
-        this.pendingReconnect = false;
-        this.pendingReconnectTimeout = null;
+        this.id                            = null;
+        this.version                       = opts.version || null;
+        this.protocolVersion               = opts.protocolVersion as ProtocolVersions;
+        this.state                         = TGClientSocket.CLOSED;
+        this.authState                     = TGClientSocket.UNAUTHENTICATED;
+        this.signedAuthToken               = null;
+        this.authToken                     = null;
+        this.pendingReconnect              = false;
+        this.pendingReconnectTimeout       = null;
         this.preparingPendingSubscriptions = false;
-        this.clientId = opts.clientId;
-        this.wsOptions = opts.wsOptions;
+        this.clientId                      = opts.clientId;
+        this.wsOptions                     = opts.wsOptions;
 
-        this.connectTimeout = opts.connectTimeout;
-        this.ackTimeout = opts.ackTimeout;
-        this.channelPrefix = opts.channelPrefix || null;
+        this.connectTimeout     = opts.connectTimeout;
+        this.ackTimeout         = opts.ackTimeout;
+        this.channelPrefix      = opts.channelPrefix || null;
         this.disconnectOnUnload =
             opts.disconnectOnUnload == null ? true : opts.disconnectOnUnload;
-        this.authTokenName = opts.authTokenName;
+        this.authTokenName      = opts.authTokenName;
 
         // pingTimeout will be connectTimeout at the start, but it will
         // be updated with values provided by the 'connect' event
-        opts.pingTimeout = opts.connectTimeout;
-        this.pingTimeout = opts.pingTimeout;
+        opts.pingTimeout         = opts.connectTimeout;
+        this.pingTimeout         = opts.pingTimeout;
         this.pingTimeoutDisabled = !!opts.pingTimeoutDisabled;
 
         const maxTimeout = Math.pow(2, 31) - 1;
@@ -271,18 +272,18 @@ export class TGClientSocket
 
         this.connectAttempts = 0;
 
-        this.isBatching = false;
-        this.batchOnHandshake = opts.batchOnHandshake;
+        this.isBatching               = false;
+        this.batchOnHandshake         = opts.batchOnHandshake;
         this.batchOnHandshakeDuration = opts.batchOnHandshakeDuration;
 
         this._batchingIntervalId = null;
-        this._outboundBuffer = new LinkedList();
-        this._channelMap = {};
+        this._outboundBuffer     = new LinkedList();
+        this._channelMap         = {};
 
         this._channelEventDemux = new StreamDemux();
-        this._channelDataDemux = new StreamDemux();
+        this._channelDataDemux  = new StreamDemux();
 
-        this._receiverDemux = new StreamDemux();
+        this._receiverDemux  = new StreamDemux();
         this._procedureDemux = new StreamDemux();
 
         this.options = opts;
@@ -350,7 +351,7 @@ export class TGClientSocket
         {
             const protocolOptionError = new InvalidArgumentsError(
                 'The "protocol" option does not affect socketcluster-client - ' +
-                    'If you want to utilize SSL/TLS, use "secure" option instead'
+                'If you want to utilize SSL/TLS, use "secure" option instead'
             );
             this._onError(protocolOptionError);
         }
@@ -358,8 +359,8 @@ export class TGClientSocket
         this.options.query = opts.query || {};
         if (typeof this.options.query === 'string')
         {
-            const searchParams = new URLSearchParams(this.options.query);
-            const queryObject: { [key: string]: any } = {};
+            const searchParams                      = new URLSearchParams(this.options.query);
+            const queryObject: {[key: string]: any} = {};
 
             searchParams.forEach((value, key) =>
             {
@@ -459,7 +460,7 @@ export class TGClientSocket
     {
         if (this.state === TGClientSocket.CLOSED)
         {
-            this.pendingReconnect = false;
+            this.pendingReconnect        = false;
             this.pendingReconnectTimeout = null;
             clearTimeout(this._reconnectTimeoutRef);
 
@@ -472,12 +473,12 @@ export class TGClientSocket
             }
 
             const transportHandlers = {
-                onOpen: (value: any) =>
+                onOpen           : (value: any) =>
                 {
                     this.state = TGClientSocket.OPEN;
                     this._onOpen(value);
                 },
-                onOpenAbort: (value: any) =>
+                onOpenAbort      : (value: any) =>
                 {
                     if (this.state !== TGClientSocket.CLOSED)
                     {
@@ -485,7 +486,7 @@ export class TGClientSocket
                         this._destroy(value.code, value.reason, true);
                     }
                 },
-                onClose: (value: any) =>
+                onClose          : (value: any) =>
                 {
                     if (this.state !== TGClientSocket.CLOSED)
                     {
@@ -493,15 +494,15 @@ export class TGClientSocket
                         this._destroy(value.code, value.reason);
                     }
                 },
-                onEvent: (value: any) =>
+                onEvent          : (value: any) =>
                 {
                     this.emit(value.event, value.data);
                 },
-                onError: (value: any) =>
+                onError          : (value: any) =>
                 {
                     this._onError(value.error);
                 },
-                onInboundInvoke: (value: any) =>
+                onInboundInvoke  : (value: any) =>
                 {
                     this._onInboundInvoke(value);
                 },
@@ -547,7 +548,7 @@ export class TGClientSocket
         }
         else
         {
-            this.pendingReconnect = false;
+            this.pendingReconnect        = false;
             this.pendingReconnectTimeout = null;
             clearTimeout(this._reconnectTimeoutRef);
         }
@@ -555,20 +556,20 @@ export class TGClientSocket
 
     decodeBase64(encodedString: string): string
     {
-        return Buffer.from(encodedString, 'base64').toString('utf8');
+        return Buffer.Buffer.from(encodedString, 'base64').toString('utf8');
     }
 
     encodeBase64(decodedString: string): string
     {
-        return Buffer.from(decodedString, 'utf8').toString('base64');
+        return Buffer.Buffer.from(decodedString, 'utf8').toString('base64');
     }
 
-    getAuthToken(): AuthToken | null
+    getAuthToken(): AuthToken|null
     {
         return this.authToken;
     }
 
-    getSignedAuthToken(): SignedAuthToken | null
+    getSignedAuthToken(): SignedAuthToken|null
     {
         return this.signedAuthToken;
     }
@@ -614,7 +615,7 @@ export class TGClientSocket
             // authStatus object to the current function, so we need to create it ourselves.
             authStatus = {
                 isAuthenticated: this.authState,
-                authError: null,
+                authError      : null,
             };
         }
 
@@ -665,7 +666,7 @@ export class TGClientSocket
     transmit(
         event: string,
         data?: any,
-        options?: { ackTimeout?: number | undefined }
+        options?: {ackTimeout?: number|undefined}
     ): Promise<void>
     {
         return this._processOutboundEvent(event, data, options);
@@ -674,7 +675,7 @@ export class TGClientSocket
     invoke(
         event: string,
         data: any,
-        options?: { ackTimeout?: number | undefined }
+        options?: {ackTimeout?: number|undefined}
     ): Promise<any>
     {
         return this._processOutboundEvent(event, data, options, true);
@@ -692,7 +693,7 @@ export class TGClientSocket
     invokePublish(
         channelName: string,
         data: any
-    ): Promise<{ channel: string; data: any }>
+    ): Promise<{channel: string; data: any}>
     {
         const pubData = {
             channel: this._decorateChannelName(channelName),
@@ -736,7 +737,7 @@ export class TGClientSocket
 
     subscribe(channelName: string, options?: SubscribeOptions): TGChannel<any>
     {
-        options = options || {};
+        options     = options || {};
         let channel = this._channelMap[channelName];
 
         const sanitizedOptions: SubscribeOptions = {
@@ -754,9 +755,9 @@ export class TGClientSocket
 
         if (!channel)
         {
-            channel = {
-                name: channelName,
-                state: TGChannel.PENDING,
+            channel                       = {
+                name   : channelName,
+                state  : TGChannel.PENDING,
                 options: sanitizedOptions,
             };
             this._channelMap[channelName] = channel;
@@ -1246,7 +1247,7 @@ export class TGClientSocket
     processPendingSubscriptions(): void
     {
         this.preparingPendingSubscriptions = false;
-        const pendingChannels: any[] = [];
+        const pendingChannels: any[]       = [];
 
         Object.keys(this._channelMap).forEach((channelName) =>
         {
@@ -1365,8 +1366,8 @@ export class TGClientSocket
     private _trySubscribe(channel: TGChannel<any>): void
     {
         const meetsAuthRequirements =
-            !channel.options['waitForAuth'] ||
-            this.authState === TGClientSocket.AUTHENTICATED;
+                  !channel.options['waitForAuth'] ||
+                  this.authState === TGClientSocket.AUTHENTICATED;
 
         // We can only ever have one pending subscribe action at any given time on a channel
         if (
@@ -1376,14 +1377,14 @@ export class TGClientSocket
             meetsAuthRequirements
         )
         {
-            const options: { [key: string]: any } = {
+            const options: {[key: string]: any} = {
                 noTimeout: true,
             };
 
-            const subscriptionOptions: { [key: string]: any } = {};
+            const subscriptionOptions: {[key: string]: any} = {};
             if (channel.options['waitForAuth'])
             {
-                options['waitForAuth'] = true;
+                options['waitForAuth']             = true;
                 subscriptionOptions['waitForAuth'] = options['waitForAuth'];
             }
             if (channel.options['data'])
@@ -1504,11 +1505,11 @@ export class TGClientSocket
         subscriptionOptions: SubscribeOptions
     ): void
     {
-        const channelName = channel.name;
+        const channelName           = channel.name;
         const meetsAuthRequirements =
-            !channel.options['waitForAuth'] ||
-            this.authState === TGClientSocket.AUTHENTICATED;
-        const hasChannel = !!this._channelMap[channelName];
+                  !channel.options['waitForAuth'] ||
+                  this.authState === TGClientSocket.AUTHENTICATED;
+        const hasChannel            = !!this._channelMap[channelName];
 
         if (hasChannel && meetsAuthRequirements)
         {
@@ -1519,8 +1520,8 @@ export class TGClientSocket
                 subscriptionOptions,
             });
             this.emit('subscribeFail', {
-                error: err,
-                channel: channelName,
+                error              : err,
+                channel            : channelName,
                 subscriptionOptions: subscriptionOptions,
             } as SubscribeFailData);
         }
@@ -1536,7 +1537,7 @@ export class TGClientSocket
         if (channel.state !== TGChannel.SUBSCRIBED)
         {
             const oldChannelState = channel.state;
-            channel.state = TGChannel.SUBSCRIBED;
+            channel.state         = TGChannel.SUBSCRIBED;
 
             const stateChangeData = {
                 oldChannelState,
@@ -1564,7 +1565,7 @@ export class TGClientSocket
     private _processOutboundEvent(
         event: string,
         data: any,
-        options?: { ackTimeout?: number | undefined },
+        options?: {ackTimeout?: number|undefined},
         expectResponse?: boolean
     ): Promise<any>
     {
@@ -1614,7 +1615,7 @@ export class TGClientSocket
         eventNode.data = eventObject;
 
         const ackTimeout =
-            options.ackTimeout == null ? this.ackTimeout : options.ackTimeout;
+                  options.ackTimeout == null ? this.ackTimeout : options.ackTimeout;
 
         eventObject.timeout = setTimeout(() =>
         {
@@ -1663,7 +1664,7 @@ export class TGClientSocket
 
         while (currentNode)
         {
-            nextNode = currentNode.next;
+            nextNode          = currentNode.next;
             const eventObject = currentNode.data;
             currentNode.detach();
             this.transport.transmitObject(eventObject);
@@ -1674,7 +1675,7 @@ export class TGClientSocket
     private _onInboundInvoke(request: TGRequest): void
     {
         const { procedure, data } = request;
-        const handler = this._privateRPCHandlerMap[procedure];
+        const handler             = this._privateRPCHandlerMap[procedure];
         if (handler)
         {
             handler.call(this, data, request);
@@ -1708,7 +1709,7 @@ export class TGClientSocket
             this.transport.clearAllListeners();
         }
 
-        this.pendingReconnect = false;
+        this.pendingReconnect        = false;
         this.pendingReconnectTimeout = null;
         clearTimeout(this._reconnectTimeoutRef);
 
@@ -1727,7 +1728,7 @@ export class TGClientSocket
         if (
             !TGClientSocket.ignoreStatuses[
                 code as keyof SocketProtocolIgnoreStatuses
-            ]
+                ]
         )
         {
             let closeMessage;
@@ -1747,7 +1748,7 @@ export class TGClientSocket
             const err = new SocketProtocolError(
                 TGClientSocket.errorStatuses[
                     code as keyof SocketProtocolErrorStatuses
-                ] || closeMessage,
+                    ] || closeMessage,
                 code
             );
             this._onError(err);
@@ -1793,7 +1794,7 @@ export class TGClientSocket
 
         while (currentNode)
         {
-            nextNode = currentNode.next;
+            nextNode          = currentNode.next;
             const eventObject = currentNode.data;
             clearTimeout(eventObject.timeout);
             delete eventObject.timeout;
@@ -1806,7 +1807,7 @@ export class TGClientSocket
             {
                 delete eventObject.callback;
                 const errorMessage = `Event "${eventObject.event}" was aborted due to a bad connection`;
-                const error = new BadConnectionError(errorMessage, failureType);
+                const error        = new BadConnectionError(errorMessage, failureType);
 
                 callback.call(eventObject, error, eventObject);
             }
@@ -1834,7 +1835,7 @@ export class TGClientSocket
 
     private _tryReconnect(initialDelay?: number): void
     {
-        const exponent = this.connectAttempts++;
+        const exponent         = this.connectAttempts++;
         const reconnectOptions = this.options.autoReconnectOptions;
         let timeout;
 
@@ -1842,7 +1843,7 @@ export class TGClientSocket
         {
             const initialTimeout = Math.round(
                 reconnectOptions.initialDelay +
-                    (reconnectOptions.randomness || 0) * Math.random()
+                (reconnectOptions.randomness || 0) * Math.random()
             );
 
             timeout = Math.round(
@@ -1861,9 +1862,9 @@ export class TGClientSocket
 
         clearTimeout(this._reconnectTimeoutRef);
 
-        this.pendingReconnect = true;
+        this.pendingReconnect        = true;
         this.pendingReconnectTimeout = timeout;
-        this._reconnectTimeoutRef = setTimeout(() =>
+        this._reconnectTimeoutRef    = setTimeout(() =>
         {
             this.connect();
         }, timeout);
@@ -1890,7 +1891,7 @@ export class TGClientSocket
 
         if (status)
         {
-            this.id = status.id;
+            this.id          = status.id;
             this.pingTimeout = status.pingTimeout;
             if (status.isAuthenticated)
             {
@@ -1934,7 +1935,7 @@ export class TGClientSocket
 
     private _extractAuthTokenData(signedAuthToken: string): any
     {
-        const tokenParts = (signedAuthToken || '').split('.');
+        const tokenParts       = (signedAuthToken || '').split('.');
         const encodedTokenData = tokenParts[1];
         if (encodedTokenData != null)
         {
@@ -1957,17 +1958,17 @@ export class TGClientSocket
     ): void
     {
         this.signedAuthToken = signedAuthToken;
-        this.authToken = this._extractAuthTokenData(signedAuthToken);
+        this.authToken       = this._extractAuthTokenData(signedAuthToken);
 
         if (this.authState !== TGClientSocket.AUTHENTICATED)
         {
-            const oldAuthState = this.authState;
-            this.authState = TGClientSocket.AUTHENTICATED;
+            const oldAuthState    = this.authState;
+            this.authState        = TGClientSocket.AUTHENTICATED;
             const stateChangeData = {
                 oldAuthState,
-                newAuthState: this.authState,
+                newAuthState   : this.authState,
                 signedAuthToken: signedAuthToken,
-                authToken: this.authToken,
+                authToken      : this.authToken,
             };
             if (!this.preparingPendingSubscriptions)
             {
@@ -1986,12 +1987,12 @@ export class TGClientSocket
     {
         if (this.authState !== TGClientSocket.UNAUTHENTICATED)
         {
-            const oldAuthState = this.authState;
-            const oldAuthToken = this.authToken;
+            const oldAuthState       = this.authState;
+            const oldAuthToken       = this.authToken;
             const oldSignedAuthToken = this.signedAuthToken;
-            this.authState = TGClientSocket.UNAUTHENTICATED;
-            this.signedAuthToken = null;
-            this.authToken = null;
+            this.authState           = TGClientSocket.UNAUTHENTICATED;
+            this.signedAuthToken     = null;
+            this.authToken           = null;
 
             const stateChangeData = {
                 oldAuthState,
@@ -2004,7 +2005,7 @@ export class TGClientSocket
 
     private async _handleBrowserUnload(): Promise<void>
     {
-        const unloadHandler = () =>
+        const unloadHandler         = () =>
         {
             this.disconnect();
         };

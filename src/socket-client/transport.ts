@@ -1,4 +1,3 @@
-import ws from 'ws';
 import {
     BadConnectionError,
     hydrateError,
@@ -8,7 +7,6 @@ import {
 import { TGRequest } from '../request/request';
 import { CodecEngine } from '../socket-server/types';
 import { EventObject, EventObjectCallback } from '../types';
-import { getGlobal } from '../utils/global';
 import {
     CallIdGenerator,
     ClientOptions,
@@ -27,30 +25,10 @@ import {
     TransportHandlers,
 } from './types';
 import { SocketProtocolErrorStatuses } from '../errors';
+import { createWebSocket } from '../utils/create-websocket';
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-empty-function */
-
-const global = getGlobal();
-let WebSocket: any;
-let createWebSocket: (uri: string, options: any) => any;
-
-if (global?.WebSocket)
-{
-    WebSocket = global.WebSocket;
-    createWebSocket = function (uri, options)
-    {
-        return new WebSocket(uri);
-    };
-}
-else
-{
-    WebSocket = ws;
-    createWebSocket = function (uri, options)
-    {
-        return new WebSocket(uri, [], options);
-    };
-}
 
 export class TGTransport
 {
@@ -140,7 +118,7 @@ export class TGTransport
         const uri = this.uri();
 
         const wsSocket = createWebSocket(uri, wsOptions);
-        wsSocket.binaryType = this.options.binaryType;
+        wsSocket.binaryType = this.options.binaryType as BinaryType;
 
         this.socket = wsSocket;
 
@@ -172,7 +150,7 @@ export class TGTransport
             this._onMessage(message.data);
         };
 
-        wsSocket.onerror = (error: Error) =>
+        wsSocket.onerror = () =>
         {
             // The onclose event will be called automatically after the onerror event
             // if the socket is connected - Otherwise, if it's in the middle of
