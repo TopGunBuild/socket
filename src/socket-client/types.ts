@@ -1,5 +1,4 @@
-import { CodecEngine } from '../socket-server/types';
-import { AuthToken } from '../types';
+import { AuthToken, CodecEngine } from '../types';
 
 export interface TGAuthEngine {
     saveToken(

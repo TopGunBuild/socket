@@ -24,7 +24,6 @@ import {
     AuthStateChangeData,
     BadSocketAuthTokenData,
     ClosureData,
-    CodecEngine,
     ConnectionAbortData,
     ConnectionData,
     DeauthenticationData,
@@ -42,6 +41,7 @@ import {
     TGServerSocketGatewayOptions,
     UnsubscriptionData,
 } from './types';
+import { CodecEngine } from '../types';
 
 export class TGServerSocketGateway extends AsyncStreamEmitter<any>
 {

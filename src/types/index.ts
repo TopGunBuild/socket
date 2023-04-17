@@ -1,5 +1,10 @@
 import { JwtPayload } from '../jwt';
 
+export interface CodecEngine {
+    decode: (input: any) => any;
+    encode: (object: any) => any;
+}
+
 export interface AuthToken extends JwtPayload {
     [x: string]: any;
 }

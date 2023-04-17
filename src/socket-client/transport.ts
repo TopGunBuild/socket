@@ -5,8 +5,7 @@ import {
     TimeoutError,
 } from '../errors/errors';
 import { TGRequest } from '../request/request';
-import { CodecEngine } from '../socket-server/types';
-import { EventObject, EventObjectCallback } from '../types';
+import { CodecEngine, EventObject, EventObjectCallback } from '../types';
 import {
     CallIdGenerator,
     ClientOptions,

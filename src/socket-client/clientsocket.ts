@@ -1,4 +1,4 @@
-import Buffer from 'buffer/';
+import Buffer from 'topgun-buffer';
 import { AsyncStreamEmitter } from '../async-stream-emitter';
 import { TGChannel } from '../channel/channel';
 import { ChannelState } from '../channel/channel-state';
@@ -19,10 +19,9 @@ import {
 } from '../errors/types';
 import { formatter } from '../formatter';
 import { Item, LinkedList } from '../linked-list';
-import { CodecEngine } from '../socket-server/types';
 import { StreamDemux } from '../stream-demux';
 import { DemuxedConsumableStream } from '../stream-demux/demuxed-consumable-stream';
-import { AuthToken, EventObject, UnsubscribeData } from '../types';
+import { AuthToken, CodecEngine, EventObject, UnsubscribeData } from '../types';
 import { cloneDeep } from '../utils/clone-deep';
 import { getGlobal } from '../utils/global';
 import { wait } from '../utils/wait';
@@ -46,7 +45,6 @@ import { TGRequest } from '../request';
 
 const isBrowser = typeof window !== 'undefined';
 const global    = getGlobal();
-// const Buffer    = _Buffer.Buffer;
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 export class TGClientSocket
@@ -556,12 +554,12 @@ export class TGClientSocket
 
     decodeBase64(encodedString: string): string
     {
-        return Buffer.Buffer.from(encodedString, 'base64').toString('utf8');
+        return Buffer.from(encodedString, 'base64').toString('utf8');
     }
 
     encodeBase64(decodedString: string): string
     {
-        return Buffer.Buffer.from(decodedString, 'utf8').toString('base64');
+        return Buffer.from(decodedString, 'utf8').toString('base64');
     }
 
     getAuthToken(): AuthToken|null

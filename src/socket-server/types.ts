@@ -1,6 +1,6 @@
 import { AuthEngine } from '../auth';
 import { JwtAlgorithm, JwtSignOptions, Secret } from '../jwt';
-import { AuthToken, UnsubscribeData } from '../types';
+import { AuthToken, CodecEngine, UnsubscribeData } from '../types';
 import { WritableConsumableStream } from '../writable-consumable-stream';
 import {
     TGActionAuthenticate,
@@ -14,11 +14,6 @@ import {
     TGActionTransmit,
 } from './action';
 import { TGServerSocket } from './server-socket';
-
-export interface CodecEngine {
-    decode: (input: any) => any;
-    encode: (object: any) => any;
-}
 
 export type SocketState = 'connecting' | 'open' | 'closed';
 export type AuthState = 'authenticated' | 'unauthenticated';

@@ -21,6 +21,7 @@
             "types": "./dist/client.d.ts",
             "node": "./dist/client.js",
             "require": "./dist/client.js",
+            "module": "./dist/client.mjs",
             "import": "./dist/client.mjs",
             "default": "./dist/client.mjs"
         },
@@ -28,6 +29,7 @@
             "types": "./dist/server.d.ts",
             "node": "./dist/server.js",
             "require": "./dist/server.js",
+            "module": "./dist/server.mjs",
             "import": "./dist/server.mjs",
             "default": "./dist/server.mjs"
         },
@@ -35,6 +37,7 @@
             "types": "./dist/channel.d.ts",
             "node": "./dist/channel.js",
             "require": "./dist/channel.js",
+            "module": "./dist/channel.mjs",
             "import": "./dist/channel.mjs",
             "default": "./dist/channel.mjs"
         },
@@ -42,6 +45,7 @@
             "types": "./dist/writable-consumable-stream.d.ts",
             "node": "./dist/writable-consumable-stream.js",
             "require": "./dist/writable-consumable-stream.js",
+            "module": "./dist/writable-consumable-stream.mjs",
             "import": "./dist/writable-consumable-stream.mjs",
             "default": "./dist/writable-consumable-stream.mjs"
         },
@@ -90,11 +94,13 @@
     },
     "homepage": "https://github.com/topgunjs/topgun-socket#readme",
     "dependencies": {
-        "buffer": "^5.2.1",
-        "topgun-webcrypto": "^1.0.3",
-        "ws": "^8.9.0"
+        "topgun-buffer": "^1.0.0",
+        "topgun-webcrypto": "^1.0.3"
     },
     "devDependencies": {
+        "@rollup/plugin-commonjs": "^24.1.0",
+        "@rollup/plugin-node-resolve": "^15.0.2",
+        "@rollup/plugin-terser": "^0.4.1",
         "@semantic-release/changelog": "^6.0.3",
         "@semantic-release/commit-analyzer": "^9.0.2",
         "@semantic-release/git": "^10.0.1",
@@ -110,8 +116,11 @@
         "eslint-config-prettier": "^8.8.0",
         "eslint-plugin-import": "^2.27.5",
         "jest": "^29.5.0",
+        "kleur": "^4.1.5",
         "lint-staged": "^13.2.1",
         "prettier": "^2.8.7",
+        "rewrite-imports": "^3.0.0",
+        "rollup": "^3.20.3",
         "semantic-release": "^21.0.1",
         "simple-git-hooks": "^2.8.1",
         "ts-jest": "^29.1.0",

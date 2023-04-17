@@ -1,9 +1,5 @@
 {
     "globalName": "topGunSocket",
-    "splitting": true,
-    "sourcemap": false,
-    "clean": true,
-    "dts": true,
     "format": [
         "cjs",
         "esm",
@@ -11,12 +7,10 @@
     ],
     "minify": true,
     "bundle": true,
-    "skipNodeModulesBundle": true,
     "entry": {
         "client": "src/socket-client/index.ts",
         "server": "src/socket-server/index.ts",
         "channel": "src/channel/index.ts",
         "writable-consumable-stream": "src/writable-consumable-stream/index.ts"
-    },
-    "watch": false
+    }
 }
