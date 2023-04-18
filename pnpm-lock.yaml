@@ -2,11 +2,11 @@ lockfileVersion: '6.0'
 
 dependencies:
   topgun-buffer:
-    specifier: ^1.0.0
-    version: 1.0.0
+    specifier: 1.0.2
+    version: 1.0.2
   topgun-webcrypto:
-    specifier: ^1.0.3
-    version: 1.0.3
+    specifier: 1.0.4
+    version: 1.0.4
 
 devDependencies:
   '@rollup/plugin-commonjs':
@@ -5672,12 +5672,12 @@ packages:
       is-number: 7.0.0
     dev: true
 
-  /topgun-buffer@1.0.0:
-    resolution: {integrity: sha512-OddphlK5kLf3v9u+9BdngNDrYiVyVX4pvFjhCcPhU1YhUHuqbVTb+n75IjsQb6OuKbl2/Hpp6Nl2NF+fG3Nn0Q==}
+  /topgun-buffer@1.0.2:
+    resolution: {integrity: sha512-g5QrYP93pp+fZ7jp6N0fFIEjbqOtLFpTq9CUJTpNiCXkpar8AC/OKwYMy2uNlW+oqAMRRG7m3cw44okoWs/yyQ==}
     dev: false
 
-  /topgun-webcrypto@1.0.3:
-    resolution: {integrity: sha512-GlzMWlIcz7Nc9XBciVhdeeLb9s7QniUuay+oaqPe7vDcqIOVS6Pot5sAwGPcKHjnyBhrDBprSh8FtF5wanIBpg==}
+  /topgun-webcrypto@1.0.4:
+    resolution: {integrity: sha512-mICpKUeEejJP/ooXOE2ARJI70lMkB4GyhOgsVimXLhHLYUrHTCylV89FkMUMcm4iHis0SAdcbAWSFSRFcrV+zw==}
     dependencies:
       '@peculiar/webcrypto': 1.4.3
     dev: false
