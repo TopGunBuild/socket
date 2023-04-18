@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/topgunjs/topgun-socket/compare/v1.2.0...v1.2.1) (2023-04-18)
+
+
+### Bug Fixes
+
+* update "exports" in package.json ([d2f2fac](https://github.com/topgunjs/topgun-socket/commit/d2f2fac8d77eff0fbdd445bebb13dea5bb1be4db))
+
 # [1.2.0](https://github.com/topgunjs/topgun-socket/compare/v1.1.11...v1.2.0) (2023-04-17)
 
 
