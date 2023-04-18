@@ -12,7 +12,7 @@ export function getGlobal(): any
             (typeof window !== 'undefined' && window) ||
             (function ()
             {
-                return this;
+                return (this || {});
             })()
         );
     }

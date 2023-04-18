@@ -1,7 +1,22 @@
-import { TGServerSocket } from '../src/socket-server';
+import { ClientOptions, create as createClient, TGClientSocket } from '../src/socket-client';
 
-test('simple', () =>
+const PORT_NUMBER = 8009;
+
+let clientOptions: ClientOptions, serverOptions, server, client: TGClientSocket;
+
+describe('Client', () =>
 {
-    expect(TGServerSocket).toBeInstanceOf(Object);
+    it('Should automatically connect socket on creation by default', async () =>
+    {
+        clientOptions = {
+            hostname: '127.0.0.1',
+            port: PORT_NUMBER
+        };
+
+        client = createClient(clientOptions);
+
+        expect(client.state).toBe(TGClientSocket.CONNECTING);
+    });
 });
+
 
