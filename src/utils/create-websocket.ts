@@ -9,6 +9,9 @@ export function createWebSocket(uri: string, options?: any): WebSocket
     {
         return new global.WebSocket(uri);
     }
-
-    throw Error(`WebSocket instance not found`);
+    else
+    {
+        const WebSocket: any = require('ws');
+        return new WebSocket(uri, [], options);
+    }
 }
