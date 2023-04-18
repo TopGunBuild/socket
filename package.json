@@ -82,8 +82,8 @@
     },
     "homepage": "https://github.com/topgunjs/topgun-socket#readme",
     "dependencies": {
-        "topgun-buffer": "1.0.2",
-        "topgun-webcrypto": "1.0.4"
+        "topgun-buffer": "1.0.3",
+        "topgun-webcrypto": "1.0.5"
     },
     "devDependencies": {
         "@rollup/plugin-commonjs": "^24.1.0",
