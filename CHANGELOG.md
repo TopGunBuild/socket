@@ -1,3 +1,10 @@
+## [1.2.3](https://github.com/topgunjs/topgun-socket/compare/v1.2.2...v1.2.3) (2023-04-18)
+
+
+### Bug Fixes
+
+* set `splitting` to false ([5adf643](https://github.com/topgunjs/topgun-socket/commit/5adf64362c418b3adaa7523bcb84fb9fd648c55f))
+
 ## [1.2.2](https://github.com/topgunjs/topgun-socket/compare/v1.2.1...v1.2.2) (2023-04-18)
 
 
