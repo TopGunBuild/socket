@@ -1,6 +1,6 @@
-import { ConsumerStats } from "../writable-consumable-stream/consumer-stats";
-import { TGChannel } from "./channel";
-import { ChannelState } from "./channel-state";
+import { ConsumerStats } from '../writable-consumable-stream/consumer-stats';
+import { TGChannel } from './channel';
+import { ChannelState } from './channel-state';
 
 export interface TGChannelClient {
     closeChannel(channelName: string): void;

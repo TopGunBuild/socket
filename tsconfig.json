@@ -1,43 +1,14 @@
 {
     "compilerOptions": {
-        "emitDeclarationOnly": true,
-        "declaration": true,
         "target": "esnext",
-        "lib": [
-            "esnext",
-            "dom"
-        ],
-        "strict": false,
-        "noImplicitAny": false,
-        "esModuleInterop": true,
-        "moduleResolution": "node",
-        "outDir": "dist",
         "module": "esnext",
-        "skipLibCheck": true,
-        "types": [
-            "node",
-            "jest"
-        ],
-        "rootDir": "src",
-        "inlineSourceMap": true,
-        "noUnusedLocals": false,
-        "noUnusedParameters": false,
-        "noImplicitReturns": true,
-        "noFallthroughCasesInSwitch": true,
-        "traceResolution": false,
-        "listEmittedFiles": false,
-        "listFiles": false,
-        "pretty": true,
-        "typeRoots": [
-            "node_modules/@types",
-            "src/types"
-        ]
+        "outDir": "dist",
+        "sourceMap": true,
+        "declaration": true,
+        "moduleResolution": "node",
+        "allowSyntheticDefaultImports": true
     },
     "include": [
         "src/**/*.ts"
-    ],
-    "exclude": [
-        "node_modules/**"
-    ],
-    "compileOnSave": false
+    ]
 }

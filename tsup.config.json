@@ -1,0 +1,20 @@
+{
+    "globalName": "TopGunSocket",
+    "splitting": true,
+    "sourcemap": false,
+    "clean": true,
+    "dts": true,
+    "format": [
+        "cjs",
+        "esm",
+        "iife"
+    ],
+    "minify": true,
+    "bundle": true,
+    "entry": {
+        "client": "src/socket-client/index.ts",
+        "server": "src/socket-server/index.ts",
+        "channel": "src/channel/index.ts",
+        "writable-consumable-stream": "src/writable-consumable-stream/index.ts"
+    }
+}

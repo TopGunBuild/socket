@@ -1,7 +1,7 @@
-import { AuthEngine } from "../auth";
-import { JwtAlgorithm, JwtSignOptions, Secret } from "../jwt";
-import { AuthToken, UnsubscribeData } from "../types";
-import { WritableConsumableStream } from "../writable-consumable-stream";
+import { AuthEngine } from '../auth';
+import { JwtAlgorithm, JwtSignOptions, Secret } from '../jwt';
+import { AuthToken, CodecEngine, UnsubscribeData } from '../types';
+import { WritableConsumableStream } from '../writable-consumable-stream';
 import {
     TGActionAuthenticate,
     TGActionHandshakeSC,
@@ -12,16 +12,11 @@ import {
     TGActionPublishOut,
     TGActionSubscribe,
     TGActionTransmit,
-} from "./action";
-import { TGServerSocket } from "./server-socket";
+} from './action';
+import { TGServerSocket } from './server-socket';
 
-export interface CodecEngine {
-    decode: (input: any) => any;
-    encode: (object: any) => any;
-}
-
-export type SocketState = "connecting" | "open" | "closed";
-export type AuthState = "authenticated" | "unauthenticated";
+export type SocketState = 'connecting' | 'open' | 'closed';
+export type AuthState = 'authenticated' | 'unauthenticated';
 
 export interface AuthTokenOptions extends JwtSignOptions {
     rejectOnFailedDelivery?: boolean;
@@ -86,6 +81,8 @@ export interface IncomingMessage {
     forwardedForAddress?: any;
 }
 
+export type IncomingMessageKey = keyof IncomingMessage;
+
 export type handshakeMiddlewareFunction = (
     stream: WritableConsumableStream<TGActionHandshakeWS | TGActionHandshakeSC>
 ) => void;
@@ -105,10 +102,10 @@ export type outboundMiddlewareFunction = (
     stream: WritableConsumableStream<TGActionPublishOut>
 ) => void;
 
-export const MIDDLEWARE_HANDSHAKE = "handshake";
-export const MIDDLEWARE_INBOUND_RAW = "inboundRaw";
-export const MIDDLEWARE_INBOUND = "inbound";
-export const MIDDLEWARE_OUTBOUND = "outbound";
+export const MIDDLEWARE_HANDSHAKE = 'handshake';
+export const MIDDLEWARE_INBOUND_RAW = 'inboundRaw';
+export const MIDDLEWARE_INBOUND = 'inbound';
+export const MIDDLEWARE_OUTBOUND = 'outbound';
 
 export type Middlewares =
     | typeof MIDDLEWARE_HANDSHAKE
@@ -116,7 +113,7 @@ export type Middlewares =
     | typeof MIDDLEWARE_INBOUND
     | typeof MIDDLEWARE_OUTBOUND;
 
-export type AuthEngineType = Pick<AuthEngine, "verifyToken" | "signToken">;
+export type AuthEngineType = Pick<AuthEngine, 'verifyToken' | 'signToken'>;
 
 export interface AuthStateChangeData extends StateChangeData {
     socket: TGServerSocket;
@@ -170,7 +167,7 @@ export interface TGServerSocketGatewayOptions {
 
     // This can be the name of an npm module or a path to a
     // Node.js module to use as the WebSocket server engine.
-    wsEngine?: { Server: any };
+    wsEngine?: { Server: any } | string;
 
     // Custom options to pass to the wsEngine when it is being
     // instantiated.
@@ -189,7 +186,7 @@ export interface TGServerSocketGatewayOptions {
     // object instead of a boolean.
     // Note that by default, per-message deflate only kicks in
     // for messages > 1024 bytes.
-    perMessageDeflate?: boolean | {};
+    perMessageDeflate?: boolean | object;
 
     // If using an RSA or ECDSA algorithm to sign the
     // authToken, you will need to provide an authPrivateKey
@@ -268,7 +265,7 @@ export interface TGServerSocketGatewayOptions {
     // Close mode means that consumers on the socket will
     // be able to finish processing their stream backlogs
     // bebfore they are ended.
-    socketStreamCleanupMode?: "kill" | "close";
+    socketStreamCleanupMode?: 'kill' | 'close';
 
     authVerifyAlgorithm?: JwtAlgorithm | string;
     authEngine?: AuthEngineType;

@@ -1,23 +1,29 @@
-import { Crypto } from '@peculiar/webcrypto';
-import { toHEX } from "../utils";
+import WebCrypto from 'topgun-webcrypto';
+import { toHEX } from '../utils';
 
-const crypto = new Crypto();
+const crypto = WebCrypto;
 
 export function randomBytes(
     randomBytesLength = 9,
     callback?: (error: Error, bytes: Uint8Array) => void
-): string {
-    let randomBytes = new Uint8Array(randomBytesLength);
+): string
+{
+    const randomBytes = new Uint8Array(randomBytesLength);
 
-    try {
+    try
+    {
         crypto.getRandomValues(randomBytes);
-        if (callback) {
+        if (callback)
+        {
             callback(null, randomBytes);
         }
         return toHEX(randomBytes); // btoa(String.fromCharCode(...randomBytes));
-    } catch (e) {
-        if (callback) {
-            callback(e, randomBytes);
+    }
+    catch (e)
+    {
+        if (callback)
+        {
+            callback(e as Error, randomBytes);
         }
         return null;
     }

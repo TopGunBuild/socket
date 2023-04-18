@@ -1,4 +1,5 @@
-export function decycle(object) {
+export function decycle(object: any)
+{
     // Make a deep copy of an object or array, assuring that there is at most
     // one instance of each object or array in the resulting structure. The
     // duplicate references (which might be forming cycles) are replaced with
@@ -15,34 +16,38 @@ export function decycle(object) {
     // the object or array. [NUMBER] or [STRING] indicates a child member or
     // property.
 
-    let objects = [], // Keep a reference to each unique object or array
-        paths = []; // Keep the path to each unique object or array
+    const objects: any[]  = [], // Keep a reference to each unique object or array
+    paths: string[] = []; // Keep the path to each unique object or array
 
-    return (function derez(value, path) {
+    return (function derez(value, path)
+    {
         // The derez recurses through the object, producing the deep copy.
 
         let i, // The loop counter
-            name, // Property name
-            nu; // The new object or array
+        name, // Property name
+        nu: {[key: (number|string)]: any}|any[]; // The new object or array
 
         // typeof null === 'object', so go on if this value is really an object but not
         // one of the weird builtin objects.
 
         if (
-            typeof value === "object" &&
+            typeof value === 'object' &&
             value !== null &&
             !(value instanceof Boolean) &&
             !(value instanceof Date) &&
             !(value instanceof Number) &&
             !(value instanceof RegExp) &&
             !(value instanceof String)
-        ) {
+        )
+        {
             // If the value is an object or array, look to see if we have already
             // encountered it. If so, return a $ref/path object. This is a hard way,
             // linear search that will get slower as the number of unique objects grows.
 
-            for (i = 0; i < objects.length; i += 1) {
-                if (objects[i] === value) {
+            for (i = 0; i < objects.length; i += 1)
+            {
+                if (objects[i] === value)
+                {
                     return { $ref: paths[i] };
                 }
             }
@@ -54,20 +59,26 @@ export function decycle(object) {
 
             // If it is an array, replicate the array.
 
-            if (Object.prototype.toString.apply(value) === "[object Array]") {
+            if (Object.prototype.toString.apply(value) === '[object Array]')
+            {
                 nu = [];
-                for (i = 0; i < value.length; i += 1) {
-                    nu[i] = derez(value[i], path + "[" + i + "]");
+                for (i = 0; i < value.length; i += 1)
+                {
+                    nu[i] = derez(value[i], path + '[' + i + ']');
                 }
-            } else {
+            }
+            else
+            {
                 // If it is an object, replicate the object.
 
                 nu = {};
-                for (name in value) {
-                    if (Object.prototype.hasOwnProperty.call(value, name)) {
+                for (name in value)
+                {
+                    if (Object.prototype.hasOwnProperty.call(value, name))
+                    {
                         nu[name] = derez(
                             value[name],
-                            path + "[" + JSON.stringify(name) + "]"
+                            path + '[' + JSON.stringify(name) + ']'
                         );
                     }
                 }
@@ -75,5 +86,5 @@ export function decycle(object) {
             return nu;
         }
         return value;
-    })(object, "$");
+    })(object, '$');
 }

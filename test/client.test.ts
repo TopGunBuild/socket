@@ -1,6 +1,7 @@
-import { test, expectTypeOf } from "vitest";
-import { TGServerSocket } from "../src/socket-server";
+import { TGServerSocket } from '../src/socket-server';
 
-test("simple", () => {
-    expectTypeOf(TGServerSocket).toBeObject();
+test('simple', () =>
+{
+    expect(TGServerSocket).toBeInstanceOf(Object);
 });
+

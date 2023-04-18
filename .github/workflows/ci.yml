@@ -70,7 +70,10 @@ jobs:
                       ${{ runner.os }}-
             - run: npm i -g pnpm
             - run: pnpm i
-            - run: pnpm semantic-release
+            - name: Build packages
+              run: pnpm build:package
+            - name: Run semantic release and publish package
+              run: pnpm semantic-release
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

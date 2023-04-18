@@ -1,4 +1,4 @@
-import { AuthTokenError, InvalidArgumentsError } from "../errors/errors";
+import { AuthTokenError, InvalidArgumentsError } from '../errors/errors';
 import {
     JwtAlgorithm,
     JwtPayload,
@@ -6,34 +6,42 @@ import {
     JwtVerifyOptions,
     sign,
     verify,
-} from "../jwt";
+} from '../jwt';
 
-export class AuthEngine {
+export class AuthEngine 
+{
     verifyToken(
         signedToken: string,
         secret: string | JsonWebKey,
         options: JwtVerifyOptions | JwtAlgorithm
-    ): Promise<string> {
+    ): Promise<string> 
+    {
         options = options || {};
-        let jwtOptions = Object.assign({}, options) as any;
+        const jwtOptions = Object.assign({}, options) as any;
         delete jwtOptions.socket;
 
-        if (typeof signedToken === "string" || signedToken == null) {
-            return new Promise((resolve, reject) => {
+        if (typeof signedToken === 'string' || signedToken == null) 
+        {
+            return new Promise((resolve, reject) => 
+            {
                 verify(signedToken, secret, jwtOptions)
-                    .then((isValid) => {
-                        if (isValid) {
+                    .then((isValid) => 
+                    {
+                        if (isValid) 
+                        {
                             resolve(signedToken);
-                        } else {
-                            reject(new AuthTokenError(`Invalid token`));
+                        }
+                        else 
+                        {
+                            reject(new AuthTokenError('Invalid token'));
                         }
                     })
-                    .catch((err) => reject(err));
+                    .catch(err => reject(err));
             });
         }
         return Promise.reject(
             new InvalidArgumentsError(
-                "Invalid token format - Token must be a string"
+                'Invalid token format - Token must be a string'
             )
         );
     }
@@ -42,19 +50,25 @@ export class AuthEngine {
         token: JwtPayload,
         secret: string | JsonWebKey,
         options: JwtSignOptions | JwtAlgorithm
-    ): Promise<string | undefined> {
+    ): Promise<string | undefined> 
+    {
         options = options || {};
-        let jwtOptions = Object.assign({}, options);
-        return new Promise((resolve, reject) => {
+        const jwtOptions = Object.assign({}, options);
+        return new Promise((resolve, reject) => 
+        {
             sign(token, secret, jwtOptions)
-                .then((token) => {
-                    if (token) {
+                .then((token) => 
+                {
+                    if (token) 
+                    {
                         resolve(token);
-                    } else {
-                        reject(new AuthTokenError(`Sign token error`));
+                    }
+                    else 
+                    {
+                        reject(new AuthTokenError('Sign token error'));
                     }
                 })
-                .catch((err) => reject(err));
+                .catch(err => reject(err));
         });
     }
 }

@@ -1,5 +1,4 @@
-import { CodecEngine } from "../socket-server/types";
-import { AuthToken } from "../types";
+import { AuthToken, CodecEngine } from '../types';
 
 export interface TGAuthEngine {
     saveToken(
@@ -74,7 +73,7 @@ export interface InvokeOptions {
 }
 
 export interface ClientOptions {
-    socketPath?: string | undefined;
+    socketPath?: string | undefined | null;
 
     host?: string | undefined;
 
@@ -91,10 +90,10 @@ export interface ClientOptions {
     path?: string | undefined;
 
     // The protocol scheme for the transport. Defaults to 'ws' or 'wss', depending upon the valur of secure.
-    protocolScheme?: string | undefined;
+    protocolScheme?: string | undefined | null;
 
     // A map of key-value pairs which will be used as query parameters for the initial HTTP handshake which will initiate the WebSocket connection.
-    query?: string | { [key: string]: string } | undefined;
+    query?: string | { [key: string]: string | number } | undefined;
 
     // (milliseconds) - This is the timeout for getting a response to a AGClientSocket invoke action.
     ackTimeout?: number | undefined;
@@ -128,7 +127,7 @@ export interface ClientOptions {
     authTokenName?: string | undefined;
 
     // The type to use to represent binary on the client. Defaults to 'arraybuffer'.
-    binaryType?: string | undefined;
+    binaryType?: string | undefined | BinaryType;
 
     // If you set this to true, any data/objects/arrays that you pass to the client socket will be cloned before being sent/queued up. If the socket
     // is disconnected and you emit an event, it will be added to a queue which will be processed upon reconnection. The cloneData option is false
@@ -212,7 +211,7 @@ export interface SubscribeOptions {
     data?: any;
 }
 
-export type AuthStates = "authenticated" | "unauthenticated";
-export type States = "connecting" | "open" | "closed";
+export type AuthStates = 'authenticated' | 'unauthenticated';
+export type States = 'connecting' | 'open' | 'closed';
 export type ProtocolVersions = 1 | 2;
 export type CallIdGenerator = () => number;

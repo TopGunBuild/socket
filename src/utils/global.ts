@@ -1,12 +1,17 @@
-declare var WorkerGlobalScope;
+declare let WorkerGlobalScope: any;
 
-export function getGlobal(): any {
-    if (typeof WorkerGlobalScope !== "undefined") {
+export function getGlobal(): any
+{
+    if (typeof WorkerGlobalScope !== 'undefined')
+    {
         return self;
-    } else {
+    }
+    else
+    {
         return (
-            (typeof window !== "undefined" && window) ||
-            (function () {
+            (typeof window !== 'undefined' && window) ||
+            (function ()
+            {
                 return this;
             })()
         );

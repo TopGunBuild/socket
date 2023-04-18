@@ -1,4 +1,4 @@
-export function isNode(): boolean {
-    // @ts-ignore
-    return typeof process === "object";
+export function isNode(): boolean
+{
+    return typeof process === 'object';
 }
