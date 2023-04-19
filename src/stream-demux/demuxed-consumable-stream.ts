@@ -2,24 +2,25 @@ import {
     ConsumableStream,
     ConsumableStreamConsumer,
 } from '../consumable-stream';
+import { StreamDemux } from './index';
 
-export class DemuxedConsumableStream<T> extends ConsumableStream<T> 
+export class DemuxedConsumableStream<T> extends ConsumableStream<T>
 {
     name: string;
-    private _streamDemux: any;
+    private _streamDemux: StreamDemux<T>;
 
     /**
      * Constructor
      */
-    constructor(streamDemux: any, name: string) 
+    constructor(streamDemux: StreamDemux<T>, name: string)
     {
         super();
         this.name = name;
         this._streamDemux = streamDemux;
     }
 
-    createConsumer(timeout?: number): ConsumableStreamConsumer<T> 
+    createConsumer(timeout?: number): ConsumableStreamConsumer<T>
     {
-        return this._streamDemux.createConsumer(this.name, timeout);
+        return this._streamDemux.createConsumer(this.name, timeout) as ConsumableStreamConsumer<T>;
     }
 }

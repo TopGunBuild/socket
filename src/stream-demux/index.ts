@@ -2,6 +2,7 @@ import { WritableConsumableStream } from '../writable-consumable-stream';
 import { Consumer } from '../writable-consumable-stream/consumer';
 import { ConsumerStats } from '../writable-consumable-stream/consumer-stats';
 import { DemuxedConsumableStream } from './demuxed-consumable-stream';
+import { ConsumableStreamConsumer } from '../consumable-stream';
 
 interface StreamDemuxValue<T> {
     stream?: string;
@@ -162,7 +163,7 @@ export class StreamDemux<T>
     createConsumer(
         streamName: string,
         timeout: any
-    ): Consumer<StreamDemuxValue<T> | T>
+    ): Consumer<StreamDemuxValue<T> | T | ConsumableStreamConsumer<T>>
     {
         const mainStreamConsumer = this._mainStream.createConsumer(timeout);
 

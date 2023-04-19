@@ -112,6 +112,7 @@
         "rollup": "^3.20.3",
         "semantic-release": "^21.0.1",
         "simple-git-hooks": "^2.8.1",
+        "socketcluster-client": "^17.1.1",
         "ts-jest": "^29.1.0",
         "tsup": "6.5.0",
         "typescript": "4.9.4"

@@ -14,7 +14,7 @@ export class Consumer<T> implements ConsumableStreamConsumer<T>
     private _backpressure: number;
     private _timeoutId: any;
     private _resolve: any;
-    private _killPacket?: { value: any; done: boolean };
+    private _killPacket?: {value: any; done: boolean};
 
     /**
      * Constructor
@@ -23,15 +23,15 @@ export class Consumer<T> implements ConsumableStreamConsumer<T>
         stream: WritableConsumableStream<T>,
         id: number,
         startNode: ConsumerNode<T>,
-        timeout: number = 0
+        timeout?: number
     )
     {
-        this.id = id;
+        this.id            = id;
         this._backpressure = 0;
-        this.stream = stream;
-        this.currentNode = startNode;
-        this.timeout = timeout;
-        this.isAlive = true;
+        this.stream        = stream;
+        this.currentNode   = startNode;
+        this.timeout       = timeout;
+        this.isAlive       = true;
         this.stream.setConsumer(this.id, this);
     }
 
@@ -42,7 +42,7 @@ export class Consumer<T> implements ConsumableStreamConsumer<T>
     getStats(): ConsumerStats
     {
         const stats: any = {
-            id: this.id,
+            id          : this.id,
             backpressure: this._backpressure,
         };
         if (this.timeout != null)
@@ -186,7 +186,7 @@ export class Consumer<T> implements ConsumableStreamConsumer<T>
                 (async () =>
                 {
                     const delay = wait(timeout);
-                    timeoutId = delay.timeoutId;
+                    timeoutId   = delay.timeoutId;
                     await delay.promise;
                     error.name = 'TimeoutError';
                     delete this._resolve;
@@ -203,7 +203,7 @@ export class Consumer<T> implements ConsumableStreamConsumer<T>
     }
 }
 
-function wait(timeout: number): { timeoutId: any; promise: Promise<any> }
+function wait(timeout: number): {timeoutId: any; promise: Promise<any>}
 {
     let timeoutId;
     const promise = new Promise((resolve) =>
