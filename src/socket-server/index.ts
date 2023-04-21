@@ -21,17 +21,6 @@ type ListenFn = (...rest: any[]) => void;
 export function listen(
     http: any,
     port: number,
-    fn?: ListenFn
-)
-export function listen(
-    http: any,
-    port: number,
-    options?: TGServerSocketGatewayOptions,
-    fn?: ListenFn
-)
-export function listen(
-    http: any,
-    port: number,
     options?: TGServerSocketGatewayOptions | ListenFn,
     fn?: ListenFn
 ): TGServerSocketGateway

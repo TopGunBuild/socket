@@ -93,7 +93,7 @@ export interface ClientOptions {
     protocolScheme?: string | undefined | null;
 
     // A map of key-value pairs which will be used as query parameters for the initial HTTP handshake which will initiate the WebSocket connection.
-    query?: string | { [key: string]: string | number } | undefined;
+    query?: string | { [key: string]: string | number | boolean } | undefined;
 
     // (milliseconds) - This is the timeout for getting a response to a AGClientSocket invoke action.
     ackTimeout?: number | undefined;

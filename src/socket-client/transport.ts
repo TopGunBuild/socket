@@ -47,9 +47,9 @@ export class TGTransport
     callIdGenerator: CallIdGenerator;
     authTokenName: string;
     isBufferingBatch: boolean;
-    socket: WebSocket;
+    socket: any;
+    _callbackMap: { [key: string]: any };
     private _pingTimeoutTicker: any;
-    private _callbackMap: { [key: string]: any };
     private _batchBuffer: any[];
     private _onOpenHandler: (value?: OnOpenValue) => void;
     private _onOpenAbortHandler: (value: OnOpenAbortValue) => void;
@@ -208,7 +208,7 @@ export class TGTransport
 
     uri(): string
     {
-        let query: string | { [key: string]: string | number } =
+        let query: string | { [key: string]: string | number | boolean } =
             this.options.query || {};
         let scheme;
         if (this.options.protocolScheme == null)

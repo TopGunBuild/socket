@@ -265,7 +265,7 @@ export interface TGServerSocketGatewayOptions {
     // Close mode means that consumers on the socket will
     // be able to finish processing their stream backlogs
     // bebfore they are ended.
-    socketStreamCleanupMode?: 'kill' | 'close';
+    socketStreamCleanupMode?: 'kill' | 'close' | 'none';
 
     authVerifyAlgorithm?: JwtAlgorithm | string;
     authEngine?: AuthEngineType;

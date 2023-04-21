@@ -8,30 +8,30 @@ import {
     verify,
 } from '../jwt';
 
-export class AuthEngine 
+export class AuthEngine
 {
-    verifyToken(
+    verifyToken?(
         signedToken: string,
         secret: string | JsonWebKey,
         options: JwtVerifyOptions | JwtAlgorithm
-    ): Promise<string> 
+    ): Promise<JwtPayload>
     {
         options = options || {};
         const jwtOptions = Object.assign({}, options) as any;
         delete jwtOptions.socket;
 
-        if (typeof signedToken === 'string' || signedToken == null) 
+        if (typeof signedToken === 'string' || signedToken == null)
         {
-            return new Promise((resolve, reject) => 
+            return new Promise((resolve, reject) =>
             {
                 verify(signedToken, secret, jwtOptions)
-                    .then((isValid) => 
+                    .then((payload: JwtPayload) =>
                     {
-                        if (isValid) 
+                        if (payload)
                         {
-                            resolve(signedToken);
+                            resolve(payload);
                         }
-                        else 
+                        else
                         {
                             reject(new AuthTokenError('Invalid token'));
                         }
@@ -46,24 +46,24 @@ export class AuthEngine
         );
     }
 
-    signToken(
+    signToken?(
         token: JwtPayload,
         secret: string | JsonWebKey,
         options: JwtSignOptions | JwtAlgorithm
-    ): Promise<string | undefined> 
+    ): Promise<string | undefined>
     {
         options = options || {};
         const jwtOptions = Object.assign({}, options);
-        return new Promise((resolve, reject) => 
+        return new Promise((resolve, reject) =>
         {
             sign(token, secret, jwtOptions)
-                .then((token) => 
+                .then((token) =>
                 {
-                    if (token) 
+                    if (token)
                     {
                         resolve(token);
                     }
-                    else 
+                    else
                     {
                         reject(new AuthTokenError('Sign token error'));
                     }

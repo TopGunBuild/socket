@@ -329,7 +329,7 @@ export async function verify(
         algorithm: 'HS256',
         throwError: false,
     }
-): Promise<boolean>
+): Promise<JwtPayload|false>
 {
     if (typeof options === 'string')
     {
@@ -430,12 +430,12 @@ export async function verify(
         ['verify']
     );
 
-    return await crypto.subtle.verify(
+    return (await crypto.subtle.verify(
         algorithm,
         key,
         base64UrlParse(tokenParts[2]),
         _utf8ToUint8Array(`${tokenParts[0]}.${tokenParts[1]}`)
-    );
+    )) ? payload : false;
 }
 
 /**
