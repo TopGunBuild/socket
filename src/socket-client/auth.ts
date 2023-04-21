@@ -1,8 +1,6 @@
+import global from '../utils/window-or-global';
 import { AuthToken } from '../types';
-import { getGlobal } from '../utils/global';
 import { SignedAuthToken, TGAuthEngine } from './types';
-
-const global = getGlobal();
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 export class AuthEngine implements TGAuthEngine
@@ -31,7 +29,7 @@ export class AuthEngine implements TGAuthEngine
     {
         if (this.isLocalStorageEnabled && global.localStorage)
         {
-            global.localStorage.setItem(name, token);
+            global.localStorage.setItem(name, token as string);
         }
         else
         {
@@ -86,7 +84,7 @@ export class AuthEngine implements TGAuthEngine
 
             // Safari, in Private Browsing Mode, looks like it supports localStorage but all calls to setItem
             // throw QuotaExceededError. We're going to detect this and avoid hard to debug edge cases.
-            global.localStorage.setItem('__scLocalStorageTest', 1);
+            global.localStorage.setItem('__scLocalStorageTest', '1');
             global.localStorage.removeItem('__scLocalStorageTest');
         }
         catch (e)

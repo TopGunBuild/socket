@@ -340,7 +340,7 @@ export async function verify(
 
     if (typeof token !== 'string')
     {
-        throw new Error('token must be a string');
+        throw new Error('AuthTokenInvalidError');
     }
 
     if (typeof secret !== 'string' && typeof secret !== 'object')

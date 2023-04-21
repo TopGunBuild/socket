@@ -106,7 +106,7 @@ describe('Integration tests', () =>
     afterEach(async () =>
     {
         let cleanupTasks = [];
-        global.localStorage.removeItem('socketcluster.authToken');
+        global.localStorage.removeItem('topgunsocket.authToken');
         if (client)
         {
             if (client.state !== client.CLOSED)
@@ -203,7 +203,7 @@ describe('Integration tests', () =>
 
         it('Should be authenticated on connect if previous JWT token is present', async () =>
         {
-            global.localStorage.setItem('socketcluster.authToken', validSignedAuthTokenBob);
+            global.localStorage.setItem('topgunsocket.authToken', validSignedAuthTokenBob);
             client = create(clientOptions);
 
             let event = await client.listener('connect').once();
@@ -215,7 +215,7 @@ describe('Integration tests', () =>
 
         it('Should send back error if JWT is invalid during handshake', async () =>
         {
-            global.localStorage.setItem('socketcluster.authToken', validSignedAuthTokenBob);
+            global.localStorage.setItem('topgunsocket.authToken', validSignedAuthTokenBob);
             client = create(clientOptions);
 
             let event = await client.listener('connect').once();
@@ -236,7 +236,7 @@ describe('Integration tests', () =>
 
             expect(event.isAuthenticated).toBeFalsy();
             expect(event.authError).not.toBeNull();
-            expect(event.authError.name).toEqual('AuthTokenInvalidError');
+            expect(event.authError.name).toEqual('AuthTokenError');
 
             // When authentication fails, the auth token properties on the client
             // socket should be set to null; that way it's not going to keep
@@ -250,7 +250,7 @@ describe('Integration tests', () =>
 
         it('Should allow switching between users', async () =>
         {
-            global.localStorage.setItem('socketcluster.authToken', validSignedAuthTokenBob);
+            global.localStorage.setItem('topgunsocket.authToken', validSignedAuthTokenBob);
             client                       = create(clientOptions);
             let authenticateTriggered    = false;
             let authStateChangeTriggered = false;
@@ -419,7 +419,7 @@ describe('Integration tests', () =>
 
         it('Should deal with auth engine errors related to saveToken function', async () =>
         {
-            global.localStorage.setItem('socketcluster.authToken', validSignedAuthTokenBob);
+            global.localStorage.setItem('topgunsocket.authToken', validSignedAuthTokenBob);
             client = create(clientOptions);
 
             let caughtError;
@@ -540,7 +540,7 @@ describe('Integration tests', () =>
 
         it('Should go through the correct sequence of authentication state changes when dealing with disconnections; part 2', async () =>
         {
-            global.localStorage.setItem('socketcluster.authToken', validSignedAuthTokenBob);
+            global.localStorage.setItem('topgunsocket.authToken', validSignedAuthTokenBob);
             client = create(clientOptions);
 
             let expectedAuthStateChanges = [
@@ -584,7 +584,7 @@ describe('Integration tests', () =>
 
         it('Should go through the correct sequence of authentication state changes when dealing with disconnections; part 3', async () =>
         {
-            global.localStorage.setItem('socketcluster.authToken', validSignedAuthTokenBob);
+            global.localStorage.setItem('topgunsocket.authToken', validSignedAuthTokenBob);
             client = create(clientOptions);
 
             let expectedAuthStateChanges = [
@@ -624,7 +624,7 @@ describe('Integration tests', () =>
 
         it('Should go through the correct sequence of authentication state changes when authenticating as a user while already authenticated as another user', async () =>
         {
-            global.localStorage.setItem('socketcluster.authToken', validSignedAuthTokenBob);
+            global.localStorage.setItem('topgunsocket.authToken', validSignedAuthTokenBob);
             client = create(clientOptions);
 
             let expectedAuthStateChanges = [
@@ -713,7 +713,7 @@ describe('Integration tests', () =>
 
         it('Subscriptions (including those with waitForAuth option) should have priority over the authenticate action', async () =>
         {
-            global.localStorage.setItem('socketcluster.authToken', validSignedAuthTokenBob);
+            global.localStorage.setItem('topgunsocket.authToken', validSignedAuthTokenBob);
             client = create(clientOptions);
 
             let expectedAuthStateChanges = [
@@ -1408,7 +1408,6 @@ describe('Integration tests', () =>
 
     describe('Ping/pong', () =>
     {
-
         it('Should disconnect if ping is not received before timeout', async () =>
         {
             clientOptions.connectTimeout = 500;

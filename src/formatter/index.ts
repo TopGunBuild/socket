@@ -1,10 +1,8 @@
-import { getGlobal } from '../utils/global';
+import global from '../utils/window-or-global';
 
 const base64Chars         =
           'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 const validJSONStartRegex = /^[ \n\r\t]*[{\[]/;
-
-const global = getGlobal();
 
 const arrayBufferToBase64 = function (arraybuffer: any): string
 {

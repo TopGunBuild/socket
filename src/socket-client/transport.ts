@@ -553,7 +553,7 @@ export class TGTransport
         this._onOpenHandler(status);
     }
 
-    private async _handshake()
+    private async _handshake(): Promise<EventObject>
     {
         const token = await this.auth.loadToken(this.authTokenName);
         // Don't wait for this.state to be 'open'.

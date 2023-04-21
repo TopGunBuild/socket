@@ -23,7 +23,7 @@ import { StreamDemux } from '../stream-demux';
 import { DemuxedConsumableStream } from '../stream-demux/demuxed-consumable-stream';
 import { AuthToken, CodecEngine, EventObject, UnsubscribeData } from '../types';
 import { cloneDeep } from '../utils/clone-deep';
-import { getGlobal } from '../utils/global';
+import global from '../utils/window-or-global';
 import { wait } from '../utils/wait';
 import { ConsumerStats } from '../writable-consumable-stream/consumer-stats';
 import { AuthEngine } from './auth';
@@ -44,7 +44,6 @@ import {
 import { TGRequest } from '../request';
 
 const isBrowser = typeof window !== 'undefined';
-const global    = getGlobal();
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 export class TGClientSocket
@@ -359,7 +358,7 @@ export class TGClientSocket
         if ((this.options as any)['protocol'])
         {
             const protocolOptionError = new InvalidArgumentsError(
-                'The "protocol" option does not affect socketcluster-client - ' +
+                'The "protocol" option does not affect topgunsocket-client - ' +
                 'If you want to utilize SSL/TLS, use "secure" option instead'
             );
             this._onError(protocolOptionError);
