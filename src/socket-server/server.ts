@@ -179,14 +179,15 @@ export class TGServerSocketGateway extends AsyncStreamEmitter<any>
             })();
         }
 
-        if (!this.options.wsEngine)
+        const wsEngine = typeof this.options.wsEngine === 'string' ? require(opts.wsEngine as string) : opts.wsEngine;
+        if (!wsEngine || !wsEngine.Server)
         {
             throw new InvalidOptionsError(
                 'The wsEngine option must be a path or module name which points ' +
                 'to a valid WebSocket engine module with a compatible interface'
             );
         }
-        const WSServer: any = this.options.wsEngine;
+        const WSServer: any = wsEngine.Server;
 
         if (
             this.options.authPrivateKey != null ||
