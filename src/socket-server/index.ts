@@ -9,7 +9,7 @@ export * from './types';
 /**
  * Captures upgrade requests for a http.Server.
  */
-export function attach(server: any, options?: TGServerSocketGatewayOptions) 
+export function attach(server: any, options?: TGServerSocketGatewayOptions)
 {
     options = options || {};
     options.httpServer = server;
