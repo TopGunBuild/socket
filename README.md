@@ -29,22 +29,22 @@ npm install topgun-socket
 
 ## How to use client module
 
-The socket-client script is called `socket-client.js` (located in the dist directory).
+The socket-client script is called `client.js` (located in the dist directory).
 Embed it in your HTML page like this:
 
 ```html
-<script type="text/javascript" src="https://unpkg.com/topgun-socket@0.0.2/dist/socket-client.js"></script>
+<script type="text/javascript" src="https://unpkg.com/topgun-socket@latest/dist/client.js"></script>
 ```
 
 \* Note that the src attribute may be different depending on how you setup your HTTP server.
 
-Once you have embedded the client `socket-client.js` into your page, you will gain access to a global `topGunSocketClient` object.
+Once you have embedded the client `client.js` into your page, you will gain access to a global `TopGunSocket` object.
 You may also use CommonJS `require` or ES6 module imports.
 
 ### Connect to a server
 
 ```js
-let socket = topGunSocketClient.create({
+let socket = TopGunSocket.create({
     hostname: "localhost",
     port: 8000,
 });
@@ -147,7 +147,7 @@ let options = {
     rejectUnauthorized: false, // Only necessary during debug if using a self-signed certificate
 };
 // Initiate the connection to the server
-let socket = topGunSocketClient.create(options);
+let socket = TopGunSocket.create(options);
 ```
 
 ### Connect Options
@@ -184,7 +184,7 @@ let options = {
 For compatibility with an existing TopGunSocket server, set the `protocolVersion` to `1` and make sure that the `path` matches your old server path:
 
 ```js
-let socket = topGunSocketClient.create({
+let socket = TopGunSocket.create({
     protocolVersion: 1,
     path: "/topgunsocket/",
 });
@@ -197,12 +197,10 @@ You need to attach it to an existing Node.js http or https server (example) and 
 ```js
 const http = require("http");
 const topGunSocketServer = require("topgun-socket/server");
-const ws = require("ws");
 
 let httpServer = http.createServer();
 let tgServer = topGunSocketServer.attach(httpServer, {
     path: "/topgunsocket/",
-    wsEngine: ws.Server,
 });
 
 (async () => {
@@ -323,7 +321,7 @@ function wait(duration) {
 For compatibility with existing TopGunSocket clients, set the `protocolVersion` to `1` and make sure that the `path` matches your old client path:
 
 ```js
-let tgServer = topGunSocketClient.attach(httpServer, {
+let tgServer = TopGunSocket.attach(httpServer, {
     protocolVersion: 1,
     path: "/topgunsocket/",
 });
