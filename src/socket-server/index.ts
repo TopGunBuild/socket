@@ -11,7 +11,46 @@ export * from './types';
  */
 export function attach(server: any, options?: TGServerSocketGatewayOptions)
 {
-    options = options || {};
+    options            = options || {};
     options.httpServer = server;
     return new TGServerSocketGateway(options);
+}
+
+type ListenFn = (...rest: any[]) => void;
+
+export function listen(
+    http: any,
+    port: number,
+    fn?: ListenFn
+)
+export function listen(
+    http: any,
+    port: number,
+    options?: TGServerSocketGatewayOptions,
+    fn?: ListenFn
+)
+export function listen(
+    http: any,
+    port: number,
+    options?: TGServerSocketGatewayOptions | ListenFn,
+    fn?: ListenFn
+): TGServerSocketGateway
+{
+    if (typeof options === 'function')
+    {
+        fn      = options;
+        options = {};
+    }
+
+    const server = http.createServer((req, res) =>
+    {
+        res.writeHead(501);
+        res.end('Not Implemented');
+    });
+
+    const gateway        = attach(server, options);
+    gateway.httpServer = server;
+    server.listen(port, fn);
+
+    return gateway;
 }

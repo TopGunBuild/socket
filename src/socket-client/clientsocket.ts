@@ -67,16 +67,16 @@ export class TGClientSocket
     static readonly errorStatuses: SocketProtocolErrorStatuses   =
                         socketProtocolErrorStatuses;
 
-    CONNECTING = TGClientSocket.CONNECTING;
-    OPEN       = TGClientSocket.OPEN;
-    CLOSED     = TGClientSocket.CLOSED;
+    readonly CONNECTING = TGClientSocket.CONNECTING;
+    readonly OPEN       = TGClientSocket.OPEN;
+    readonly CLOSED     = TGClientSocket.CLOSED;
 
-    AUTHENTICATED   = TGClientSocket.AUTHENTICATED;
-    UNAUTHENTICATED = TGClientSocket.UNAUTHENTICATED;
+    readonly AUTHENTICATED   = TGClientSocket.AUTHENTICATED;
+    readonly UNAUTHENTICATED = TGClientSocket.UNAUTHENTICATED;
 
-    SUBSCRIBED   = TGClientSocket.SUBSCRIBED;
-    PENDING      = TGClientSocket.PENDING;
-    UNSUBSCRIBED = TGClientSocket.UNSUBSCRIBED;
+    readonly SUBSCRIBED   = TGClientSocket.SUBSCRIBED;
+    readonly PENDING      = TGClientSocket.PENDING;
+    readonly UNSUBSCRIBED = TGClientSocket.UNSUBSCRIBED;
 
     options: ClientOptions;
 

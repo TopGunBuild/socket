@@ -482,6 +482,22 @@ export class TGTransport
         }
     }
 
+    _resetPingTimeout(): void
+    {
+        if (this.pingTimeoutDisabled)
+        {
+            return;
+        }
+
+        // let now = new Date().getTime();
+        clearTimeout(this._pingTimeoutTicker);
+        this._pingTimeoutTicker = setTimeout(() =>
+        {
+            this._destroy(4000);
+            this.socket.close(4000);
+        }, this.pingTimeout);
+    }
+
     // -----------------------------------------------------------------------------------------------------
     // @ Private methods
     // -----------------------------------------------------------------------------------------------------
@@ -701,21 +717,5 @@ export class TGTransport
     private _onError(error: any): void
     {
         this._onErrorHandler({ error });
-    }
-
-    private _resetPingTimeout(): void
-    {
-        if (this.pingTimeoutDisabled)
-        {
-            return;
-        }
-
-        // let now = new Date().getTime();
-        clearTimeout(this._pingTimeoutTicker);
-        this._pingTimeoutTicker = setTimeout(() =>
-        {
-            this._destroy(4000);
-            this.socket.close(4000);
-        }, this.pingTimeout);
     }
 }
