@@ -1,3 +1,20 @@
+## [1.2.4](https://github.com/topgunjs/topgun-socket/compare/v1.2.3...v1.2.4) (2023-04-23)
+
+
+### Bug Fixes
+
+* bug fixes and improvements ([2ffdf23](https://github.com/topgunjs/topgun-socket/commit/2ffdf23a83deacdf9f60b26d8bc404b06f83c7c0))
+* fix global, add test ([0968fac](https://github.com/topgunjs/topgun-socket/commit/0968facaa199bcc707380061ac9ad305755684dd))
+* fix test passing ([9554836](https://github.com/topgunjs/topgun-socket/commit/9554836f61900a51ece23d45890c66e9322fa747))
+* set `splitting` to false ([8d06b11](https://github.com/topgunjs/topgun-socket/commit/8d06b11060b8fa565f5fd9a85218751c00b80286))
+* **socket-server:** add `window-or-global`, fix test passing ([9b8b172](https://github.com/topgunjs/topgun-socket/commit/9b8b172fb530f49131ad3e8d7cc3111eb2316534))
+* **socket-server:** fix `wsEngine` options property ([793d319](https://github.com/topgunjs/topgun-socket/commit/793d3196d1c8512a61edbbf793edf7dfd0f60916))
+
+
+### Performance Improvements
+
+* minify = `true` ([ba7e1de](https://github.com/topgunjs/topgun-socket/commit/ba7e1de2bd0fca1d89fe95186b3a1079178fd59b))
+
 ## [1.2.3](https://github.com/topgunjs/topgun-socket/compare/v1.2.2...v1.2.3) (2023-04-18)
 
 
