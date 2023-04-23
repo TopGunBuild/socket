@@ -1,5 +1,6 @@
 import * as http from 'http'
 import * as localStorage from 'localStorage';
+import { JwtVerifyOptions } from 'topgun-jsonwebtoken';
 import { ClientOptions, create, TGClientSocket } from '../src/socket-client';
 import {
     listen,
@@ -7,8 +8,6 @@ import {
     TGServerSocketGateway,
     TGServerSocketGatewayOptions
 } from '../src/socket-server';
-import { TGSimpleBroker } from '../src/simple-broker';
-import { JwtVerifyOptions } from '../src/jwt';
 import { wait } from '../src/utils/wait';
 
 // Add to the global scope like in browser.
