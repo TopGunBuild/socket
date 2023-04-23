@@ -609,7 +609,6 @@ export class TGTransport
 
     private _destroy(code?: number, reason?: any): void
     {
-        // let protocolReason = socketProtocolErrorStatuses[code as keyof SocketProtocolErrorStatuses];
         if (
             !reason &&
             socketProtocolErrorStatuses[

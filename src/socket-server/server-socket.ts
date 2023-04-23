@@ -60,10 +60,8 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
     static AUTHENTICATED: AuthState   = 'authenticated';
     static UNAUTHENTICATED: AuthState = 'unauthenticated';
 
-    static ignoreStatuses: SocketProtocolIgnoreStatuses =
-               socketProtocolIgnoreStatuses;
-    static errorStatuses: SocketProtocolErrorStatuses   =
-               socketProtocolErrorStatuses;
+    static ignoreStatuses: SocketProtocolIgnoreStatuses = socketProtocolIgnoreStatuses;
+    static errorStatuses: SocketProtocolErrorStatuses   = socketProtocolErrorStatuses;
 
     readonly CONNECTING      = TGServerSocket.CONNECTING;
     readonly OPEN            = TGServerSocket.OPEN;
@@ -112,7 +110,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
 
     state: SocketState;
     authState: AuthState;
-    authToken?: AuthToken;
+    authToken: AuthToken|null;
     signedAuthToken?: string;
     private _receiverDemux: StreamDemux<unknown>;
     private _procedureDemux: StreamDemux<unknown>;
@@ -141,6 +139,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
         this.socket          = socket;
         this.state           = TGServerSocket.CONNECTING;
         this.authState       = TGServerSocket.UNAUTHENTICATED;
+        this.authToken       = null;
         this.protocolVersion = protocolVersion;
 
         this._receiverDemux  = new StreamDemux();
@@ -793,9 +792,9 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
         if (oldAuthState !== TGServerSocket.AUTHENTICATED)
         {
             const stateChangeData: StateChangeData = {
-                oldState : oldAuthState,
-                newState : this.authState,
-                authToken: this.authToken,
+                oldAuthState,
+                newAuthState: this.authState,
+                authToken   : this.authToken,
             };
             this.emit('authStateChange', stateChangeData);
             this.server.emit('authenticationStateChange', {
@@ -815,18 +814,18 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
         options?: AuthTokenOptions
     ): Promise<void>
     {
-        if (this.state === TGServerSocket.CONNECTING)
+        if (this.state === this.CONNECTING)
         {
-            const err = new InvalidActionError(
+            let err = new InvalidActionError(
                 'Cannot call setAuthToken before completing the handshake'
             );
             this.emitError(err);
             throw err;
         }
 
-        const authToken    = cloneDeep(data);
-        const oldAuthState = this.authState;
-        this.authState     = TGServerSocket.AUTHENTICATED;
+        let authToken    = cloneDeep(data);
+        let oldAuthState = this.authState;
+        this.authState   = this.AUTHENTICATED;
 
         if (options == null)
         {
@@ -838,43 +837,43 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
             if (options.algorithm != null)
             {
                 delete options.algorithm;
-                const err = new InvalidArgumentsError(
+                let err = new InvalidArgumentsError(
                     'Cannot change auth token algorithm at runtime - It must be specified as a config option on launch'
                 );
                 this.emitError(err);
             }
         }
 
-        // options.mutatePayload      = true;
-        const rejectOnFailedDelivery = options.rejectOnFailedDelivery;
+        options.mutatePayload      = true;
+        let rejectOnFailedDelivery = options.rejectOnFailedDelivery;
         delete options.rejectOnFailedDelivery;
-        const defaultSignatureOptions = this.server.defaultSignatureOptions;
+        let defaultSignatureOptions = this.server.defaultSignatureOptions;
 
         // We cannot have the exp claim on the token and the expiresIn option
         // set at the same time or else auth.signToken will throw an error.
         let expiresIn;
-        if (data.exp == null)
+        if (options.expiresIn == null)
         {
             expiresIn = defaultSignatureOptions.expiresIn;
         }
         else
         {
-            expiresIn = data.exp;
+            expiresIn = options.expiresIn;
         }
         if (authToken)
         {
             if (authToken.exp == null)
             {
-                data.exp = expiresIn;
+                options.expiresIn = expiresIn;
             }
             else
             {
-                delete data.exp;
+                delete options.expiresIn;
             }
         }
         else
         {
-            data.exp = expiresIn;
+            options.expiresIn = expiresIn;
         }
 
         // Always use the default algorithm since it cannot be changed at runtime.
@@ -889,15 +888,11 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
 
         try
         {
-            signedAuthToken = await this.server.auth.signToken(
-                authToken,
-                this.server.signatureKey,
-                options
-            );
+            signedAuthToken = await this.server.auth.signToken(authToken, this.server.signatureKey, options);
         }
         catch (error)
         {
-            this.emitError(error as Error);
+            this.emitError(error);
             this._destroy(4002, error.toString());
             this.socket.close(4002);
             throw error;
@@ -911,8 +906,8 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
 
         this.triggerAuthenticationEvents(oldAuthState);
 
-        const tokenData = {
-            token: signedAuthToken,
+        let tokenData = {
+            token: signedAuthToken
         };
 
         if (rejectOnFailedDelivery)
@@ -923,9 +918,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
             }
             catch (err)
             {
-                const error = new AuthError(
-                    `Failed to deliver auth token to client - ${err}`
-                );
+                let error = new AuthError(`Failed to deliver auth token to client - ${err}`);
                 this.emitError(error);
                 throw error;
             }
@@ -949,8 +942,9 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
         if (oldAuthState !== TGServerSocket.UNAUTHENTICATED)
         {
             const stateChangeData: StateChangeData = {
-                oldState: oldAuthState,
-                newState: this.authState,
+                oldAuthState: oldAuthState,
+                newAuthState: this.authState,
+                authToken   : this.authToken
             };
             this.emit('authStateChange', stateChangeData);
             this.server.emit('authenticationStateChange', {
@@ -1085,7 +1079,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
             this.authToken = null;
             this.authState = TGServerSocket.UNAUTHENTICATED;
 
-            if ((error as AuthTokenExpiredError).isBadToken)
+            if (error['isBadToken'])
             {
                 this._emitBadAuthTokenError(error as Error, signedAuthToken);
             }
@@ -1156,7 +1150,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
             {
                 const authError      = new AuthTokenExpiredError(
                     err.message,
-                    (err as AuthTokenError).expiredAt
+                    err['expiredAt']
                 );
                 authError.isBadToken = true;
                 return authError;
@@ -1171,7 +1165,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
             {
                 const authError      = new AuthTokenNotBeforeError(
                     err.message,
-                    (err as AuthTokenError).date
+                    err['date']
                 );
                 // In this case, the token is good; it's just not active yet.
                 authError.isBadToken = false;
@@ -1717,7 +1711,7 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
                 clientSocketStatus.authError = dehydrateError(error);
                 serverSocketStatus.authError = error as Error;
 
-                if ((error as AuthTokenInvalidError).isBadToken)
+                if (error.isBadToken)
                 {
                     this.deauthenticate();
                 }
@@ -1786,10 +1780,10 @@ export class TGServerSocket extends AsyncStreamEmitter<any>
         }
         catch (error)
         {
-            if ((error as AuthTokenInvalidError).isBadToken)
+            if (error['isBadToken'])
             {
                 this.deauthenticate();
-                request.error(error as AuthTokenInvalidError);
+                request.error(error);
 
                 return;
             }

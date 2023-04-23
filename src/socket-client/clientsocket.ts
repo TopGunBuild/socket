@@ -1622,8 +1622,7 @@ export class TGClientSocket
         }
         eventNode.data = eventObject;
 
-        const ackTimeout =
-                  options.ackTimeout == null ? this.ackTimeout : options.ackTimeout;
+        const ackTimeout = options.ackTimeout == null ? this.ackTimeout : options.ackTimeout;
 
         eventObject.timeout = setTimeout(() =>
         {
@@ -1961,9 +1960,7 @@ export class TGClientSocket
         return null;
     }
 
-    private _changeToAuthenticatedState(
-        signedAuthToken: SignedAuthToken
-    ): void
+    private _changeToAuthenticatedState(signedAuthToken: SignedAuthToken): void
     {
         this.signedAuthToken = signedAuthToken;
         this.authToken       = this._extractAuthTokenData(signedAuthToken);

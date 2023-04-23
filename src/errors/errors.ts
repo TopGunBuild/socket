@@ -5,23 +5,23 @@ import {
     SocketProtocolIgnoreStatuses,
 } from './types';
 
-function supportsStrict(): any 
+function supportsStrict(): any
 {
     'use strict';
     return (
-        typeof (function () 
+        typeof (function ()
         {
             return this;
         })() == 'undefined'
     );
 }
 
-export class AuthTokenExpiredError extends Error 
+export class AuthTokenExpiredError extends Error
 {
     expiry: Date;
     isBadToken: boolean;
 
-    constructor(message: string, expiry?: Date | number) 
+    constructor(message: string, expiry?: Date | number)
     {
         super(message);
         Object.setPrototypeOf(this, AuthTokenExpiredError.prototype);
@@ -29,45 +29,45 @@ export class AuthTokenExpiredError extends Error
         this.message = message;
         this.expiry = new Date(expiry);
 
-        if (Error['captureStackTrace'] && !supportsStrict()) 
+        if (Error['captureStackTrace'] && !supportsStrict())
         {
             Error['captureStackTrace'](this, arguments.callee);
         }
-        else 
+        else
         {
             this.stack = new Error().stack;
         }
     }
 }
 
-export class AuthTokenInvalidError extends Error 
+export class AuthTokenInvalidError extends Error
 {
     isBadToken: boolean;
 
-    constructor(message: string) 
+    constructor(message: string)
     {
         super(message);
         Object.setPrototypeOf(this, AuthTokenInvalidError.prototype);
         this.name = 'AuthTokenInvalidError';
         this.message = message;
 
-        if (Error['captureStackTrace'] && !supportsStrict()) 
+        if (Error['captureStackTrace'] && !supportsStrict())
         {
             Error['captureStackTrace'](this, arguments.callee);
         }
-        else 
+        else
         {
             this.stack = new Error().stack;
         }
     }
 }
 
-export class AuthTokenNotBeforeError extends Error 
+export class AuthTokenNotBeforeError extends Error
 {
     date: Date;
     isBadToken: boolean;
 
-    constructor(message: string, date?: Date) 
+    constructor(message: string, date?: Date)
     {
         super(message);
         Object.setPrototypeOf(this, AuthTokenNotBeforeError.prototype);
@@ -75,11 +75,11 @@ export class AuthTokenNotBeforeError extends Error
         this.message = message;
         this.date = date;
 
-        if (Error['captureStackTrace'] && !supportsStrict()) 
+        if (Error['captureStackTrace'] && !supportsStrict())
         {
             Error['captureStackTrace'](this, arguments.callee);
         }
-        else 
+        else
         {
             this.stack = new Error().stack;
         }
@@ -87,24 +87,24 @@ export class AuthTokenNotBeforeError extends Error
 }
 
 // For any other auth token error.
-export class AuthTokenError extends Error 
+export class AuthTokenError extends Error
 {
     expiredAt?: any;
     date?: any;
     isBadToken: boolean;
 
-    constructor(message: string) 
+    constructor(message: string)
     {
         super(message);
         Object.setPrototypeOf(this, AuthTokenError.prototype);
         this.name = 'AuthTokenError';
         this.message = message;
 
-        if (Error['captureStackTrace'] && !supportsStrict()) 
+        if (Error['captureStackTrace'] && !supportsStrict())
         {
             Error['captureStackTrace'](this, arguments.callee);
         }
-        else 
+        else
         {
             this.stack = new Error().stack;
         }
@@ -112,31 +112,31 @@ export class AuthTokenError extends Error
 }
 
 // For any other auth error; not specifically related to the auth token itself.
-export class AuthError extends Error 
+export class AuthError extends Error
 {
-    constructor(message: string) 
+    constructor(message: string)
     {
         super(message);
         Object.setPrototypeOf(this, AuthError.prototype);
         this.name = 'AuthError';
         this.message = message;
 
-        if (Error['captureStackTrace'] && !supportsStrict()) 
+        if (Error['captureStackTrace'] && !supportsStrict())
         {
             Error['captureStackTrace'](this, arguments.callee);
         }
-        else 
+        else
         {
             this.stack = new Error().stack;
         }
     }
 }
 
-export class SilentMiddlewareBlockedError extends Error 
+export class SilentMiddlewareBlockedError extends Error
 {
     type: string;
 
-    constructor(message: string, type: string) 
+    constructor(message: string, type: string)
     {
         super(message);
         Object.setPrototypeOf(this, SilentMiddlewareBlockedError.prototype);
@@ -144,102 +144,102 @@ export class SilentMiddlewareBlockedError extends Error
         this.message = message;
         this.type = type;
 
-        if (Error['captureStackTrace'] && !supportsStrict()) 
+        if (Error['captureStackTrace'] && !supportsStrict())
         {
             Error['captureStackTrace'](this, arguments.callee);
         }
-        else 
+        else
         {
             this.stack = new Error().stack;
         }
     }
 }
 
-export class InvalidActionError extends Error 
+export class InvalidActionError extends Error
 {
-    constructor(message: string) 
+    constructor(message: string)
     {
         super(message);
         Object.setPrototypeOf(this, InvalidActionError.prototype);
         this.name = 'InvalidActionError';
         this.message = message;
 
-        if (Error['captureStackTrace'] && !supportsStrict()) 
+        if (Error['captureStackTrace'] && !supportsStrict())
         {
             Error['captureStackTrace'](this, arguments.callee);
         }
-        else 
+        else
         {
             this.stack = new Error().stack;
         }
     }
 }
 
-export class InvalidArgumentsError extends Error 
+export class InvalidArgumentsError extends Error
 {
-    constructor(message: string) 
+    constructor(message: string)
     {
         super(message);
         Object.setPrototypeOf(this, InvalidArgumentsError.prototype);
         this.name = 'InvalidArgumentsError';
         this.message = message;
 
-        if (Error['captureStackTrace'] && !supportsStrict()) 
+        if (Error['captureStackTrace'] && !supportsStrict())
         {
             Error['captureStackTrace'](this, arguments.callee);
         }
-        else 
+        else
         {
             this.stack = new Error().stack;
         }
     }
 }
 
-export class InvalidOptionsError extends Error 
+export class InvalidOptionsError extends Error
 {
-    constructor(message: string) 
+    constructor(message: string)
     {
         super(message);
         Object.setPrototypeOf(this, InvalidOptionsError.prototype);
         this.name = 'InvalidOptionsError';
         this.message = message;
 
-        if (Error['captureStackTrace'] && !supportsStrict()) 
+        if (Error['captureStackTrace'] && !supportsStrict())
         {
             Error['captureStackTrace'](this, arguments.callee);
         }
-        else 
+        else
         {
             this.stack = new Error().stack;
         }
     }
 }
 
-export class InvalidMessageError extends Error 
+export class InvalidMessageError extends Error
 {
-    constructor(message: string) 
+    constructor(message: string)
     {
         super(message);
         Object.setPrototypeOf(this, InvalidMessageError.prototype);
         this.name = 'InvalidMessageError';
         this.message = message;
 
-        if (Error['captureStackTrace'] && !supportsStrict()) 
+        if (Error['captureStackTrace'] && !supportsStrict())
         {
             Error['captureStackTrace'](this, arguments.callee);
         }
-        else 
+        else
         {
             this.stack = new Error().stack;
         }
     }
 }
 
-export class SocketProtocolError extends Error 
+export class SocketProtocolError extends Error
 {
     code: number;
 
-    constructor(message: string, code: number) 
+    constructor(message: string, code: number)
     {
         super(message);
         Object.setPrototypeOf(this, SocketProtocolError.prototype);
@@ -247,102 +247,102 @@ export class SocketProtocolError extends Error
         this.message = message;
         this.code = code;
 
-        if (Error['captureStackTrace'] && !supportsStrict()) 
+        if (Error['captureStackTrace'] && !supportsStrict())
         {
             Error['captureStackTrace'](this, arguments.callee);
         }
-        else 
+        else
         {
             this.stack = new Error().stack;
         }
     }
 }
 
-export class ServerProtocolError extends Error 
+export class ServerProtocolError extends Error
 {
-    constructor(message: string) 
+    constructor(message: string)
     {
         super(message);
         Object.setPrototypeOf(this, ServerProtocolError.prototype);
         this.name = 'ServerProtocolError';
         this.message = message;
 
-        if (Error['captureStackTrace'] && !supportsStrict()) 
+        if (Error['captureStackTrace'] && !supportsStrict())
         {
             Error['captureStackTrace'](this, arguments.callee);
         }
-        else 
+        else
         {
             this.stack = new Error().stack;
         }
     }
 }
 
-export class HTTPServerError extends Error 
+export class HTTPServerError extends Error
 {
-    constructor(message: string) 
+    constructor(message: string)
     {
         super(message);
         Object.setPrototypeOf(this, HTTPServerError.prototype);
         this.name = 'HTTPServerError';
         this.message = message;
 
-        if (Error['captureStackTrace'] && !supportsStrict()) 
+        if (Error['captureStackTrace'] && !supportsStrict())
         {
             Error['captureStackTrace'](this, arguments.callee);
         }
-        else 
+        else
         {
             this.stack = new Error().stack;
         }
     }
 }
 
-export class ResourceLimitError extends Error 
+export class ResourceLimitError extends Error
 {
-    constructor(message: string) 
+    constructor(message: string)
     {
         super(message);
         Object.setPrototypeOf(this, ResourceLimitError.prototype);
         this.name = 'ResourceLimitError';
         this.message = message;
 
-        if (Error['captureStackTrace'] && !supportsStrict()) 
+        if (Error['captureStackTrace'] && !supportsStrict())
         {
             Error['captureStackTrace'](this, arguments.callee);
         }
-        else 
+        else
         {
             this.stack = new Error().stack;
         }
     }
 }
 
-export class TimeoutError extends Error 
+export class TimeoutError extends Error
 {
-    constructor(message: string) 
+    constructor(message: string)
     {
         super(message);
         Object.setPrototypeOf(this, TimeoutError.prototype);
         this.name = 'TimeoutError';
         this.message = message;
 
-        if (Error['captureStackTrace'] && !supportsStrict()) 
+        if (Error['captureStackTrace'] && !supportsStrict())
         {
             Error['captureStackTrace'](this, arguments.callee);
         }
-        else 
+        else
         {
             this.stack = new Error().stack;
         }
     }
 }
 
-export class BadConnectionError extends Error 
+export class BadConnectionError extends Error
 {
     type: string;
 
-    constructor(message: string, type: string) 
+    constructor(message: string, type: string)
     {
         super(message);
         Object.setPrototypeOf(this, BadConnectionError.prototype);
@@ -350,42 +350,42 @@ export class BadConnectionError extends Error
         this.message = message;
         this.type = type;
 
-        if (Error['captureStackTrace'] && !supportsStrict()) 
+        if (Error['captureStackTrace'] && !supportsStrict())
         {
             Error['captureStackTrace'](this, arguments.callee);
         }
-        else 
+        else
         {
             this.stack = new Error().stack;
         }
     }
 }
 
-export class BrokerError extends Error 
+export class BrokerError extends Error
 {
-    constructor(message: string) 
+    constructor(message: string)
     {
         super(message);
         Object.setPrototypeOf(this, BrokerError.prototype);
         this.name = 'BrokerError';
         this.message = message;
 
-        if (Error['captureStackTrace'] && !supportsStrict()) 
+        if (Error['captureStackTrace'] && !supportsStrict())
         {
             Error['captureStackTrace'](this, arguments.callee);
         }
-        else 
+        else
         {
             this.stack = new Error().stack;
         }
     }
 }
 
-export class ProcessExitError extends Error 
+export class ProcessExitError extends Error
 {
     code?: number | undefined;
 
-    constructor(message: string, code?: number) 
+    constructor(message: string, code?: number)
     {
         super(message);
         Object.setPrototypeOf(this, ProcessExitError.prototype);
@@ -393,31 +393,31 @@ export class ProcessExitError extends Error
         this.message = message;
         this.code = code;
 
-        if (Error['captureStackTrace'] && !supportsStrict()) 
+        if (Error['captureStackTrace'] && !supportsStrict())
         {
             Error['captureStackTrace'](this, arguments.callee);
         }
-        else 
+        else
         {
             this.stack = new Error().stack;
         }
     }
 }
 
-export class UnknownError extends Error 
+export class UnknownError extends Error
 {
-    constructor(message: string) 
+    constructor(message: string)
     {
         super(message);
         Object.setPrototypeOf(this, UnknownError.prototype);
         this.name = 'UnknownError';
         this.message = message;
 
-        if (Error['captureStackTrace'] && !supportsStrict()) 
+        if (Error['captureStackTrace'] && !supportsStrict())
         {
             Error['captureStackTrace'](this, arguments.callee);
         }
-        else 
+        else
         {
             this.stack = new Error().stack;
         }
@@ -465,32 +465,32 @@ const unserializableErrorProperties: { [key: string]: 1 } = {
 export function dehydrateError(
     error: any,
     includeStackTrace?: boolean
-): DehydratedError 
+): DehydratedError
 {
     let dehydratedError: any;
 
-    if (error && typeof error === 'object') 
+    if (error && typeof error === 'object')
     {
         dehydratedError = {
             message: error.message,
         };
-        if (includeStackTrace) 
+        if (includeStackTrace)
         {
             dehydratedError.stack = error.stack;
         }
-        for (const i in error) 
+        for (const i in error)
         {
-            if (!unserializableErrorProperties[i]) 
+            if (!unserializableErrorProperties[i])
             {
                 dehydratedError[i] = error[i];
             }
         }
     }
-    else if (typeof error === 'function') 
+    else if (typeof error === 'function')
     {
         dehydratedError = '[function ' + (error['name'] || 'anonymous') + ']';
     }
-    else 
+    else
     {
         dehydratedError = error;
     }
@@ -499,23 +499,23 @@ export function dehydrateError(
 }
 
 // Convert a dehydrated error back to its *original* form.
-export function hydrateError(error: DehydratedError): any 
+export function hydrateError(error: DehydratedError): any
 {
     let hydratedError = null;
-    if (error != null) 
+    if (error != null)
     {
-        if (typeof error === 'object') 
+        if (typeof error === 'object')
         {
             hydratedError = new Error(error.message);
-            for (const i in error) 
+            for (const i in error)
             {
-                if (error.hasOwnProperty(i)) 
+                if (error.hasOwnProperty(i))
                 {
                     (hydratedError as any)[i] = error[i];
                 }
             }
         }
-        else 
+        else
         {
             hydratedError = error;
         }

@@ -83,6 +83,7 @@
     "homepage": "https://github.com/topgunjs/topgun-socket#readme",
     "dependencies": {
         "topgun-buffer": "1.0.3",
+        "topgun-jsonwebtoken": "^1.0.2",
         "topgun-webcrypto": "1.0.5",
         "ws": "^8.9.0"
     },

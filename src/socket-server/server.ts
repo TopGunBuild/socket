@@ -10,13 +10,13 @@ import {
     SilentMiddlewareBlockedError,
 } from '../errors/errors';
 import { formatter } from '../formatter';
-import { JwtAlgorithm, JwtVerifyOptions, Secret } from '../jwt';
+import { JwtAlgorithm, JwtVerifyOptions, JwtSecret } from 'topgun-jsonwebtoken';
 import { TGSimpleBroker } from '../simple-broker/simple-broker';
 import { SimpleExchange } from '../simple-broker/simple-exchange';
 import { generateId } from '../utils/generate-id';
 import { isNode } from '../utils/is-node';
 import { WritableConsumableStream } from '../writable-consumable-stream';
-import { TGAction } from './action';
+import { ITGAction, TGAction } from './action';
 import { TGServerSocket } from './server-socket';
 import {
     AuthEngineType,
@@ -73,12 +73,12 @@ export class TGServerSocketGateway extends AsyncStreamEmitter<any>
     brokerEngine: TGSimpleBroker;
     middlewareEmitFailures: boolean;
     isReady: boolean;
-    signatureKey?: Secret;
-    verificationKey?: Secret;
+    signatureKey?: JwtSecret;
+    verificationKey?: JwtSecret;
     defaultVerificationOptions: JwtVerifyOptions|JwtAlgorithm;
     defaultSignatureOptions: {
-        expiresIn: number;
-        algorithm?: string;
+        expiresIn?: number;
+        algorithm?: JwtAlgorithm;
     };
     exchange: SimpleExchange;
 
@@ -564,7 +564,7 @@ export class TGServerSocketGateway extends AsyncStreamEmitter<any>
 
     async processMiddlewareAction(
         middlewareStream: any,
-        action: TGAction,
+        action: ITGAction,
         socket?: any
     ): Promise<{data: any; options: any}>
     {

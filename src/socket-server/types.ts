@@ -1,5 +1,5 @@
 import { AuthEngine } from '../auth';
-import { JwtAlgorithm, JwtSignOptions, Secret } from '../jwt';
+import { JwtAlgorithm, JwtSignOptions, JwtSecret } from 'topgun-jsonwebtoken';
 import { AuthToken, CodecEngine, UnsubscribeData } from '../types';
 import { WritableConsumableStream } from '../writable-consumable-stream';
 import {
@@ -20,11 +20,12 @@ export type AuthState = 'authenticated' | 'unauthenticated';
 
 export interface AuthTokenOptions extends JwtSignOptions {
     rejectOnFailedDelivery?: boolean;
+    mutatePayload?: any;
 }
 
 export interface StateChangeData {
-    oldState: AuthState;
-    newState: AuthState;
+    oldAuthState: AuthState;
+    newAuthState: AuthState;
     authToken?: AuthToken;
 }
 
@@ -178,7 +179,7 @@ export interface TGServerSocketGatewayOptions {
     // string. The default JWT algorithm used is 'HS256'.
     // If you want to use RSA or ECDSA, you should provide an
     // authPrivateKey and authPublicKey instead of authKey.
-    authKey?: Secret;
+    authKey?: JwtSecret;
 
     // perMessageDeflate compression. Note that this option is
     // passed directly to the wsEngine's Server object.
@@ -191,14 +192,14 @@ export interface TGServerSocketGatewayOptions {
     // If using an RSA or ECDSA algorithm to sign the
     // authToken, you will need to provide an authPrivateKey
     // and authPublicKey in PEM format (string or Buffer).
-    authPrivateKey?: Secret;
-    authPublicKey?: Secret;
+    authPrivateKey?: JwtSecret;
+    authPublicKey?: JwtSecret;
 
     // The default expiry for auth tokens in seconds
     authDefaultExpiry?: number;
 
     // The algorithm to use to sign and verify JWT tokens.
-    authAlgorithm?: string;
+    authAlgorithm?: JwtAlgorithm;
 
     // Can be 1 or 2. Version 1 is for maximum backwards
     // compatibility with SocketCluster clients.

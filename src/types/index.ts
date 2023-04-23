@@ -1,4 +1,4 @@
-import { JwtPayload } from '../jwt';
+import { JwtPayload } from 'topgun-jsonwebtoken';
 
 export interface CodecEngine {
     decode: (input: any) => any;

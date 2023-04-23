@@ -1,19 +1,19 @@
 import { AuthTokenError, InvalidArgumentsError } from '../errors/errors';
 import {
-    JwtAlgorithm,
     JwtPayload,
     JwtSignOptions,
     JwtVerifyOptions,
+    JwtSecret,
     sign,
     verify,
-} from '../jwt';
+} from 'topgun-jsonwebtoken';
 
 export class AuthEngine
 {
     verifyToken?(
         signedToken: string,
-        secret: string | JsonWebKey,
-        options: JwtVerifyOptions | JwtAlgorithm
+        secret: JwtSecret,
+        options: JwtVerifyOptions
     ): Promise<JwtPayload>
     {
         options = options || {};
@@ -48,8 +48,8 @@ export class AuthEngine
 
     signToken?(
         token: JwtPayload,
-        secret: string | JsonWebKey,
-        options: JwtSignOptions | JwtAlgorithm
+        secret: JwtSecret,
+        options: JwtSignOptions
     ): Promise<string | undefined>
     {
         options = options || {};

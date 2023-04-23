@@ -13,22 +13,12 @@ const PUBLISH_IN   = 'publishIn';
 const PUBLISH_OUT  = 'publishOut';
 const AUTHENTICATE = 'authenticate';
 
-export class TGAction
+export interface ITGAction
 {
-    static HANDSHAKE_WS: ActionType = HANDSHAKE_WS;
-    static HANDSHAKE_SC: ActionType = HANDSHAKE_SC;
-    static MESSAGE: ActionType      = MESSAGE;
-    static TRANSMIT: ActionType     = TRANSMIT;
-    static INVOKE: ActionType       = INVOKE;
-    static SUBSCRIBE: ActionType    = SUBSCRIBE;
-    static PUBLISH_IN: ActionType   = PUBLISH_IN;
-    static PUBLISH_OUT: ActionType  = PUBLISH_OUT;
-    static AUTHENTICATE: ActionType = AUTHENTICATE;
-
     type: ActionType;
     request?: IncomingMessage;
     socket?: TGServerSocket;
-    authTokenExpiredError?: AuthTokenExpiredError;
+    authTokenExpiredError?: typeof AuthTokenExpiredError;
     receiver?: string;
     procedure?: string;
     channel?: string;
@@ -36,73 +26,72 @@ export class TGAction
     signedAuthToken?: string;
     data?: any;
 
-    readonly HANDSHAKE_WS = HANDSHAKE_WS;
-    readonly HANDSHAKE_SC = HANDSHAKE_SC;
-    readonly MESSAGE      = MESSAGE;
-    readonly TRANSMIT     = TRANSMIT;
-    readonly INVOKE       = INVOKE;
-    readonly SUBSCRIBE    = SUBSCRIBE;
-    readonly PUBLISH_IN   = PUBLISH_IN;
-    readonly PUBLISH_OUT  = PUBLISH_OUT;
-    readonly AUTHENTICATE = AUTHENTICATE;
+    HANDSHAKE_WS: typeof HANDSHAKE_WS;
+    HANDSHAKE_SC: typeof HANDSHAKE_SC;
+    MESSAGE: typeof MESSAGE;
+    TRANSMIT: typeof TRANSMIT;
+    INVOKE: typeof INVOKE;
+    SUBSCRIBE: typeof SUBSCRIBE;
+    PUBLISH_IN: typeof PUBLISH_IN;
+    PUBLISH_OUT: typeof PUBLISH_OUT;
+    AUTHENTICATE: typeof AUTHENTICATE;
 
     outcome: null|'allowed'|'blocked';
     promise: Promise<any>;
-    private _resolve: (value?: PromiseLike<any>|any) => void;
-    private _reject: (reason?: any) => void;
-
-    /**
-     * Constructor
-     */
-    constructor()
-    {
-        this.outcome = null;
-
-        this.HANDSHAKE_WS = HANDSHAKE_WS;
-        this.HANDSHAKE_SC = HANDSHAKE_SC;
-        this.MESSAGE      = MESSAGE;
-        this.TRANSMIT     = TRANSMIT;
-        this.INVOKE       = INVOKE;
-        this.SUBSCRIBE    = SUBSCRIBE;
-        this.PUBLISH_IN   = PUBLISH_IN;
-        this.PUBLISH_OUT  = PUBLISH_OUT;
-        this.AUTHENTICATE = AUTHENTICATE;
-
-        this.promise = new Promise((resolve, reject) =>
-        {
-            this._resolve = resolve;
-            this._reject  = reject;
-        });
-    }
-
-    // -----------------------------------------------------------------------------------------------------
-    // @ Public methods
-    // -----------------------------------------------------------------------------------------------------
+    _resolve: (value?: PromiseLike<any>|any) => void;
+    _reject: (reason?: any) => void;
 
     allow(packet: any): void
-    {
-        if (this.outcome)
-        {
-            throw new InvalidActionError(
-                `AGAction ${this.type} has already been ${this.outcome}; cannot allow`
-            );
+
+    block(error: Error): void
+}
+
+export function TGAction()
+{
+    this.outcome = null;
+    this.request = null;
+    this.socket = null;
+    this.authTokenExpiredError = null;
+    this.receiver = null;
+    this.procedure = null;
+    this.channel = null;
+    this.authToken = null;
+    this.signedAuthToken = null;
+    this.data = null;
+
+    this.promise = new Promise((resolve, reject) => {
+        this._resolve = resolve;
+        this._reject = reject;
+    });
+
+    this.allow = (packet: any) => {
+        if (this.outcome) {
+            throw new InvalidActionError(`TGAction ${this.type} has already been ${this.outcome}; cannot allow`);
         }
         this.outcome = 'allowed';
         this._resolve(packet);
-    }
+    };
 
-    block(error: Error): void
-    {
-        if (this.outcome)
-        {
-            throw new InvalidActionError(
-                `AGAction ${this.type} has already been ${this.outcome}; cannot block`
-            );
+    this.block = (error: Error) => {
+        if (this.outcome) {
+            throw new InvalidActionError(`TGAction ${this.type} has already been ${this.outcome}; cannot block`);
         }
         this.outcome = 'blocked';
         this._reject(error);
-    }
+    };
 }
+
+TGAction.prototype.HANDSHAKE_WS = TGAction.HANDSHAKE_WS = 'handshakeWS';
+TGAction.prototype.HANDSHAKE_SC = TGAction.HANDSHAKE_SC = 'handshakeSC';
+
+TGAction.prototype.MESSAGE = TGAction.MESSAGE = 'message';
+
+TGAction.prototype.TRANSMIT = TGAction.TRANSMIT = 'transmit';
+TGAction.prototype.INVOKE = TGAction.INVOKE = 'invoke';
+TGAction.prototype.SUBSCRIBE = TGAction.SUBSCRIBE = 'subscribe';
+TGAction.prototype.PUBLISH_IN = TGAction.PUBLISH_IN = 'publishIn';
+TGAction.prototype.PUBLISH_OUT = TGAction.PUBLISH_OUT = 'publishOut';
+TGAction.prototype.AUTHENTICATE = TGAction.AUTHENTICATE = 'authenticate';
 
 export type ActionType =
     |typeof HANDSHAKE_WS
@@ -158,7 +147,7 @@ export interface TGActionTransmit extends TGActionBase
 {
     type: typeof TRANSMIT;
     socket: TGServerSocket;
-    authTokenExpiredError?: AuthTokenExpiredError;
+    authTokenExpiredError?: typeof AuthTokenExpiredError;
     receiver: string;
     data?: any;
 }
@@ -167,7 +156,7 @@ export interface TGActionInvoke extends TGActionBase
 {
     type: typeof INVOKE;
     socket: TGServerSocket;
-    authTokenExpiredError?: AuthTokenExpiredError;
+    authTokenExpiredError?: typeof AuthTokenExpiredError;
     procedure: string;
     data?: any;
 }
@@ -176,7 +165,7 @@ export interface TGActionSubscribe extends TGActionBase
 {
     type: typeof SUBSCRIBE;
     socket: TGServerSocket;
-    authTokenExpiredError?: AuthTokenExpiredError;
+    authTokenExpiredError?: typeof AuthTokenExpiredError;
     channel?: string;
     data?: any;
 }
@@ -185,7 +174,7 @@ export interface TGActionPublishIn extends TGActionBase
 {
     type: typeof PUBLISH_IN;
     socket: TGServerSocket;
-    authTokenExpiredError?: AuthTokenExpiredError;
+    authTokenExpiredError?: typeof AuthTokenExpiredError;
     channel?: string;
     data?: any;
 }

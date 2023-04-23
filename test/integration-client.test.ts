@@ -935,7 +935,7 @@ describe('Integration tests', () =>
                 {
                     if (action.type === TGAction.PUBLISH_IN)
                     {
-                        lastServerMessage = (action as TGAction).data;
+                        lastServerMessage = action['data'];
                     }
                     action.allow();
                 }
