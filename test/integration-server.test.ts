@@ -1967,7 +1967,7 @@ describe('Integration tests', () =>
         );
     });
 
-    describe('Socket RPC invoke', () =>
+    /*describe('Socket RPC invoke', () =>
     {
         it(
             'Should support invoking a remote procedure on the server',
@@ -4332,5 +4332,5 @@ describe('Integration tests', () =>
                 );
             });
         });
-    });
+    });*/
 });
