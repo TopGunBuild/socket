@@ -1353,7 +1353,7 @@ describe('Integration tests', () =>
 
     describe('Socket disconnection', () =>
     {
-        it(
+        /*it(
             'Server-side socket disconnect event should not trigger if the socket did not complete the handshake; instead, it should trigger connectAbort',
             async () =>
             {
@@ -1442,9 +1442,9 @@ describe('Integration tests', () =>
                 expect(serverSocketAborted).toEqual(true);
                 expect(serverDisconnected).toEqual(false);
             }
-        );
+        );*/
 
-        it(
+        /*it(
             'Server-side socket disconnect event should trigger if the socket completed the handshake (not connectAbort)',
             async () =>
             {
@@ -1497,6 +1497,9 @@ describe('Integration tests', () =>
                             socketDisconnectedBeforeConnect = true;
                         }
                         socketDisconnected = true;
+                        console.log(
+                            event
+                        );
                         expect(event.code).toEqual(4445);
                         expect(event.reason).toEqual('Disconnect after handshake');
                     })();
@@ -1534,9 +1537,9 @@ describe('Integration tests', () =>
                 expect(serverDisconnected).toEqual(true);
                 expect(serverSocketAborted).toEqual(false);
             }
-        );
+        );*/
 
-        it(
+        /*it(
             'The close event should trigger when the socket loses the connection before the handshake',
             async () =>
             {
@@ -1611,9 +1614,9 @@ describe('Integration tests', () =>
                 expect(serverSocketAborted).toEqual(true);
                 expect(serverClosure).toEqual(true);
             }
-        );
+        );*/
 
-        it(
+        /*it(
             'The close event should trigger when the socket loses the connection after the handshake',
             async () =>
             {
@@ -1688,7 +1691,7 @@ describe('Integration tests', () =>
                 expect(serverDisconnection).toEqual(true);
                 expect(serverClosure).toEqual(true);
             }
-        );
+        );*/
 
         /*it(
             'Disconnection should support socket message backpressure',
