@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/topgunjs/topgun-socket/compare/v1.3.0...v1.3.1) (2023-05-01)
+
+
+### Bug Fixes
+
+* fix listen function ([175a853](https://github.com/topgunjs/topgun-socket/commit/175a853bee636378939a4dbd88763ce5671c7f75))
+
 # [1.3.0](https://github.com/topgunjs/topgun-socket/compare/v1.2.4...v1.3.0) (2023-05-01)
 
 
