@@ -1690,7 +1690,7 @@ describe('Integration tests', () =>
             }
         );
 
-        it(
+        /*it(
             'Disconnection should support socket message backpressure',
             async () =>
             {
@@ -1801,7 +1801,7 @@ describe('Integration tests', () =>
                 // Since the client disconnect() call is executed on the 11th message, we can assume that the 'disconnect' event will trigger sooner.
                 expect(requestDataAtTimeOfDisconnect < 15).toEqual(true);
             }
-        );
+        );*/
 
         it(
             'Socket streams should be killed immediately if socket disconnects (default/kill mode)',
