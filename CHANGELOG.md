@@ -1,3 +1,15 @@
+# [1.3.0](https://github.com/topgunjs/topgun-socket/compare/v1.2.4...v1.3.0) (2023-05-01)
+
+
+### Features
+
+* **socket-server:** remove `http` param from `listen`. add typings to `attach` ([516cc12](https://github.com/topgunjs/topgun-socket/commit/516cc124248ef928ef0b8f30a97dcd3af33276f5))
+
+
+### Reverts
+
+* remove "esModuleInterop" from tsconfig ([c7bd460](https://github.com/topgunjs/topgun-socket/commit/c7bd46047b08967f2a74eb506d4a514615f1cb6b))
+
 ## [1.2.4](https://github.com/topgunjs/topgun-socket/compare/v1.2.3...v1.2.4) (2023-04-23)
 
 
