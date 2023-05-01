@@ -1,4 +1,3 @@
-import * as http from 'http'
 import * as localStorage from 'localStorage';
 import { ClientOptions, create, TGClientSocket } from '../src/socket-client';
 import { wait } from '../src/utils/wait';
@@ -81,7 +80,7 @@ describe('Integration tests', () =>
             ackTimeout: 200
         };
 
-        server = listen(http, PORT_NUMBER, serverOptions);
+        server = listen(PORT_NUMBER, serverOptions);
 
         async function handleServerConnection()
         {
@@ -106,6 +105,7 @@ describe('Integration tests', () =>
     afterEach(async () =>
     {
         let cleanupTasks = [];
+        console.log('-', global.localStorage);
         global.localStorage.removeItem('topgunsocket.authToken');
         if (client)
         {
@@ -286,7 +286,7 @@ describe('Integration tests', () =>
         it('If token engine signing is synchronous, authentication can be captured using the authenticate event', async () =>
         {
             let port         = 8509;
-            let customServer = listen(http, port, {
+            let customServer = listen(port, {
                 authKey      : serverOptions.authKey,
                 authSignAsync: false
             });
@@ -322,7 +322,7 @@ describe('Integration tests', () =>
         it('If token engine signing is asynchronous, authentication can be captured using the authenticate event', async () =>
         {
             let port         = 8510;
-            let customServer = listen(http, port, {
+            let customServer = listen(port, {
                 authKey      : serverOptions.authKey,
                 authSignAsync: true
             });
@@ -358,7 +358,7 @@ describe('Integration tests', () =>
         it('If token verification is synchronous, authentication can be captured using the authenticate event', async () =>
         {
             let port         = 8511;
-            let customServer = listen(http, port, {
+            let customServer = listen(port, {
                 authKey        : serverOptions.authKey,
                 authVerifyAsync: false
             });
