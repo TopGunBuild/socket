@@ -105,7 +105,6 @@ describe('Integration tests', () =>
     afterEach(async () =>
     {
         let cleanupTasks = [];
-        console.log('-', global.localStorage);
         global.localStorage.removeItem('topgunsocket.authToken');
         if (client)
         {
