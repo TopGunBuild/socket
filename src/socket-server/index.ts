@@ -36,15 +36,11 @@ export function listen(
     if (isNode())
     {
         const http   = require('http');
-        const server = http.createServer((req, res) =>
-        {
-            res.writeHead(501);
-            res.end('Not Implemented');
-        });
+        const httpServer = http.createServer();
 
-        options.httpServer = server;
-        const gateway      = attach(server, options);
-        server.listen(port, fn);
+        const gateway      = attach(httpServer, options);
+        gateway.httpServer = httpServer;
+        httpServer.listen(port, fn);
 
         return gateway;
     }

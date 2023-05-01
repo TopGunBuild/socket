@@ -128,7 +128,6 @@ export class TGServerSocketGateway extends AsyncStreamEmitter<any>
             middlewareEmitFailures  : true,
             socketStreamCleanupMode : 'kill',
             cloneData               : false,
-            isNode                  : isNode(),
         };
 
         this.options = Object.assign(opts, options);
@@ -298,7 +297,7 @@ export class TGServerSocketGateway extends AsyncStreamEmitter<any>
             wsServerOptions.clientTracking = false;
         }
 
-        if (this.options.isNode)
+        if (isNode())
         {
             this.wsServer = new WSServer(wsServerOptions);
 

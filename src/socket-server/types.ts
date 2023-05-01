@@ -157,8 +157,6 @@ export interface ClosureData extends CloseData {
 }
 
 export interface TGServerSocketGatewayOptions {
-    // NodeJS ot serverless
-    isNode?: boolean;
 
     // An instance of a Node.js HTTP server.
     // https://nodejs.org/api/http.html#http_class_http_server
