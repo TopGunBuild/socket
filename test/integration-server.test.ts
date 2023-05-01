@@ -1,4 +1,3 @@
-import * as http from 'http'
 import * as localStorage from 'localStorage';
 import { JwtVerifyOptions } from 'topgun-jsonwebtoken';
 import { ClientOptions, create, TGClientSocket } from '../src/socket-client';
@@ -224,7 +223,7 @@ describe('Integration tests', () =>
     {
         beforeEach(async () =>
         {
-            server = listen(http, PORT_NUMBER, serverOptions);
+            server = listen(PORT_NUMBER, serverOptions);
             bindFailureHandlers(server);
 
             server.setMiddleware(server.MIDDLEWARE_INBOUND, async (middlewareStream: any) =>
@@ -504,7 +503,7 @@ describe('Integration tests', () =>
             'Token should be available after the authenticate listener resolves',
             async () =>
             {
-                server = listen(http, PORT_NUMBER, {
+                server = listen(PORT_NUMBER, {
                     authKey : serverOptions.authKey,
                     wsEngine: WS_ENGINE
                 });
@@ -540,7 +539,7 @@ describe('Integration tests', () =>
             'Authentication can be captured using the authenticate listener',
             async () =>
             {
-                server = listen(http, PORT_NUMBER, {
+                server = listen(PORT_NUMBER, {
                     authKey : serverOptions.authKey,
                     wsEngine: WS_ENGINE
                 });
@@ -576,7 +575,7 @@ describe('Integration tests', () =>
             'Previously authenticated client should still be authenticated after reconnecting',
             async () =>
             {
-                server = listen(http, PORT_NUMBER, {
+                server = listen(PORT_NUMBER, {
                     authKey : serverOptions.authKey,
                     wsEngine: WS_ENGINE
                 });
@@ -618,7 +617,7 @@ describe('Integration tests', () =>
             'Should set the correct expiry when using expiresIn option when creating a JWT with socket.setAuthToken',
             async () =>
             {
-                server = listen(http, PORT_NUMBER, {
+                server = listen(PORT_NUMBER, {
                     authKey : serverOptions.authKey,
                     wsEngine: WS_ENGINE
                 });
@@ -656,7 +655,7 @@ describe('Integration tests', () =>
             'Should set the correct expiry when adding exp claim when creating a JWT with socket.setAuthToken',
             async () =>
             {
-                server = listen(http, PORT_NUMBER, {
+                server = listen(PORT_NUMBER, {
                     authKey : serverOptions.authKey,
                     wsEngine: WS_ENGINE
                 });
@@ -694,7 +693,7 @@ describe('Integration tests', () =>
             'The exp claim should have priority over expiresIn option when using socket.setAuthToken',
             async () =>
             {
-                server = listen(http, PORT_NUMBER, {
+                server = listen(PORT_NUMBER, {
                     authKey : serverOptions.authKey,
                     wsEngine: WS_ENGINE
                 });
@@ -732,7 +731,7 @@ describe('Integration tests', () =>
             'Should send back error if socket.setAuthToken tries to set both iss claim and issuer option',
             async () =>
             {
-                server = listen(http, PORT_NUMBER, {
+                server = listen(PORT_NUMBER, {
                     authKey : serverOptions.authKey,
                     wsEngine: WS_ENGINE
                 });
@@ -816,7 +815,7 @@ describe('Integration tests', () =>
             'Should trigger an authTokenSigned event and socket.signedAuthToken should be set after calling the socket.setAuthToken method',
             async () =>
             {
-                server = listen(http, PORT_NUMBER, {
+                server = listen(PORT_NUMBER, {
                     authKey : serverOptions.authKey,
                     wsEngine: WS_ENGINE
                 });
@@ -880,7 +879,7 @@ describe('Integration tests', () =>
             'The socket.setAuthToken call should reject if token delivery fails and rejectOnFailedDelivery option is true',
             async () =>
             {
-                server = listen(http, PORT_NUMBER, {
+                server = listen(PORT_NUMBER, {
                     authKey   : serverOptions.authKey,
                     wsEngine  : WS_ENGINE,
                     ackTimeout: 1000
@@ -945,7 +944,7 @@ describe('Integration tests', () =>
             'The socket.setAuthToken call should not reject if token delivery fails and rejectOnFailedDelivery option is not true',
             async () =>
             {
-                server = listen(http, PORT_NUMBER, {
+                server = listen(PORT_NUMBER, {
                     authKey   : serverOptions.authKey,
                     wsEngine  : WS_ENGINE,
                     ackTimeout: 1000
@@ -1009,7 +1008,7 @@ describe('Integration tests', () =>
             {
                 global.localStorage.setItem('topgunsocket.authToken', validSignedAuthTokenBob);
 
-                server = listen(http, PORT_NUMBER, {
+                server = listen(PORT_NUMBER, {
                     authKey : serverOptions.authKey,
                     wsEngine: WS_ENGINE
                 });
@@ -1054,7 +1053,7 @@ describe('Integration tests', () =>
             'Should remove client data from the server when client disconnects before authentication process finished',
             async () =>
             {
-                server = listen(http, PORT_NUMBER, {
+                server = listen(PORT_NUMBER, {
                     authKey : serverOptions.authKey,
                     wsEngine: WS_ENGINE
                 });
@@ -1112,7 +1111,7 @@ describe('Integration tests', () =>
             'Exchange is attached to socket before the handshake event is triggered',
             async () =>
             {
-                server = listen(http, PORT_NUMBER, {
+                server = listen(PORT_NUMBER, {
                     authKey : serverOptions.authKey,
                     wsEngine: WS_ENGINE
                 });
@@ -1142,7 +1141,7 @@ describe('Integration tests', () =>
             'Should close the connection if the client tries to send a message before the handshake',
             async () =>
             {
-                server = listen(http, PORT_NUMBER, {
+                server = listen(PORT_NUMBER, {
                     authKey : serverOptions.authKey,
                     wsEngine: WS_ENGINE
                 });
@@ -1182,7 +1181,7 @@ describe('Integration tests', () =>
             'Should close the connection if the client tries to send a ping before the handshake',
             async () =>
             {
-                server = listen(http, PORT_NUMBER, {
+                server = listen(PORT_NUMBER, {
                     authKey : serverOptions.authKey,
                     wsEngine: WS_ENGINE
                 });
@@ -1217,7 +1216,7 @@ describe('Integration tests', () =>
             'Should not close the connection if the client tries to send a message before the handshake and strictHandshake is false',
             async () =>
             {
-                server = listen(http, PORT_NUMBER, {
+                server = listen(PORT_NUMBER, {
                     authKey        : serverOptions.authKey,
                     wsEngine       : WS_ENGINE,
                     strictHandshake: false
@@ -1260,7 +1259,7 @@ describe('Integration tests', () =>
             'Server-side socket connect event and server connection event should trigger',
             async () =>
             {
-                server = listen(http, PORT_NUMBER, {
+                server = listen(PORT_NUMBER, {
                     authKey : serverOptions.authKey,
                     wsEngine: WS_ENGINE
                 });
@@ -1358,7 +1357,7 @@ describe('Integration tests', () =>
             'Server-side socket disconnect event should not trigger if the socket did not complete the handshake; instead, it should trigger connectAbort',
             async () =>
             {
-                server = listen(http, PORT_NUMBER, {
+                server = listen(PORT_NUMBER, {
                     authKey : serverOptions.authKey,
                     wsEngine: WS_ENGINE
                 });
@@ -1449,7 +1448,7 @@ describe('Integration tests', () =>
             'Server-side socket disconnect event should trigger if the socket completed the handshake (not connectAbort)',
             async () =>
             {
-                server = listen(http, PORT_NUMBER, {
+                server = listen(PORT_NUMBER, {
                     authKey : serverOptions.authKey,
                     wsEngine: WS_ENGINE
                 });
@@ -1541,7 +1540,7 @@ describe('Integration tests', () =>
             'The close event should trigger when the socket loses the connection before the handshake',
             async () =>
             {
-                server = listen(http, PORT_NUMBER, {
+                server = listen(PORT_NUMBER, {
                     authKey : serverOptions.authKey,
                     wsEngine: WS_ENGINE
                 });
@@ -1618,7 +1617,7 @@ describe('Integration tests', () =>
             'The close event should trigger when the socket loses the connection after the handshake',
             async () =>
             {
-                server = listen(http, PORT_NUMBER, {
+                server = listen(PORT_NUMBER, {
                     authKey : serverOptions.authKey,
                     wsEngine: WS_ENGINE
                 });
@@ -1695,7 +1694,7 @@ describe('Integration tests', () =>
             'Disconnection should support socket message backpressure',
             async () =>
             {
-                server = listen(http, PORT_NUMBER, {
+                server = listen(PORT_NUMBER, {
                     authKey : serverOptions.authKey,
                     wsEngine: WS_ENGINE
                 });
@@ -1808,7 +1807,7 @@ describe('Integration tests', () =>
             'Socket streams should be killed immediately if socket disconnects (default/kill mode)',
             async () =>
             {
-                server = listen(http, PORT_NUMBER, {
+                server = listen(PORT_NUMBER, {
                     authKey : serverOptions.authKey,
                     wsEngine: WS_ENGINE
                 });
@@ -1861,7 +1860,7 @@ describe('Integration tests', () =>
             'Socket streams should be closed eventually if socket disconnects (close mode)',
             async () =>
             {
-                server = listen(http, PORT_NUMBER, {
+                server = listen(PORT_NUMBER, {
                     authKey                : serverOptions.authKey,
                     wsEngine               : WS_ENGINE,
                     socketStreamCleanupMode: 'close'
@@ -1915,7 +1914,7 @@ describe('Integration tests', () =>
             'Socket streams should be closed eventually if socket disconnects (none mode)',
             async () =>
             {
-                server = listen(http, PORT_NUMBER, {
+                server = listen(PORT_NUMBER, {
                     authKey                : serverOptions.authKey,
                     wsEngine               : WS_ENGINE,
                     socketStreamCleanupMode: 'none'
