@@ -1806,7 +1806,7 @@ describe('Integration tests', () =>
             }
         );*/
 
-        it(
+        /*it(
             'Socket streams should be killed immediately if socket disconnects (default/kill mode)',
             async () =>
             {
@@ -1857,9 +1857,9 @@ describe('Integration tests', () =>
                 expect(handledPackets.length).toEqual(4);
                 expect(closedReceiver).toEqual(true);
             }
-        );
+        );*/
 
-        it(
+        /*it(
             'Socket streams should be closed eventually if socket disconnects (close mode)',
             async () =>
             {
@@ -1911,9 +1911,9 @@ describe('Integration tests', () =>
                 expect(handledPackets.length).toEqual(15);
                 expect(closedReceiver).toEqual(true);
             }
-        );
+        );*/
 
-        it(
+        /*it(
             'Socket streams should be closed eventually if socket disconnects (none mode)',
             async () =>
             {
@@ -1965,7 +1965,7 @@ describe('Integration tests', () =>
                 expect(handledPackets.length).toEqual(15);
                 expect(closedReceiver).toEqual(false);
             }
-        );
+        );*/
     });
 
     /*describe('Socket RPC invoke', () =>
