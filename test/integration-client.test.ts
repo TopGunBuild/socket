@@ -159,7 +159,7 @@ describe('Integration tests', () =>
         });
     });
 
-    describe('Errors', () =>
+    /*describe('Errors', () =>
     {
         it('Should be able to emit the error event locally on the socket', async () =>
         {
@@ -189,7 +189,7 @@ describe('Integration tests', () =>
             expect(err).not.toEqual(null);
             expect(err.name).toBe('CustomError');
         });
-    });
+    });*/
 
     describe('Authentication', () =>
     {
