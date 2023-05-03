@@ -1,3 +1,10 @@
+## [1.3.2](https://github.com/topgunjs/topgun-socket/compare/v1.3.1...v1.3.2) (2023-05-03)
+
+
+### Bug Fixes
+
+* upgrade topgun-buffer 1.0.3 -> 1.0.5 ([ecc323b](https://github.com/topgunjs/topgun-socket/commit/ecc323b5f5443920e30315e5b7fc5f37f59bbe89))
+
 ## [1.3.1](https://github.com/topgunjs/topgun-socket/compare/v1.3.0...v1.3.1) (2023-05-01)
 
 
