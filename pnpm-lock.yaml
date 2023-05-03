@@ -2,8 +2,8 @@ lockfileVersion: '6.0'
 
 dependencies:
   topgun-buffer:
-    specifier: 1.0.5
-    version: 1.0.5
+    specifier: 1.0.6
+    version: 1.0.6
   topgun-jsonwebtoken:
     specifier: ^1.0.2
     version: 1.0.2
@@ -5477,8 +5477,8 @@ packages:
       is-number: 7.0.0
     dev: true
 
-  /topgun-buffer@1.0.5:
-    resolution: {integrity: sha512-Aa0bfil2SzrjruJoK9SF3WolW0QqPLpHNgIGmeFsgKKTDOK3bDrt4ZSmCTCKJRPfzyJoKmoyMTJtWo5h3uVM+Q==}
+  /topgun-buffer@1.0.6:
+    resolution: {integrity: sha512-7K0v9lOXz7X3Cfzcyq9dC3YPG8BvaqmJC7vpQVXYHqo9L2buSkY2GKJ1Gl1j0e37/Gmh4VR0tEpP6V4qSvKXuw==}
     dev: false
 
   /topgun-jsonwebtoken@1.0.2:
