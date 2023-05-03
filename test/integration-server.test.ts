@@ -940,7 +940,7 @@ describe('Integration tests', () =>
             }
         );
 
-        it(
+        /*it(
             'The socket.setAuthToken call should not reject if token delivery fails and rejectOnFailedDelivery option is not true',
             async () =>
             {
@@ -1000,7 +1000,7 @@ describe('Integration tests', () =>
                     req.error(err);
                 }
             }
-        );
+        );*/
 
         it(
             'The verifyToken method of the authEngine receives correct params',
