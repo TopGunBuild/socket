@@ -29,16 +29,16 @@ npm install topgun-socket
 
 ## How to use client module
 
-The socket-client script is called `client.js` (located in the dist directory).
+The socket-client script is called `client.js`(ESM) or `client.global.js`(iife) (located in the dist directory).
 Embed it in your HTML page like this:
 
 ```html
-<script type="text/javascript" src="https://unpkg.com/topgun-socket@latest/dist/client.js"></script>
+<script type="text/javascript" src="https://unpkg.com/topgun-socket@latest/dist/client.global.js"></script>
 ```
 
 \* Note that the src attribute may be different depending on how you setup your HTTP server.
 
-Once you have embedded the client `client.js` into your page, you will gain access to a global `TopGunSocket` object.
+Once you have embedded the client `client.global.js` into your page, you will gain access to a global `TopGunSocket` object.
 You may also use CommonJS `require` or ES6 module imports.
 
 ### Connect to a server
