@@ -1,25 +1,29 @@
-import { AsyncStreamEmitter } from '../async-stream-emitter';
+import { AsyncStreamEmitter } from '../async-stream-emitter/async-stream-emitter';
 import { SimpleExchange } from './simple-exchange';
-import { CodecEngine } from '../types';
+import { SimpleSocket } from './types';
 
-export class TGSimpleBroker extends AsyncStreamEmitter<any>
+export class SimpleBroker extends AsyncStreamEmitter<any>
 {
     isReady: boolean;
-    private _codec: CodecEngine;
     private readonly _exchangeClient: SimpleExchange;
-    private readonly _clientSubscribers: { [key: string]: any };
-    private readonly _clientSubscribersCounter: { [key: string]: any };
+    private readonly _clientSubscribers: {
+        [channelName: string]: {
+            [socketId: string]: SimpleSocket
+        }
+    };
+    private readonly _clientSubscribersCounter: {
+        [channelName: string]: number
+    };
 
     /**
-     * Constructor
+     * constructor
      */
     constructor()
     {
         super();
-        this.isReady = false;
-        this._codec = null;
-        this._exchangeClient = new SimpleExchange(this);
-        this._clientSubscribers = {};
+        this.isReady                   = false;
+        this._exchangeClient           = new SimpleExchange(this);
+        this._clientSubscribers        = {};
         this._clientSubscribersCounter = {};
 
         setTimeout(() =>
@@ -38,64 +42,44 @@ export class TGSimpleBroker extends AsyncStreamEmitter<any>
         return this._exchangeClient;
     }
 
-    async subscribeClient(
-        client: { id: string },
-        channelName: string
-    ): Promise<void>
+    subscribeSocket(socket: SimpleSocket, channelName: string): Promise<any>
     {
         if (!this._clientSubscribers[channelName])
         {
-            this._clientSubscribers[channelName] = {};
+            this._clientSubscribers[channelName]        = {};
             this._clientSubscribersCounter[channelName] = 0;
-            this.emit('subscribe', {
-                channel: channelName,
-            });
         }
-        if (!this._clientSubscribers[channelName][client.id])
+        if (!this._clientSubscribers[channelName][socket.id])
         {
             this._clientSubscribersCounter[channelName]++;
+            this.emit('subscribe', {
+                channel: channelName
+            });
         }
-        this._clientSubscribers[channelName][client.id] = client;
+        this._clientSubscribers[channelName][socket.id] = socket;
+        return Promise.resolve();
     }
 
-    async subscribeSocket(
-        client: { id: string },
-        channelName: string
-    ): Promise<void>
-    {
-        return this.subscribeClient(client, channelName);
-    }
-
-    async unsubscribeClient(
-        client: { id: string },
-        channelName: string
-    ): Promise<void>
+    unsubscribeSocket(socket: SimpleSocket, channelName: string): Promise<any>
     {
         if (this._clientSubscribers[channelName])
         {
-            if (this._clientSubscribers[channelName][client.id])
+            if (this._clientSubscribers[channelName][socket.id])
             {
                 this._clientSubscribersCounter[channelName]--;
-                delete this._clientSubscribers[channelName][client.id];
+                delete this._clientSubscribers[channelName][socket.id];
 
                 if (this._clientSubscribersCounter[channelName] <= 0)
                 {
                     delete this._clientSubscribers[channelName];
                     delete this._clientSubscribersCounter[channelName];
                     this.emit('unsubscribe', {
-                        channel: channelName,
+                        channel: channelName
                     });
                 }
             }
         }
-    }
-
-    async unsubscribeSocket(
-        client: { id: string },
-        channelName: string
-    ): Promise<void>
-    {
-        return this.unsubscribeClient(client, channelName);
+        return Promise.resolve();
     }
 
     subscriptions(): string[]
@@ -108,63 +92,23 @@ export class TGSimpleBroker extends AsyncStreamEmitter<any>
         return !!this._clientSubscribers[channelName];
     }
 
-    setCodecEngine(codec: CodecEngine): void
+    publish(channelName: string, data: any, suppressEvent?: boolean): Promise<void>
     {
-        this._codec = codec;
-    }
-
-    /**
-     * In this implementation of the broker engine, both invokePublish and transmitPublish
-     * methods are the same. In alternative implementations, they could be different.
-     */
-    invokePublish(
-        channelName: string,
-        data: any,
-        suppressEvent?: boolean
-    ): Promise<void>
-    {
-        return this.transmitPublish(channelName, data, suppressEvent);
-    }
-
-    async transmitPublish(
-        channelName: string,
-        data: any,
-        suppressEvent?: boolean
-    ): Promise<void>
-    {
-        const packet = {
+        let packet              = {
             channel: channelName,
-            data,
+            data
         };
-        const transmitOptions: any = {};
+        const subscriberSockets = this._clientSubscribers[channelName] || {};
 
-        if (this._codec)
+        Object.keys(subscriberSockets).forEach((i) =>
         {
-            // Optimization
-            try
-            {
-                transmitOptions.stringifiedData = this._codec.encode({
-                    event: '#publish',
-                    data: packet,
-                });
-            }
-            catch (error)
-            {
-                this.emit('error', { error });
-                return;
-            }
-        }
-
-        const subscriberClients = this._clientSubscribers[channelName] || {};
-
-        Object.keys(subscriberClients).forEach((i) =>
-        {
-            subscriberClients[i].transmit('#publish', packet, transmitOptions);
+            subscriberSockets[i].transmit('#publish', packet);
         });
 
         if (!suppressEvent)
         {
             this.emit('publish', packet);
         }
+        return Promise.resolve();
     }
 }

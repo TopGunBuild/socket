@@ -1,35 +1,25 @@
 import global from '../utils/window-or-global';
-import { AuthToken } from '../types';
-import { SignedAuthToken, TGAuthEngine } from './types';
+import { TGAuthEngine } from './types';
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
 export class AuthEngine implements TGAuthEngine
 {
-    private readonly _internalStorage: { [k: string]: any };
-    private readonly isLocalStorageEnabled: boolean;
+    isLocalStorageEnabled: boolean;
+    private readonly _internalStorage: {[key: string]: any};
 
     /**
      * Constructor
      */
     constructor()
     {
-        this._internalStorage = {};
+        this._internalStorage      = {};
         this.isLocalStorageEnabled = this._checkLocalStorageEnabled();
     }
 
-    // -----------------------------------------------------------------------------------------------------
-    // @ Public methods
-    // -----------------------------------------------------------------------------------------------------
-
-    saveToken(
-        name: string,
-        token: AuthToken | SignedAuthToken,
-        options?: { [key: string]: any }
-    ): Promise<AuthToken | SignedAuthToken>
+    saveToken(name: string, token: string): Promise<string>
     {
         if (this.isLocalStorageEnabled && global.localStorage)
         {
-            global.localStorage.setItem(name, token as string);
+            global.localStorage.setItem(name, token);
         }
         else
         {
@@ -38,9 +28,9 @@ export class AuthEngine implements TGAuthEngine
         return Promise.resolve(token);
     }
 
-    removeToken(name: string): Promise<AuthToken | SignedAuthToken | null>
+    removeToken(name: string): Promise<any>
     {
-        const loadPromise = this.loadToken(name);
+        let loadPromise = this.loadToken(name);
 
         if (this.isLocalStorageEnabled && global.localStorage)
         {
@@ -54,7 +44,7 @@ export class AuthEngine implements TGAuthEngine
         return loadPromise;
     }
 
-    loadToken(name: string): Promise<AuthToken | SignedAuthToken | null>
+    loadToken(name: string): Promise<string>
     {
         let token;
 
@@ -69,10 +59,6 @@ export class AuthEngine implements TGAuthEngine
 
         return Promise.resolve(token);
     }
-
-    // -----------------------------------------------------------------------------------------------------
-    // @ Private methods
-    // -----------------------------------------------------------------------------------------------------
 
     private _checkLocalStorageEnabled()
     {

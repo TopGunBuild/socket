@@ -1,71 +1,61 @@
-import {
-    ConsumableStream,
-    ConsumableStreamConsumer,
-} from '../consumable-stream';
-import { StreamDemux } from '../stream-demux';
-import { DemuxedConsumableStream } from '../stream-demux/demuxed-consumable-stream';
-import { ConsumerStats } from '../writable-consumable-stream/consumer-stats';
-import { ChannelState } from './channel-state';
-import { TGChannelClient } from './client';
+import { AsyncIterableStream } from '../stream-demux/async-iterable-stream';
+import { IClientSocket } from '../client/types';
+import { ChannelState, SCChannelOptions } from './types';
 
-export class TGChannel<T> extends ConsumableStream<T> 
+export class TGChannel<T> extends AsyncIterableStream<T>
 {
-    static PENDING: ChannelState = 'pending';
-    static SUBSCRIBED: ChannelState = 'subscribed';
+    static PENDING: ChannelState      = 'pending';
+    static SUBSCRIBED: ChannelState   = 'subscribed';
     static UNSUBSCRIBED: ChannelState = 'unsubscribed';
 
-    name: string;
-    PENDING: ChannelState;
-    SUBSCRIBED: ChannelState;
-    UNSUBSCRIBED: ChannelState;
-    client: TGChannelClient;
+    readonly PENDING: ChannelState;
+    readonly SUBSCRIBED: ChannelState;
+    readonly UNSUBSCRIBED: ChannelState;
 
-    _eventDemux: StreamDemux<T>;
-    _dataStream: DemuxedConsumableStream<T>;
+    name: string;
+    client: IClientSocket;
     _pendingSubscriptionCid: number;
+
+    private _eventDemux: any;
+    private _dataStream: any;
 
     /**
      * Constructor
      */
-    constructor(
-        name: string,
-        client: TGChannelClient,
-        eventDemux: StreamDemux<T>,
-        dataDemux: StreamDemux<T>
-    ) 
+    constructor(name: string, client: IClientSocket, eventDemux, dataStream)
     {
         super();
-        this.PENDING = TGChannel.PENDING;
-        this.SUBSCRIBED = TGChannel.SUBSCRIBED;
+        this.PENDING      = TGChannel.PENDING;
+        this.SUBSCRIBED   = TGChannel.SUBSCRIBED;
         this.UNSUBSCRIBED = TGChannel.UNSUBSCRIBED;
 
-        this.name = name;
+        this.name   = name;
         this.client = client;
 
         this._eventDemux = eventDemux;
-        this._dataStream = dataDemux.stream(this.name);
+        this._dataStream = dataStream;
     }
 
     // -----------------------------------------------------------------------------------------------------
     // @ Accessors
     // -----------------------------------------------------------------------------------------------------
 
-    get state(): ChannelState 
+    get state(): ChannelState
     {
         return this.client.getChannelState(this.name);
     }
 
-    set state(value) 
+    set state(value: ChannelState)
     {
         throw new Error('Cannot directly set channel state');
     }
 
-    get options(): { [key: string]: any } 
+    get options(): SCChannelOptions
     {
         return this.client.getChannelOptions(this.name);
     }
 
-    set options(value) 
+    set options(value: SCChannelOptions)
     {
         throw new Error('Cannot directly set channel options');
     }
@@ -74,189 +64,48 @@ export class TGChannel<T> extends ConsumableStream<T>
     // @ Public methods
     // -----------------------------------------------------------------------------------------------------
 
-    createConsumer(timeout?: number): ConsumableStreamConsumer<T> 
+    createAsyncIterator(timeout?: number): AsyncIterator<T>
     {
-        return this._dataStream.createConsumer(timeout);
+        return this._dataStream.createAsyncIterator(timeout);
     }
 
-    listener(eventName: string): DemuxedConsumableStream<T> 
+    listener(eventName: string)
     {
         return this._eventDemux.stream(`${this.name}/${eventName}`);
     }
 
-    close(): void 
+    closeListener(eventName: string): void
+    {
+        this._eventDemux.close(`${this.name}/${eventName}`);
+    }
+
+    closeAllListeners(): void
+    {
+        this._eventDemux.closeAll();
+    }
+
+    close(): void
     {
         this.client.closeChannel(this.name);
     }
 
-    kill(): void 
-    {
-        this.client.killChannel(this.name);
-    }
-
-    killOutputConsumer(consumerId: number): void 
-    {
-        if (this.hasOutputConsumer(consumerId)) 
-        {
-            this.client.killChannelOutputConsumer(consumerId);
-        }
-    }
-
-    killListenerConsumer(consumerId: number): void 
-    {
-        if (this.hasAnyListenerConsumer(consumerId)) 
-        {
-            this.client.killChannelListenerConsumer(consumerId);
-        }
-    }
-
-    getOutputConsumerStats(consumerId: number): ConsumerStats | undefined 
-    {
-        if (this.hasOutputConsumer(consumerId)) 
-        {
-            return this.client.getChannelOutputConsumerStats(consumerId);
-        }
-        return undefined;
-    }
-
-    getListenerConsumerStats(consumerId: number): ConsumerStats | undefined 
-    {
-        if (this.hasAnyListenerConsumer(consumerId)) 
-        {
-            return this.client.getChannelListenerConsumerStats(consumerId);
-        }
-        return undefined;
-    }
-
-    getBackpressure(): number 
-    {
-        return this.client.getChannelBackpressure(this.name);
-    }
-
-    getListenerConsumerBackpressure(consumerId: number): number 
-    {
-        if (this.hasAnyListenerConsumer(consumerId)) 
-        {
-            return this.client.getChannelListenerConsumerBackpressure(
-                consumerId
-            );
-        }
-        return 0;
-    }
-
-    getOutputConsumerBackpressure(consumerId: number): any 
-    {
-        if (this.hasOutputConsumer(consumerId)) 
-        {
-            return this.client.getChannelOutputConsumerBackpressure(consumerId);
-        }
-        return 0;
-    }
-
-    closeOutput(): void 
-    {
-        this.client.channelCloseOutput(this.name);
-    }
-
-    closeListener(eventName: string): void 
-    {
-        this.client.channelCloseListener(this.name, eventName);
-    }
-
-    closeAllListeners(): void 
-    {
-        this.client.channelCloseAllListeners(this.name);
-    }
-
-    killOutput(): void 
-    {
-        this.client.channelKillOutput(this.name);
-    }
-
-    killListener(eventName: string): void 
-    {
-        this.client.channelKillListener(this.name, eventName);
-    }
-
-    killAllListeners(): void 
-    {
-        this.client.channelKillAllListeners(this.name);
-    }
-
-    getOutputConsumerStatsList(): ConsumerStats[] 
-    {
-        return this.client.channelGetOutputConsumerStatsList(this.name);
-    }
-
-    getListenerConsumerStatsList(eventName: string): ConsumerStats[] 
-    {
-        return this.client.channelGetListenerConsumerStatsList(
-            this.name,
-            eventName
-        );
-    }
-
-    getAllListenersConsumerStatsList(): ConsumerStats[] 
-    {
-        return this.client.channelGetAllListenersConsumerStatsList(this.name);
-    }
-
-    getOutputBackpressure(): number 
-    {
-        return this.client.channelGetOutputBackpressure(this.name);
-    }
-
-    getListenerBackpressure(eventName: string): number 
-    {
-        return this.client.channelGetListenerBackpressure(this.name, eventName);
-    }
-
-    getAllListenersBackpressure(): number 
-    {
-        return this.client.channelGetAllListenersBackpressure(this.name);
-    }
-
-    hasOutputConsumer(consumerId: number): boolean 
-    {
-        return this.client.channelHasOutputConsumer(this.name, consumerId);
-    }
-
-    hasListenerConsumer(eventName: string, consumerId: number): boolean 
-    {
-        return this.client.channelHasListenerConsumer(
-            this.name,
-            eventName,
-            consumerId
-        );
-    }
-
-    hasAnyListenerConsumer(consumerId: number): boolean 
-    {
-        return this.client.channelHasAnyListenerConsumer(this.name, consumerId);
-    }
-
-    subscribe(options?: any): void 
+    subscribe(options: SCChannelOptions): void
     {
         this.client.subscribe(this.name, options);
     }
 
-    unsubscribe(): void 
+    unsubscribe(): void
     {
         this.client.unsubscribe(this.name);
     }
 
-    isSubscribed(includePending?: boolean): boolean 
+    isSubscribed(includePending?: boolean): boolean
     {
         return this.client.isSubscribed(this.name, includePending);
     }
 
-    transmitPublish(data: any): Promise<void> 
+    publish(data)
     {
-        return this.client.transmitPublish(this.name, data);
-    }
-
-    invokePublish(data: any): Promise<void> 
-    {
-        return this.client.invokePublish(this.name, data);
+        return this.client.publish(this.name, data);
     }
 }

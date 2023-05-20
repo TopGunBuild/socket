@@ -13,7 +13,7 @@ export class AuthEngine
     verifyToken?(
         signedToken: string,
         secret: JwtSecret,
-        options: JwtVerifyOptions
+        options?: JwtVerifyOptions
     ): Promise<JwtPayload>
     {
         options = options || {};

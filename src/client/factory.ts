@@ -1,15 +1,15 @@
 import { InvalidArgumentsError } from '../errors';
 import global from '../utils/window-or-global';
 import { uuidv4 } from '../utils/uuidv4';
-import { TGClientSocket } from './clientsocket';
-import { ClientOptions } from './types';
+import { SocketClientOptions } from './types';
+import { TGClientSocket } from './client';
 
 function isUrlSecure(): boolean
 {
     return global.location && location.protocol === 'https:';
 }
 
-function getPort(options: ClientOptions, isSecureDefault?: boolean): number
+function getPort(options: SocketClientOptions, isSecureDefault?: boolean): number
 {
     const isSecure = options.secure == null ? isSecureDefault : options.secure;
     return (
@@ -22,7 +22,7 @@ function getPort(options: ClientOptions, isSecureDefault?: boolean): number
     );
 }
 
-export function create(options: ClientOptions): TGClientSocket
+export function create(options: SocketClientOptions): any
 {
     options = options || {};
 
@@ -54,7 +54,7 @@ export function create(options: ClientOptions): TGClientSocket
 
     const isSecureDefault = isUrlSecure();
 
-    const opts: ClientOptions = {
+    const opts: SocketClientOptions = {
         clientId: uuidv4(),
         port    : getPort(options, isSecureDefault),
         hostname: global.location && location.hostname || 'localhost',

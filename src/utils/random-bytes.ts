@@ -259,11 +259,26 @@ export const HEX = /*#__PURE__*/ [
     'ff',
 ];
 
-export function toHEX(input: ArrayBuffer): string
+function toHEX(input: ArrayBuffer): string
 {
     let i      = 0,
-    output = '';
+        output = '';
     const arr  = new Uint8Array(input);
     for (; i < arr.length; i++) output += HEX[arr[i]];
     return output;
+}
+
+
+export function randomBytes(randomBytesLength = 9): string
+{
+    const randomBytes = new Uint8Array(randomBytesLength);
+
+    try
+    {
+        return toHEX(randomBytes);
+    }
+    catch (e)
+    {
+        return null;
+    }
 }
