@@ -262,7 +262,7 @@ export const HEX = /*#__PURE__*/ [
 function toHEX(input: ArrayBuffer): string
 {
     let i      = 0,
-        output = '';
+    output = '';
     const arr  = new Uint8Array(input);
     for (; i < arr.length; i++) output += HEX[arr[i]];
     return output;

@@ -29,7 +29,7 @@ export interface TGSocketServerOptions {
     // object instead of a boolean.
     // Note that by default, per-message deflate only kicks in
     // for messages > 1024 bytes.
-    perMessageDeflate?: boolean | {};
+    perMessageDeflate?: boolean | object;
 
     // If using an RSA or ECDSA algorithm to sign the
     // authToken, you will need to provide an authPrivateKey

@@ -22,7 +22,7 @@ function getPort(options: SocketClientOptions, isSecureDefault?: boolean): numbe
     );
 }
 
-export function create(options: SocketClientOptions): any
+export function create(options: SocketClientOptions): TGClientSocket
 {
     options = options || {};
 

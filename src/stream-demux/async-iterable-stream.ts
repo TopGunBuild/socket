@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-empty-function */
 export abstract class AsyncIterableStream<T> implements AsyncIterator<T>, AsyncIterable<T>
 {
     next(timeout?: number): Promise<IteratorResult<T>>
@@ -7,7 +9,7 @@ export abstract class AsyncIterableStream<T> implements AsyncIterator<T>, AsyncI
 
     async once(timeout?: number): Promise<T>
     {
-        let result = await this.next(timeout);
+        const result = await this.next(timeout);
         if (result.done)
         {
             // If stream was ended, this function should never resolve.

@@ -5,6 +5,7 @@ import { TGChannel } from '../channel/channel';
 import { SimpleBroker } from './simple-broker';
 import { ChannelState } from '../channel/types';
 
+/* eslint-disable @typescript-eslint/no-unused-vars */
 export class SimpleExchange extends AsyncStreamEmitter<any>
 {
     private readonly _broker: SimpleBroker;
@@ -28,7 +29,7 @@ export class SimpleExchange extends AsyncStreamEmitter<any>
 
         (async () =>
         {
-            for await (let { channel, data } of this._broker.listener('publish'))
+            for await (const { channel, data } of this._broker.listener('publish'))
             {
                 this._channelDataDemux.write(channel, data);
             }
@@ -63,8 +64,8 @@ export class SimpleExchange extends AsyncStreamEmitter<any>
             this._triggerChannelSubscribe(channel);
         }
 
-        let channelDataStream = this._channelDataDemux.stream(channelName);
-        let channelIterable   = new TGChannel(
+        const channelDataStream = this._channelDataDemux.stream(channelName);
+        const channelIterable   = new TGChannel(
             channelName,
             this,
             this._channelEventDemux,
@@ -76,7 +77,7 @@ export class SimpleExchange extends AsyncStreamEmitter<any>
 
     unsubscribe(channelName: string): void
     {
-        let channel = this._channelMap[channelName];
+        const channel = this._channelMap[channelName];
 
         if (channel)
         {
@@ -86,10 +87,8 @@ export class SimpleExchange extends AsyncStreamEmitter<any>
 
     channel(channelName: string): TGChannel<any>
     {
-        let currentChannel = this._channelMap[channelName];
-
-        let channelDataStream = this._channelDataDemux.stream(channelName);
-        let channelIterable   = new TGChannel(
+        const channelDataStream = this._channelDataDemux.stream(channelName);
+        const channelIterable   = new TGChannel(
             channelName,
             this,
             this._channelEventDemux,
@@ -101,7 +100,7 @@ export class SimpleExchange extends AsyncStreamEmitter<any>
 
     getChannelState(channelName: string): ChannelState
     {
-        let channel = this._channelMap[channelName];
+        const channel = this._channelMap[channelName];
         if (channel)
         {
             return channel.state;
@@ -116,7 +115,7 @@ export class SimpleExchange extends AsyncStreamEmitter<any>
 
     subscriptions(includePending?: boolean): string[]
     {
-        let subs = [];
+        const subs = [];
         Object.keys(this._channelMap).forEach((channelName) =>
         {
             if (includePending || this._channelMap[channelName].state === TGChannel.SUBSCRIBED)
@@ -129,7 +128,7 @@ export class SimpleExchange extends AsyncStreamEmitter<any>
 
     isSubscribed(channelName: string, includePending?: boolean): boolean
     {
-        let channel = this._channelMap[channelName];
+        const channel = this._channelMap[channelName];
         if (includePending)
         {
             return !!channel;
@@ -143,7 +142,7 @@ export class SimpleExchange extends AsyncStreamEmitter<any>
 
     private _triggerChannelSubscribe(channel: SimpleChannel): void
     {
-        let channelName = channel.name;
+        const channelName = channel.name;
 
         channel.state = TGChannel.SUBSCRIBED;
 
@@ -153,7 +152,7 @@ export class SimpleExchange extends AsyncStreamEmitter<any>
 
     private _triggerChannelUnsubscribe(channel: SimpleChannel)
     {
-        let channelName = channel.name;
+        const channelName = channel.name;
 
         delete this._channelMap[channelName];
         if (channel.state === TGChannel.SUBSCRIBED)

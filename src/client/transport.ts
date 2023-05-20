@@ -12,7 +12,7 @@ let createWebSocket;
 if (global.WebSocket)
 {
     WebSocket       = global.WebSocket;
-    createWebSocket = function (uri, options)
+    createWebSocket = function (uri)
     {
         return new WebSocket(uri);
     };
@@ -81,9 +81,9 @@ export class TGTransport extends AsyncStreamEmitter<any>
         // Open the connection.
 
         this.state = this.CONNECTING;
-        let uri    = this.uri();
+        const uri    = this.uri();
 
-        let wsSocket        = createWebSocket(uri, this.options);
+        const wsSocket        = createWebSocket(uri, this.options);
         wsSocket.binaryType = this.options.binaryType;
 
         this.socket = wsSocket;
@@ -111,12 +111,12 @@ export class TGTransport extends AsyncStreamEmitter<any>
             this._onClose(code, event.reason);
         };
 
-        wsSocket.onmessage = (message, flags) =>
+        wsSocket.onmessage = (message) =>
         {
             this._onMessage(message.data);
         };
 
-        wsSocket.onerror = (error) =>
+        wsSocket.onerror = () =>
         {
             // The onclose event will be called automatically after the onerror event
             // if the socket is connected - Otherwise, if it's in the middle of
@@ -144,7 +144,7 @@ export class TGTransport extends AsyncStreamEmitter<any>
     {
         let query: string|{[key: string]: string|number|boolean} =
                 this.options.query || {};
-        let schema                                               = this.options.secure ? 'wss' : 'ws';
+        const schema                                               = this.options.secure ? 'wss' : 'ws';
 
         if (this.options.timestampRequests)
         {
@@ -211,7 +211,7 @@ export class TGTransport extends AsyncStreamEmitter<any>
 
     transmitObject(eventObject: EventObject, options?: any): number
     {
-        let simpleEventObject: EventObject = {
+        const simpleEventObject: EventObject = {
             event: eventObject.event,
             data : eventObject.data
         };
@@ -233,7 +233,7 @@ export class TGTransport extends AsyncStreamEmitter<any>
         options: TransmitOptions
     ): Promise<void>
     {
-        let eventObject = {
+        const eventObject = {
             event: event,
             data : data
         };
@@ -252,7 +252,7 @@ export class TGTransport extends AsyncStreamEmitter<any>
         callback?: EventObjectCallback
     ): number|null
     {
-        let eventObject: EventObject = {
+        const eventObject: EventObject = {
             event   : event,
             data    : data,
             callback: callback
@@ -352,7 +352,7 @@ export class TGTransport extends AsyncStreamEmitter<any>
             delete this._batchTimeout;
             if (this._batchSendList.length)
             {
-                let str = this.serializeObject(this._batchSendList);
+                const str = this.serializeObject(this._batchSendList);
                 if (str != null)
                 {
                     this.send(str);
@@ -364,7 +364,7 @@ export class TGTransport extends AsyncStreamEmitter<any>
 
     sendObjectSingle(object: any): void
     {
-        let str = this.serializeObject(object);
+        const str = this.serializeObject(object);
         if (str != null)
         {
             this.send(str);
@@ -421,13 +421,13 @@ export class TGTransport extends AsyncStreamEmitter<any>
 
     private async _handshake(): Promise<EventObject>
     {
-        let token = await this.auth.loadToken(this.authTokenName);
+        const token = await this.auth.loadToken(this.authTokenName);
         // Don't wait for this.state to be 'open'.
         // The underlying WebSocket (this.socket) is already open.
-        let options = {
+        const options = {
             force: true
         };
-        let status  = await this.invoke('#handshake', { authToken: token }, options);
+        const status  = await this.invoke('#handshake', { authToken: token }, options);
         if (status)
         {
             // Add the token which was used as part of authentication attempt
@@ -445,16 +445,16 @@ export class TGTransport extends AsyncStreamEmitter<any>
     {
         Object.keys(this._callbackMap || {}).forEach((i) =>
         {
-            let eventObject = this._callbackMap[i];
+            const eventObject = this._callbackMap[i];
             delete this._callbackMap[i];
 
             clearTimeout(eventObject.timeout);
             delete eventObject.timeout;
 
-            let errorMessage       = `Event "${eventObject.event}" was aborted due to a bad connection`;
-            let badConnectionError = new BadConnectionError(errorMessage, failureType);
+            const errorMessage       = `Event "${eventObject.event}" was aborted due to a bad connection`;
+            const badConnectionError = new BadConnectionError(errorMessage, failureType);
 
-            let callback = eventObject.callback;
+            const callback = eventObject.callback;
             delete eventObject.callback;
 
             (async () =>
@@ -479,14 +479,14 @@ export class TGTransport extends AsyncStreamEmitter<any>
         if (this.state === this.OPEN)
         {
             this.state      = this.CLOSED;
-            let donePromise = this.listener('close').once();
+            const donePromise = this.listener('close').once();
             this._abortAllPendingEventsDueToBadConnection('disconnect', donePromise);
             this.emit('close', { code, data });
         }
         else if (this.state === this.CONNECTING)
         {
             this.state      = this.CLOSED;
-            let donePromise = this.listener('openAbort').once();
+            const donePromise = this.listener('openAbort').once();
             this._abortAllPendingEventsDueToBadConnection('connectAbort', donePromise);
             this.emit('openAbort', { code, data });
         }
@@ -502,13 +502,13 @@ export class TGTransport extends AsyncStreamEmitter<any>
             }
             else
             {
-                let response = new TGResponse(this, obj.cid);
+                const response = new TGResponse(this, obj.cid);
                 this.emit('inboundInvoke', { ...obj, response });
             }
         }
         else if (obj && obj.rid != null)
         {
-            let eventObject = this._callbackMap[obj.rid];
+            const eventObject = this._callbackMap[obj.rid];
             if (eventObject)
             {
                 clearTimeout(eventObject.timeout);
@@ -517,7 +517,7 @@ export class TGTransport extends AsyncStreamEmitter<any>
 
                 if (eventObject.callback)
                 {
-                    let rehydratedError = hydrateError(obj.error);
+                    const rehydratedError = hydrateError(obj.error);
                     eventObject.callback(rehydratedError, obj.data);
                 }
             }
@@ -532,7 +532,7 @@ export class TGTransport extends AsyncStreamEmitter<any>
     {
         this.emit('event', { event: 'message', data: { message } });
 
-        let obj = this.decode(message);
+        const obj = this.decode(message);
 
         // If ping
         if (obj === '#1')
@@ -547,7 +547,7 @@ export class TGTransport extends AsyncStreamEmitter<any>
         {
             if (Array.isArray(obj))
             {
-                let len = obj.length;
+                const len = obj.length;
                 for (let i = 0; i < len; i++)
                 {
                     this._handleTransmittedEventObject(obj[i], message);
@@ -572,7 +572,6 @@ export class TGTransport extends AsyncStreamEmitter<any>
             return;
         }
 
-        let now = (new Date()).getTime();
         clearTimeout(this._pingTimeoutTicker);
         this._pingTimeoutTicker = setTimeout(() =>
         {
@@ -589,11 +588,11 @@ export class TGTransport extends AsyncStreamEmitter<any>
         }
         delete eventObject.timeout;
 
-        let callback = eventObject.callback;
+        const callback = eventObject.callback;
         if (callback)
         {
             delete eventObject.callback;
-            let error = new TimeoutError(`Event response for "${eventObject.event}" timed out`);
+            const error = new TimeoutError(`Event response for "${eventObject.event}" timed out`);
             callback.call(eventObject, error, eventObject);
         }
     }

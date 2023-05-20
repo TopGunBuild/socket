@@ -44,7 +44,7 @@ export interface AuthTokenOptions extends JwtSignOptions
     mutatePayload?: any;
 }
 
-export type AuthEngineType = Pick<AuthEngine, "verifyToken" | "signToken">;
+export type AuthEngineType = Pick<AuthEngine, 'verifyToken' | 'signToken'>;
 
 export interface CodecEngine {
     decode: (input: any) => any;

@@ -39,13 +39,13 @@ export class StreamDemux<T>
 
     createAsyncIterator(name: string, timeout?: number): AsyncIterator<T>
     {
-        let mainStreamIterator = this._mainStream.createAsyncIterator(timeout);
+        const mainStreamIterator = this._mainStream.createAsyncIterator(timeout);
         return {
             next: async () =>
             {
                 while (true)
                 {
-                    let packet = await mainStreamIterator.next();
+                    const packet = await mainStreamIterator.next();
                     if (packet.done)
                     {
                         return packet;

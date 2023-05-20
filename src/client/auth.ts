@@ -30,7 +30,7 @@ export class AuthEngine implements TGAuthEngine
 
     removeToken(name: string): Promise<any>
     {
-        let loadPromise = this.loadToken(name);
+        const loadPromise = this.loadToken(name);
 
         if (this.isLocalStorageEnabled && global.localStorage)
         {

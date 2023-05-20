@@ -124,7 +124,7 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
         super();
         socketOptions = socketOptions || {};
 
-        let defaultOptions: SocketClientOptions = {
+        const defaultOptions: SocketClientOptions = {
             path                  : '/socketcluster/',
             secure                : false,
             autoConnect           : true,
@@ -138,7 +138,7 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
             binaryType            : 'arraybuffer',
             cloneData             : false
         };
-        let opts                          = Object.assign(defaultOptions, socketOptions);
+        const opts                          = Object.assign(defaultOptions, socketOptions);
 
         this.id                            = null;
         this.version                       = opts.version || null;
@@ -163,9 +163,9 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
         this.pingTimeout         = opts.pingTimeout;
         this.pingTimeoutDisabled = !!opts.pingTimeoutDisabled;
 
-        let maxTimeout = Math.pow(2, 31) - 1;
+        const maxTimeout = Math.pow(2, 31) - 1;
 
-        let verifyDuration = (propertyName) =>
+        const verifyDuration = (propertyName) =>
         {
             if (this[propertyName] > maxTimeout)
             {
@@ -207,7 +207,7 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
 
             // Add properties to the this.options.autoReconnectOptions object.
             // We assign the reference to a reconnectOptions variable to avoid repetition.
-            let reconnectOptions = this.options.autoReconnectOptions;
+            const reconnectOptions = this.options.autoReconnectOptions;
             if (reconnectOptions.initialDelay == null)
             {
                 reconnectOptions.initialDelay = 10000;
@@ -252,7 +252,7 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
 
         if (this.options.protocol)
         {
-            let protocolOptionError = new InvalidArgumentsError(
+            const protocolOptionError = new InvalidArgumentsError(
                 'The "protocol" option does not affect asyngular-client - ' +
                 'If you want to utilize SSL/TLS, use "secure" option instead'
             );
@@ -300,8 +300,8 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
         this._privateDataHandlerMap = {
             '#publish': (data) =>
             {
-                let undecoratedChannelName = this._undecorateChannelName(data.channel);
-                let isSubscribed           = this.isSubscribed(undecoratedChannelName, true);
+                const undecoratedChannelName = this._undecorateChannelName(data.channel);
+                const isSubscribed           = this.isSubscribed(undecoratedChannelName, true);
 
                 if (isSubscribed)
                 {
@@ -310,8 +310,8 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
             },
             '#kickOut': (data) =>
             {
-                let undecoratedChannelName = this._undecorateChannelName(data.channel);
-                let channel                = this._channelMap[undecoratedChannelName];
+                const undecoratedChannelName = this._undecorateChannelName(data.channel);
+                const channel                = this._channelMap[undecoratedChannelName];
                 if (channel)
                 {
                     this.emit('kickOut', {
@@ -429,15 +429,15 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
                 this.transport.closeAllListeners();
             }
 
-            let transport  = new TGTransport(this.auth, this.codec, this.options);
+            const transport  = new TGTransport(this.auth, this.codec, this.options);
             this.transport = transport;
 
             (async () =>
             {
-                let asyncIterator = transport.listener('open').createAsyncIterator();
+                const asyncIterator = transport.listener('open').createAsyncIterator();
                 while (true)
                 {
-                    let packet = await asyncIterator.next();
+                    const packet = await asyncIterator.next();
                     if (packet.done) break;
                     this.state = this.OPEN;
                     this._onOpen(packet.value);
@@ -446,10 +446,10 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
 
             (async () =>
             {
-                let asyncIterator = transport.listener('error').createAsyncIterator();
+                const asyncIterator = transport.listener('error').createAsyncIterator();
                 while (true)
                 {
-                    let packet = await asyncIterator.next();
+                    const packet = await asyncIterator.next();
                     if (packet.done) break;
                     this._onError(packet.value.error);
                 }
@@ -457,10 +457,10 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
 
             (async () =>
             {
-                let asyncIterator = transport.listener('close').createAsyncIterator();
+                const asyncIterator = transport.listener('close').createAsyncIterator();
                 while (true)
                 {
-                    let packet = await asyncIterator.next();
+                    const packet = await asyncIterator.next();
                     if (packet.done) break;
                     this.state = this.CLOSED;
                     this._onClose(packet.value.code, packet.value.data);
@@ -469,10 +469,10 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
 
             (async () =>
             {
-                let asyncIterator = transport.listener('openAbort').createAsyncIterator();
+                const asyncIterator = transport.listener('openAbort').createAsyncIterator();
                 while (true)
                 {
-                    let packet = await asyncIterator.next();
+                    const packet = await asyncIterator.next();
                     if (packet.done) break;
                     this.state = this.CLOSED;
                     this._onClose(packet.value.code, packet.value.data, true);
@@ -481,10 +481,10 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
 
             (async () =>
             {
-                let asyncIterator = transport.listener('event').createAsyncIterator();
+                const asyncIterator = transport.listener('event').createAsyncIterator();
                 while (true)
                 {
-                    let packet = await asyncIterator.next();
+                    const packet = await asyncIterator.next();
                     if (packet.done) break;
                     this.emit(packet.value.event, packet.value.data);
                 }
@@ -492,10 +492,10 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
 
             (async () =>
             {
-                let asyncIterator = transport.listener('inboundTransmit').createAsyncIterator();
+                const asyncIterator = transport.listener('inboundTransmit').createAsyncIterator();
                 while (true)
                 {
-                    let packet = await asyncIterator.next();
+                    const packet = await asyncIterator.next();
                     if (packet.done) break;
                     this._onInboundTransmit(packet.value.event, packet.value.data);
                 }
@@ -503,10 +503,10 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
 
             (async () =>
             {
-                let asyncIterator = transport.listener('inboundInvoke').createAsyncIterator();
+                const asyncIterator = transport.listener('inboundInvoke').createAsyncIterator();
                 while (true)
                 {
-                    let packet = await asyncIterator.next();
+                    const packet = await asyncIterator.next();
                     if (packet.done) break;
                     this._onInboundInvoke(packet.value.event, packet.value.data, packet.value.response);
                 }
@@ -529,7 +529,7 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
             throw new InvalidArgumentsError('If specified, the code argument must be a number');
         }
 
-        let isConnecting = this.state === this.CONNECTING;
+        const isConnecting = this.state === this.CONNECTING;
         if (isConnecting || this.state === this.OPEN)
         {
             this.state = this.CLOSED;
@@ -664,7 +664,7 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
 
     publish(channelName: string, data?: any): Promise<any>
     {
-        let pubData = {
+        const pubData = {
             channel: this._decorateChannelName(channelName),
             data   : data
         };
@@ -676,7 +676,7 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
         options     = options || {};
         let channel = this._channelMap[channelName];
 
-        let sanitizedOptions: SubscribeOptions = {
+        const sanitizedOptions: SubscribeOptions = {
             waitForAuth: !!options.waitForAuth,
             batch      : !!options.batch,
         };
@@ -705,8 +705,8 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
             channel.options = sanitizedOptions;
         }
 
-        let channelDataStream = this._channelDataDemux.stream(channelName);
-        let channelIterable   = new TGChannel(
+        const channelDataStream = this._channelDataDemux.stream(channelName);
+        const channelIterable   = new TGChannel(
             channelName,
             this,
             this._channelEventDemux,
@@ -718,7 +718,7 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
 
     unsubscribe(channelName: string): void
     {
-        let channel = this._channelMap[channelName];
+        const channel = this._channelMap[channelName];
 
         if (channel)
         {
@@ -729,10 +729,8 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
 
     channel(channelName: string): TGChannel<any>
     {
-        let currentChannel = this._channelMap[channelName];
-
-        let channelDataStream = this._channelDataDemux.stream(channelName);
-        let channelIterable   = new TGChannel(
+        const channelDataStream = this._channelDataDemux.stream(channelName);
+        const channelIterable   = new TGChannel(
             channelName,
             this,
             this._channelEventDemux,
@@ -744,7 +742,7 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
 
     getChannelState(channelName: string): ChannelState
     {
-        let channel = this._channelMap[channelName];
+        const channel = this._channelMap[channelName];
         if (channel)
         {
             return channel.state;
@@ -754,7 +752,7 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
 
     getChannelOptions(channelName: string): SCChannelOptions
     {
-        let channel = this._channelMap[channelName];
+        const channel = this._channelMap[channelName];
         if (channel)
         {
             return { ...channel.options };
@@ -789,7 +787,7 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
 
     subscriptions(includePending?: boolean): string[]
     {
-        let subs = [];
+        const subs = [];
         Object.keys(this._channelMap).forEach((channelName) =>
         {
             if (includePending || this._channelMap[channelName].state === TGChannel.SUBSCRIBED)
@@ -802,7 +800,7 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
 
     isSubscribed(channelName: string, includePending?: boolean): boolean
     {
-        let channel = this._channelMap[channelName];
+        const channel = this._channelMap[channelName];
         if (includePending)
         {
             return !!channel;
@@ -813,11 +811,11 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
     processPendingSubscriptions(): void
     {
         this.preparingPendingSubscriptions = false;
-        let pendingChannels                = [];
+        const pendingChannels                = [];
 
         Object.keys(this._channelMap).forEach((channelName) =>
         {
-            let channel = this._channelMap[channelName];
+            const channel = this._channelMap[channelName];
             if (channel.state === TGChannel.PENDING)
             {
                 pendingChannels.push(channel);
@@ -826,8 +824,8 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
 
         pendingChannels.sort((a, b) =>
         {
-            let ap = a.options.priority || 0;
-            let bp = b.options.priority || 0;
+            const ap = a.options.priority || 0;
+            const bp = b.options.priority || 0;
             if (ap > bp)
             {
                 return -1;
@@ -853,7 +851,7 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
     {
         if (this.state === this.OPEN)
         {
-            let options: TransmitOptions = {
+            const options: TransmitOptions = {
                 noTimeout: true
             };
             if (channel.options.batch)
@@ -867,20 +865,20 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
             // so long as the connection remains open. If the connection closes,
             // the server will automatically unsubscribe the client and thus complete
             // the operation on the server side.
-            let decoratedChannelName = this._decorateChannelName(channel.name);
+            const decoratedChannelName = this._decorateChannelName(channel.name);
             this.transport.transmit('#unsubscribe', decoratedChannelName, options);
         }
     }
 
     private _triggerChannelUnsubscribe(channel: TGChannel<any>, setAsPending?: boolean): void
     {
-        let channelName = channel.name;
+        const channelName = channel.name;
 
         this._cancelPendingSubscribeCallback(channel);
 
         if (channel.state === TGChannel.SUBSCRIBED)
         {
-            let stateChangeData = {
+            const stateChangeData = {
                 oldChannelState: channel.state,
                 newChannelState: setAsPending ? TGChannel.PENDING : TGChannel.UNSUBSCRIBED
             };
@@ -905,7 +903,7 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
 
     private _trySubscribe(channel: TGChannel<any>): void
     {
-        let meetsAuthRequirements = !channel.options.waitForAuth || this.authState === this.AUTHENTICATED;
+        const meetsAuthRequirements = !channel.options.waitForAuth || this.authState === this.AUTHENTICATED;
 
         // We can only ever have one pending subscribe action at any given time on a channel
         if (
@@ -916,11 +914,11 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
         )
         {
 
-            let options: {[key: string]: any} = {
+            const options: {[key: string]: any} = {
                 noTimeout: true
             };
 
-            let subscriptionOptions: SubscribeOptions = {};
+            const subscriptionOptions: SubscribeOptions = {};
             if (channel.options.waitForAuth)
             {
                 options.waitForAuth             = true;
@@ -999,9 +997,9 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
 
     private _triggerChannelSubscribeFail(err: Error, channel: TGChannel<any>, subscriptionOptions: SubscribeOptions): void
     {
-        let channelName           = channel.name;
-        let meetsAuthRequirements = !channel.options.waitForAuth || this.authState === this.AUTHENTICATED;
-        let hasChannel            = !!this._channelMap[channelName];
+        const channelName           = channel.name;
+        const meetsAuthRequirements = !channel.options.waitForAuth || this.authState === this.AUTHENTICATED;
+        const hasChannel            = !!this._channelMap[channelName];
 
         if (hasChannel && meetsAuthRequirements)
         {
@@ -1021,14 +1019,14 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
 
     private _triggerChannelSubscribe(channel: TGChannel<any>, subscriptionOptions: SubscribeOptions): void
     {
-        let channelName = channel.name;
+        const channelName = channel.name;
 
         if (channel.state !== TGChannel.SUBSCRIBED)
         {
-            let oldChannelState = channel.state;
+            const oldChannelState = channel.state;
             channel.state       = TGChannel.SUBSCRIBED;
 
-            let stateChangeData = {
+            const stateChangeData = {
                 oldChannelState,
                 newChannelState: channel.state,
                 subscriptionOptions
@@ -1054,7 +1052,7 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
         {
             this.connect();
         }
-        let eventObject: EventObject = {
+        const eventObject: EventObject = {
             event: event
         };
 
@@ -1113,11 +1111,11 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
         }
         delete eventObject.timeout;
 
-        let callback = eventObject.callback;
+        const callback = eventObject.callback;
         if (callback)
         {
             delete eventObject.callback;
-            let error = new TimeoutError(`Event response for "${eventObject.event}" timed out`);
+            const error = new TimeoutError(`Event response for "${eventObject.event}" timed out`);
             callback.call(eventObject, error, eventObject);
         }
         // Cleanup any pending response callback in the transport layer too.
@@ -1135,7 +1133,7 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
         while (currentNode)
         {
             nextNode        = currentNode.next;
-            let eventObject = currentNode.data;
+            const eventObject = currentNode.data;
             currentNode.detach();
             this.transport.transmitObject(eventObject);
             currentNode = nextNode;
@@ -1144,7 +1142,7 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
 
     private _onInboundInvoke(event: string, data: any, response: TGResponse): void
     {
-        let handler = this._privateRPCHandlerMap[event];
+        const handler = this._privateRPCHandlerMap[event];
         if (handler)
         {
             handler.call(this, data, response);
@@ -1167,7 +1165,7 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
 
     private _onInboundTransmit(event: string, data: any): void
     {
-        let handler = this._privateDataHandlerMap[event];
+        const handler = this._privateDataHandlerMap[event];
         if (handler)
         {
             handler.call(this, data);
@@ -1192,7 +1190,7 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
 
         this._suspendSubscriptions();
 
-        let donePromise = this.listener('close').once();
+        const donePromise = this.listener('close').once();
         this._abortAllPendingEventsDueToBadConnection(openAbort ? 'connectAbort' : 'disconnect', donePromise);
 
         // Try to reconnect
@@ -1242,7 +1240,7 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
             {
                 closeMessage = 'Socket connection closed with status code ' + code;
             }
-            let err = new SocketProtocolError(TGClientSocket.errorStatuses[code] || closeMessage, code);
+            const err = new SocketProtocolError(TGClientSocket.errorStatuses[code] || closeMessage, code);
             this._onError(err);
         }
     }
@@ -1255,18 +1253,18 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
         while (currentNode)
         {
             nextNode        = currentNode.next;
-            let eventObject = currentNode.data;
+            const eventObject = currentNode.data;
             clearTimeout(eventObject.timeout);
             delete eventObject.timeout;
             currentNode.detach();
             currentNode = nextNode;
 
-            let callback = eventObject.callback;
+            const callback = eventObject.callback;
             if (callback)
             {
                 delete eventObject.callback;
-                let errorMessage = `Event "${eventObject.event}" was aborted due to a bad connection`;
-                let error        = new BadConnectionError(errorMessage, failureType);
+                const errorMessage = `Event "${eventObject.event}" was aborted due to a bad connection`;
+                const error        = new BadConnectionError(errorMessage, failureType);
 
                 (async () =>
                 {
@@ -1286,7 +1284,7 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
     {
         Object.keys(this._channelMap).forEach((channelName) =>
         {
-            let channel = this._channelMap[channelName];
+            const channel = this._channelMap[channelName];
             this._triggerChannelUnsubscribe(channel, true);
         });
     }
@@ -1346,13 +1344,13 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
 
     private _tryReconnect(initialDelay?: number): void
     {
-        let exponent         = this.connectAttempts++;
-        let reconnectOptions = this.options.autoReconnectOptions;
+        const exponent         = this.connectAttempts++;
+        const reconnectOptions = this.options.autoReconnectOptions;
         let timeout;
 
         if (initialDelay == null || exponent > 0)
         {
-            let initialTimeout = Math.round(reconnectOptions.initialDelay + (reconnectOptions.randomness || 0) * Math.random());
+            const initialTimeout = Math.round(reconnectOptions.initialDelay + (reconnectOptions.randomness || 0) * Math.random());
 
             timeout = Math.round(initialTimeout * Math.pow(reconnectOptions.multiplier, exponent));
         }
@@ -1378,8 +1376,8 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
 
     private _extractAuthTokenData(signedAuthToken: string): any
     {
-        let tokenParts       = (signedAuthToken || '').split('.');
-        let encodedTokenData = tokenParts[1];
+        const tokenParts       = (signedAuthToken || '').split('.');
+        const encodedTokenData = tokenParts[1];
         if (encodedTokenData != null)
         {
             let tokenData = encodedTokenData;
@@ -1398,13 +1396,13 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
 
     private async _handleBrowserUnload(): Promise<void>
     {
-        let unloadHandler           = () =>
+        const unloadHandler           = () =>
         {
             this.disconnect();
         };
         let isUnloadHandlerAttached = false;
 
-        let attachUnloadHandler = () =>
+        const attachUnloadHandler = () =>
         {
             if (!isUnloadHandlerAttached)
             {
@@ -1413,7 +1411,7 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
             }
         };
 
-        let detachUnloadHandler = () =>
+        const detachUnloadHandler = () =>
         {
             if (isUnloadHandlerAttached)
             {
@@ -1424,10 +1422,10 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
 
         (async () =>
         {
-            let asyncIterator = this.listener('connecting').createAsyncIterator();
+            const asyncIterator = this.listener('connecting').createAsyncIterator();
             while (true)
             {
-                let packet = await asyncIterator.next();
+                const packet = await asyncIterator.next();
                 if (packet.done) break;
                 attachUnloadHandler();
             }
@@ -1435,10 +1433,10 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
 
         (async () =>
         {
-            let asyncIterator = this.listener('close').createAsyncIterator();
+            const asyncIterator = this.listener('close').createAsyncIterator();
             while (true)
             {
-                let packet = await asyncIterator.next();
+                const packet = await asyncIterator.next();
                 if (packet.done) break;
                 detachUnloadHandler();
             }
@@ -1449,14 +1447,14 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
     {
         if (this.authState !== this.UNAUTHENTICATED)
         {
-            let oldAuthState       = this.authState;
-            let oldAuthToken       = this.authToken;
-            let oldSignedAuthToken = this.signedAuthToken;
+            const oldAuthState       = this.authState;
+            const oldAuthToken       = this.authToken;
+            const oldSignedAuthToken = this.signedAuthToken;
             this.authState         = this.UNAUTHENTICATED;
             this.signedAuthToken   = null;
             this.authToken         = null;
 
-            let stateChangeData = {
+            const stateChangeData = {
                 oldAuthState,
                 newAuthState: this.authState
             };
@@ -1472,9 +1470,9 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
 
         if (this.authState !== this.AUTHENTICATED)
         {
-            let oldAuthState    = this.authState;
+            const oldAuthState    = this.authState;
             this.authState      = this.AUTHENTICATED;
-            let stateChangeData = {
+            const stateChangeData = {
                 oldAuthState,
                 newAuthState   : this.authState,
                 signedAuthToken: signedAuthToken,

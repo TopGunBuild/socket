@@ -54,7 +54,7 @@ export class TGSocket extends AsyncStreamEmitter<any>
     UNAUTHENTICATED: AuthState = TGSocket.UNAUTHENTICATED;
 
     private readonly _autoAckRPCs: {'#publish': number};
-    private readonly _callbackMap: {};
+    private readonly _callbackMap: {[key: string]: any};
     private readonly _pingIntervalTicker: any;
     private _receiverDemux: StreamDemux<any>;
     private _procedureDemux: StreamDemux<any>;
@@ -126,7 +126,7 @@ export class TGSocket extends AsyncStreamEmitter<any>
         this._resetPongTimeout();
 
         // Receive incoming raw messages
-        this._on('message', async (message, flags) =>
+        this._on('message', async (message) =>
         {
             this._resetPongTimeout();
 
@@ -150,7 +150,7 @@ export class TGSocket extends AsyncStreamEmitter<any>
             // If pong
             if (obj === '#2')
             {
-                let token = this.getAuthToken();
+                const token = this.getAuthToken();
                 if (this.server.isAuthTokenExpired(token))
                 {
                     this.deauthenticate();
@@ -160,7 +160,7 @@ export class TGSocket extends AsyncStreamEmitter<any>
             {
                 if (Array.isArray(obj))
                 {
-                    let len = obj.length;
+                    const len = obj.length;
                     for (let i = 0; i < len; i++)
                     {
                         this._handleRemoteEventObject(obj[i], message);
@@ -221,7 +221,7 @@ export class TGSocket extends AsyncStreamEmitter<any>
 
         if (typeof code !== 'number')
         {
-            let err = new InvalidArgumentsError('If specified, the code argument must be a number');
+            const err = new InvalidArgumentsError('If specified, the code argument must be a number');
             this.emitError(err);
         }
 
@@ -329,7 +329,7 @@ export class TGSocket extends AsyncStreamEmitter<any>
     {
         this.server.verifyOutboundEvent(this, event, data, options, (err, newData) =>
         {
-            let eventObject: EventObject = {
+            const eventObject: EventObject = {
                 event: event
             };
             if (newData !== undefined)
@@ -364,7 +364,7 @@ export class TGSocket extends AsyncStreamEmitter<any>
                     reject(err);
                     return;
                 }
-                let eventObject: EventObject = {
+                const eventObject: EventObject = {
                     event: event,
                     cid  : this._nextCallId()
                 };
@@ -373,9 +373,9 @@ export class TGSocket extends AsyncStreamEmitter<any>
                     eventObject.data = newData;
                 }
 
-                let timeout = setTimeout(() =>
+                const timeout = setTimeout(() =>
                 {
-                    let error = new TimeoutError(`Event response for "${event}" timed out`);
+                    const error = new TimeoutError(`Event response for "${event}" timed out`);
                     delete this._callbackMap[eventObject.cid];
                     reject(error);
                 }, this.server.ackTimeout);
@@ -410,7 +410,7 @@ export class TGSocket extends AsyncStreamEmitter<any>
     {
         if (oldAuthState !== this.AUTHENTICATED)
         {
-            let stateChangeData: AuthStateChangeData = {
+            const stateChangeData: AuthStateChangeData = {
                 oldAuthState,
                 newAuthState: this.authState,
                 authToken   : this.authToken
@@ -430,8 +430,8 @@ export class TGSocket extends AsyncStreamEmitter<any>
 
     async setAuthToken(data: AuthToken, options?: AuthTokenOptions): Promise<void>
     {
-        let authToken    = cloneDeep(data);
-        let oldAuthState = this.authState;
+        const authToken    = cloneDeep(data);
+        const oldAuthState = this.authState;
         this.authState   = this.AUTHENTICATED;
 
         if (options == null)
@@ -444,7 +444,7 @@ export class TGSocket extends AsyncStreamEmitter<any>
             if (options.algorithm != null)
             {
                 delete options.algorithm;
-                let err = new InvalidArgumentsError(
+                const err = new InvalidArgumentsError(
                     'Cannot change auth token algorithm at runtime - It must be specified as a config option on launch'
                 );
                 this.emitError(err);
@@ -452,9 +452,9 @@ export class TGSocket extends AsyncStreamEmitter<any>
         }
 
         options.mutatePayload      = true;
-        let rejectOnFailedDelivery = options.rejectOnFailedDelivery;
+        const rejectOnFailedDelivery = options.rejectOnFailedDelivery;
         delete options.rejectOnFailedDelivery;
-        let defaultSignatureOptions = this.server.defaultSignatureOptions;
+        const defaultSignatureOptions = this.server.defaultSignatureOptions;
 
         // We cannot have the exp claim on the token and the expiresIn option
         // set at the same time or else auth.signToken will throw an error.
@@ -496,7 +496,7 @@ export class TGSocket extends AsyncStreamEmitter<any>
 
         this.authToken = authToken;
 
-        let handleAuthTokenSignFail = (error) =>
+        const handleAuthTokenSignFail = (error) =>
         {
             this.emitError(error);
             this._onClose(4002, error.toString());
@@ -504,9 +504,9 @@ export class TGSocket extends AsyncStreamEmitter<any>
             throw error;
         };
 
-        let sendAuthTokenToClient = async (signedToken) =>
+        const sendAuthTokenToClient = async (signedToken) =>
         {
-            let tokenData = {
+            const tokenData = {
                 token: signedToken
             };
             try
@@ -574,14 +574,14 @@ export class TGSocket extends AsyncStreamEmitter<any>
 
     deauthenticateSelf(): void
     {
-        let oldAuthState     = this.authState;
-        let oldAuthToken     = this.authToken;
+        const oldAuthState     = this.authState;
+        const oldAuthToken     = this.authToken;
         this.signedAuthToken = null;
         this.authToken       = null;
         this.authState       = this.UNAUTHENTICATED;
         if (oldAuthState !== this.UNAUTHENTICATED)
         {
-            let stateChangeData = {
+            const stateChangeData = {
                 oldAuthState,
                 newAuthState: this.authState
             };
@@ -645,7 +645,7 @@ export class TGSocket extends AsyncStreamEmitter<any>
 
         if (this.state !== this.CLOSED)
         {
-            let prevState = this.state;
+            const prevState = this.state;
             this.state    = this.CLOSED;
 
             if (prevState === this.CONNECTING)
@@ -685,7 +685,7 @@ export class TGSocket extends AsyncStreamEmitter<any>
                 {
                     closeMessage = `Socket connection closed with status code ${code}`;
                 }
-                let err = new SocketProtocolError(TGSocket.errorStatuses[code] || closeMessage, code);
+                const err = new SocketProtocolError(TGSocket.errorStatuses[code] || closeMessage, code);
                 this.emitError(err);
             }
         }
@@ -703,9 +703,9 @@ export class TGSocket extends AsyncStreamEmitter<any>
     {
         if (obj && obj.event != null)
         {
-            let eventName = obj.event;
+            const eventName = obj.event;
 
-            let requestOptions: EventObject = {
+            const requestOptions: EventObject = {
                 socket: this,
                 event : eventName,
                 data  : obj.data,
@@ -724,7 +724,7 @@ export class TGSocket extends AsyncStreamEmitter<any>
             else
             {
                 requestOptions.cid = obj.cid;
-                let response       = new TGResponse(this, requestOptions.cid);
+                const response       = new TGResponse(this, requestOptions.cid);
                 this.server.verifyInboundRemoteEvent(requestOptions, (err, newEventData, ackData) =>
                 {
                     if (err)
@@ -765,12 +765,12 @@ export class TGSocket extends AsyncStreamEmitter<any>
         else if (obj && obj.rid != null)
         {
             // If incoming message is a response to a previously sent message
-            let ret = this._callbackMap[obj.rid];
+            const ret = this._callbackMap[obj.rid];
             if (ret)
             {
                 clearTimeout(ret.timeout);
                 delete this._callbackMap[obj.rid];
-                let rehydratedError = hydrateError(obj.error);
+                const rehydratedError = hydrateError(obj.error);
                 ret.callback(rehydratedError, obj.data);
             }
         }
@@ -825,17 +825,17 @@ export class TGSocket extends AsyncStreamEmitter<any>
         {
             switch (event)
             {
-                case 'message':
-                    this.socket['addEventListener'](event, (event: any) =>
-                        cb(event.data)
-                    );
-                    break;
-                case 'close':
-                case 'error':
-                    this.socket['addEventListener'](event, (event: any) =>
-                        cb(event)
-                    );
-                    break;
+            case 'message':
+                this.socket['addEventListener'](event, (event: any) =>
+                    cb(event.data)
+                );
+                break;
+            case 'close':
+            case 'error':
+                this.socket['addEventListener'](event, (event: any) =>
+                    cb(event)
+                );
+                break;
             }
         }
     }

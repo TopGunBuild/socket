@@ -36,15 +36,15 @@ export class WritableAsyncIterableStream<T> extends AsyncIterableStream<T>
         return new Promise((resolve, reject) =>
         {
             let timeoutId;
-            let consumerId = this._nextConsumerId++;
+            const consumerId = this._nextConsumerId++;
             if (timeout !== undefined)
             {
                 // Create the error object in the outer scope in order
                 // to get the full stack trace.
-                let error = new Error('Stream consumer iteration timed out');
+                const error = new Error('Stream consumer iteration timed out');
                 (async () =>
                 {
-                    let delay = wait(timeout);
+                    const delay = wait(timeout);
                     timeoutId = delay.timeoutId;
                     await delay.promise;
                     error.name = 'TimeoutError';
@@ -81,7 +81,7 @@ export class WritableAsyncIterableStream<T> extends AsyncIterableStream<T>
 
     private _write(value: T, done?: boolean): void
     {
-        let dataNode                  = {
+        const dataNode                  = {
             data: { value, done },
             next: null
         };
@@ -103,7 +103,7 @@ export class WritableAsyncIterableStream<T> extends AsyncIterableStream<T>
 function wait(timeout: number = 0)
 {
     let timeoutId;
-    let promise = new Promise((resolve) =>
+    const promise = new Promise((resolve) =>
     {
         timeoutId = setTimeout(resolve, timeout);
     });

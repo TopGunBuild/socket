@@ -12,9 +12,8 @@
     "minify": true,
     "bundle": true,
     "entry": {
-        "client": "src/socket-client/index.ts",
-        "server": "src/socket-server/index.ts",
-        "channel": "src/channel/index.ts",
-        "writable-consumable-stream": "src/writable-consumable-stream/index.ts"
+        "client": "src/client/index.ts",
+        "server": "src/server/index.ts",
+        "channel": "src/channel/index.ts"
     }
 }

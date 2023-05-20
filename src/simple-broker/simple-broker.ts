@@ -94,7 +94,7 @@ export class SimpleBroker extends AsyncStreamEmitter<any>
 
     publish(channelName: string, data: any, suppressEvent?: boolean): Promise<void>
     {
-        let packet              = {
+        const packet              = {
             channel: channelName,
             data
         };

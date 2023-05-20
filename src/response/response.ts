@@ -27,7 +27,7 @@ export class TGResponse
     {
         if (this.id)
         {
-            let responseData: IResponseData = {
+            const responseData: IResponseData = {
                 rid: this.id
             };
             if (data !== undefined)
@@ -42,9 +42,9 @@ export class TGResponse
     {
         if (this.id)
         {
-            let err = dehydrateError(error);
+            const err = dehydrateError(error);
 
-            let responseData: IResponseData = {
+            const responseData: IResponseData = {
                 rid  : this.id,
                 error: err
             };
