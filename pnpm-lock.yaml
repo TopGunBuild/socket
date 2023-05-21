@@ -1,6 +1,9 @@
 lockfileVersion: '6.0'
 
 dependencies:
+  async:
+    specifier: 2.6.1
+    version: 2.6.1
   jest-codemods:
     specifier: ^0.31.0
     version: 0.31.0(@babel/preset-env@7.21.5)
@@ -2563,6 +2566,12 @@ packages:
     resolution: {integrity: sha512-Z7tMw1ytTXt5jqMcOP+OQteU1VuNK9Y02uuJtKQ1Sv69jXQKKg5cibLwGJow8yzZP+eAc18EmLGPal0bp36rvQ==}
     engines: {node: '>=8'}
     dev: true
+
+  /async@2.6.1:
+    resolution: {integrity: sha512-fNEiL2+AZt6AlAw/29Cr0UDe4sRAHCpEHh54WMz+Bb7QfNcFw4h3loofyJpLeQs4Yx7yuqu/2dLgM5hKOs6HlQ==}
+    dependencies:
+      lodash: 4.17.21
+    dev: false
 
   /available-typed-arrays@1.0.5:
     resolution: {integrity: sha512-DMD0KiN46eipeziST1LPP/STfDU0sufISXmjSgvVsoU2tqxctQeASejWcfNtxYKqETM1UxQ8sp2OrSBWpHY6sw==}

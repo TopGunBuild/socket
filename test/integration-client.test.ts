@@ -1,5 +1,7 @@
 import * as localStorage from 'localStorage';
 import { create } from '../src/client';
+import { listen } from '../src/server';
+import { wait } from '../src/utils/wait';
 
 // Add to the global scope like in browser.
 global.localStorage = localStorage;
@@ -10,96 +12,111 @@ let clientOptions;
 let serverOptions;
 
 let allowedUsers = {
-    bob: true,
-    kate: true,
+    bob  : true,
+    kate : true,
     alice: true
 };
 
 let server, client;
-let validSignedAuthTokenBob = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImJvYiIsImV4cCI6MzE2Mzc1ODk3ODIxNTQ4NywiaWF0IjoxNTAyNzQ3NzQ2fQ.GLf_jqi_qUSCRahxe2D2I9kD8iVIs0d4xTbiZMRiQq4';
+let validSignedAuthTokenBob  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImJvYiIsImV4cCI6MzE2Mzc1ODk3ODIxNTQ4NywiaWF0IjoxNTAyNzQ3NzQ2fQ.GLf_jqi_qUSCRahxe2D2I9kD8iVIs0d4xTbiZMRiQq4';
 let validSignedAuthTokenKate = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImthdGUiLCJleHAiOjMxNjM3NTg5NzgyMTU0ODcsImlhdCI6MTUwMjc0Nzc5NX0.Yfb63XvDt9Wk0wHSDJ3t7Qb1F0oUVUaM5_JKxIE2kyw';
-let invalidSignedAuthToken = 'fakebGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.fakec2VybmFtZSI6ImJvYiIsImlhdCI6MTUwMjYyNTIxMywiZXhwIjoxNTAyNzExNjEzfQ.fakemYcOOjM9bzmS4UYRvlWSk_lm3WGHvclmFjLbyOk';
+let invalidSignedAuthToken   = 'fakebGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.fakec2VybmFtZSI6ImJvYiIsImlhdCI6MTUwMjYyNTIxMywiZXhwIjoxNTAyNzExNjEzfQ.fakemYcOOjM9bzmS4UYRvlWSk_lm3WGHvclmFjLbyOk';
 
 const TOKEN_EXPIRY_IN_SECONDS = 60 * 60 * 24 * 366 * 5000;
 
-function wait(duration) {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            resolve();
-        }, duration);
-    });
-};
-
-function connectionHandler(socket) {
-    async function handleLogin() {
+function connectionHandler(socket)
+{
+    async function handleLogin()
+    {
         let rpc = await socket.procedure('login').once();
-        if (allowedUsers[rpc.data.username]) {
+        if (allowedUsers[rpc.data.username])
+        {
             rpc.data.exp = Math.round(Date.now() / 1000) + TOKEN_EXPIRY_IN_SECONDS;
             socket.setAuthToken(rpc.data);
             rpc.end();
-        } else {
-            let err = new Error('Failed to login');
+        }
+        else
+        {
+            let err  = new Error('Failed to login');
             err.name = 'FailedLoginError';
             rpc.error(err);
         }
     }
+
     handleLogin();
 
-    async function handleSetAuthKey() {
-        let rpc = await socket.procedure('setAuthKey').once();
-        server.signatureKey = rpc.data;
+    async function handleSetAuthKey()
+    {
+        let rpc                = await socket.procedure('setAuthKey').once();
+        server.signatureKey    = rpc.data;
         server.verificationKey = rpc.data;
         rpc.end();
     }
+
     handleSetAuthKey();
 
-    async function handlePerformTask() {
-        for await (let rpc of socket.procedure('performTask')) {
-            setTimeout(function () {
+    async function handlePerformTask()
+    {
+        for await (let rpc of socket.procedure('performTask'))
+        {
+            setTimeout(() =>
+            {
                 rpc.end();
             }, 1000);
         }
     }
-    handlePerformTask();
-};
 
-describe('Integration tests', () => {
-    beforeEach(async () => {
+    handlePerformTask();
+}
+
+describe('Integration tests', () =>
+{
+    beforeEach(async () =>
+    {
         serverOptions = {
-            authKey: 'testkey',
+            authKey   : 'testkey',
             ackTimeout: 200
         };
 
-        server = asyngularServer.listen(PORT_NUMBER, serverOptions);
-        async function handleServerConnection() {
-            for await (let {socket} of server.listener('connection')) {
+        server = listen(PORT_NUMBER, serverOptions);
+
+        async function handleServerConnection()
+        {
+            for await (let { socket } of server.listener('connection'))
+            {
                 connectionHandler(socket);
             }
         }
+
         handleServerConnection();
 
-        server.addMiddleware(server.MIDDLEWARE_AUTHENTICATE, async function (req) {
-            if (req.authToken.username === 'alice') {
-                let err = new Error('Blocked by MIDDLEWARE_AUTHENTICATE');
+        server.addMiddleware(server.MIDDLEWARE_AUTHENTICATE, async function (req)
+        {
+            if (req.authToken.username === 'alice')
+            {
+                let err  = new Error('Blocked by MIDDLEWARE_AUTHENTICATE');
                 err.name = 'AuthenticateMiddlewareError';
                 throw err;
             }
         });
 
         clientOptions = {
-            hostname: '127.0.0.1',
-            port: PORT_NUMBER,
+            hostname  : '127.0.0.1',
+            port      : PORT_NUMBER,
             ackTimeout: 200
         };
 
         await server.listener('ready').once();
     });
 
-    afterEach(async () => {
+    afterEach(async () =>
+    {
         let cleanupTasks = [];
         global.localStorage.removeItem('asyngular.authToken');
-        if (client) {
-            if (client.state !== client.CLOSED) {
+        if (client)
+        {
+            if (client.state !== client.CLOSED)
+            {
                 cleanupTasks.push(
                     Promise.race([
                         client.listener('disconnect').once(),
@@ -107,12 +124,15 @@ describe('Integration tests', () => {
                     ])
                 );
                 client.disconnect();
-            } else {
+            }
+            else
+            {
                 client.disconnect();
             }
         }
         cleanupTasks.push(
-            (async () => {
+            (async () =>
+            {
                 server.httpServer.close();
                 await server.close();
             })()
@@ -120,14 +140,16 @@ describe('Integration tests', () => {
         await Promise.all(cleanupTasks);
     });
 
-    describe('Creation', () => {
+    describe('Creation', () =>
+    {
 
         it(
             'Should automatically connect socket on creation by default',
-            async () => {
+            async () =>
+            {
                 clientOptions = {
                     hostname: '127.0.0.1',
-                    port: PORT_NUMBER
+                    port    : PORT_NUMBER
                 };
 
                 client = create(clientOptions);
@@ -138,10 +160,11 @@ describe('Integration tests', () => {
 
         it(
             'Should not automatically connect socket if autoConnect is set to false',
-            async () => {
+            async () =>
+            {
                 clientOptions = {
-                    hostname: '127.0.0.1',
-                    port: PORT_NUMBER,
+                    hostname   : '127.0.0.1',
+                    port       : PORT_NUMBER,
                     autoConnect: false
                 };
 
@@ -152,24 +175,30 @@ describe('Integration tests', () => {
         );
     });
 
-    describe('Errors', () => {
+    describe('Errors', () =>
+    {
         it(
             'Should be able to emit the error event locally on the socket',
-            async () => {
-                client = create(clientOptions);
+            async () =>
+            {
+                client  = create(clientOptions);
                 let err = null;
 
-                (async () => {
-                    for await (let {error} of client.listener('error')) {
+                (async () =>
+                {
+                    for await (let { error } of client.listener('error'))
+                    {
                         err = error;
                     }
                 })();
 
-                (async () => {
-                    for await (let status of client.listener('connect')) {
-                        let error = new Error('Custom error');
+                (async () =>
+                {
+                    for await (let status of client.listener('connect'))
+                    {
+                        let error  = new Error('Custom error');
                         error.name = 'CustomError';
-                        client.emit('error', {error});
+                        client.emit('error', { error });
                     }
                 })();
 
@@ -181,11 +210,13 @@ describe('Integration tests', () => {
         );
     });
 
-    describe('Authentication', () => {
+    describe('Authentication', () =>
+    {
         it(
             'Should not send back error if JWT is not provided in handshake',
-            async () => {
-                client = create(clientOptions);
+            async () =>
+            {
+                client    = create(clientOptions);
                 let event = await client.listener('connect').once();
                 expect(event.authError === undefined).toEqual(true);
             }
@@ -193,7 +224,8 @@ describe('Integration tests', () => {
 
         it(
             'Should be authenticated on connect if previous JWT token is present',
-            async () => {
+            async () =>
+            {
                 global.localStorage.setItem('asyngular.authToken', validSignedAuthTokenBob);
                 client = create(clientOptions);
 
@@ -204,7 +236,8 @@ describe('Integration tests', () => {
             }
         );
 
-        it('Should send back error if JWT is invalid during handshake', async () => {
+        it('Should send back error if JWT is invalid during handshake', async () =>
+        {
             global.localStorage.setItem('asyngular.authToken', validSignedAuthTokenBob);
             client = create(clientOptions);
 
@@ -238,10 +271,11 @@ describe('Integration tests', () => {
             await client.invoke('setAuthKey', serverOptions.authKey);
         });
 
-        it('Should allow switching between users', async () => {
+        it('Should allow switching between users', async () =>
+        {
             global.localStorage.setItem('asyngular.authToken', validSignedAuthTokenBob);
-            client = create(clientOptions);
-            let authenticateTriggered = false;
+            client                       = create(clientOptions);
+            let authenticateTriggered    = false;
             let authStateChangeTriggered = false;
 
             await client.listener('connect').once();
@@ -249,9 +283,10 @@ describe('Integration tests', () => {
             expect(client.authToken).not.toEqual(null);
             expect(client.authToken.username).toEqual('bob');
 
-            client.invoke('login', {username: 'alice'});
+            client.invoke('login', { username: 'alice' });
 
-            (async () => {
+            (async () =>
+            {
                 await client.listener('authenticate').once();
                 authenticateTriggered = true;
                 expect(client.authState).toEqual('authenticated');
@@ -259,7 +294,8 @@ describe('Integration tests', () => {
                 expect(client.authToken.username).toEqual('alice');
             })();
 
-            (async () => {
+            (async () =>
+            {
                 await client.listener('authStateChange').once();
                 authStateChangeTriggered = true;
             })();
@@ -272,15 +308,17 @@ describe('Integration tests', () => {
 
         it(
             'If token engine signing is synchronous, authentication can be captured using the authenticate event',
-            async () => {
-                let port = 8509;
-                let customServer = asyngularServer.listen(port, {
-                    authKey: serverOptions.authKey,
+            async () =>
+            {
+                let port         = 8509;
+                let customServer = listen(port, {
+                    authKey      : serverOptions.authKey,
                     authSignAsync: false
                 });
 
-                (async () => {
-                    let {socket} = await customServer.listener('connection').once();
+                (async () =>
+                {
+                    let { socket } = await customServer.listener('connection').once();
                     connectionHandler(socket);
                 })();
 
@@ -288,12 +326,12 @@ describe('Integration tests', () => {
 
                 client = create({
                     hostname: clientOptions.hostname,
-                    port: port
+                    port    : port
                 });
 
                 await client.listener('connect').once();
 
-                await client.invoke('login', {username: 'bob'});
+                await client.invoke('login', { username: 'bob' });
                 await client.listener('authenticate').once();
 
                 expect(client.authState).toEqual('authenticated');
@@ -307,15 +345,17 @@ describe('Integration tests', () => {
 
         it(
             'If token engine signing is asynchronous, authentication can be captured using the authenticate event',
-            async () => {
-                let port = 8510;
-                let customServer = asyngularServer.listen(port, {
-                    authKey: serverOptions.authKey,
+            async () =>
+            {
+                let port         = 8510;
+                let customServer = listen(port, {
+                    authKey      : serverOptions.authKey,
                     authSignAsync: true
                 });
 
-                (async () => {
-                    let {socket} = await customServer.listener('connection').once();
+                (async () =>
+                {
+                    let { socket } = await customServer.listener('connection').once();
                     connectionHandler(socket);
                 })();
 
@@ -323,12 +363,12 @@ describe('Integration tests', () => {
 
                 client = create({
                     hostname: clientOptions.hostname,
-                    port: port
+                    port    : port
                 });
 
                 await client.listener('connect').once();
 
-                client.invoke('login', {username: 'bob'});
+                client.invoke('login', { username: 'bob' });
 
                 await client.listener('authenticate').once();
 
@@ -343,15 +383,17 @@ describe('Integration tests', () => {
 
         it(
             'If token verification is synchronous, authentication can be captured using the authenticate event',
-            async () => {
-                let port = 8511;
-                const customServer = asyngularServer.listen(port, {
-                    authKey: serverOptions.authKey,
+            async () =>
+            {
+                let port           = 8511;
+                const customServer = listen(port, {
+                    authKey        : serverOptions.authKey,
                     authVerifyAsync: false
                 });
 
-                (async () => {
-                    let {socket} = await customServer.listener('connection').once();
+                (async () =>
+                {
+                    let { socket } = await customServer.listener('connection').once();
                     connectionHandler(socket);
                 })();
 
@@ -359,18 +401,20 @@ describe('Integration tests', () => {
 
                 client = create({
                     hostname: clientOptions.hostname,
-                    port: port
+                    port    : port
                 });
 
                 await client.listener('connect').once();
 
                 await Promise.all([
-                    (async () => {
-                        await client.invoke('login', {username: 'bob'});
+                    (async () =>
+                    {
+                        await client.invoke('login', { username: 'bob' });
                         await client.listener('authenticate').once();
                         client.disconnect();
                     })(),
-                    (async () => {
+                    (async () =>
+                    {
                         await client.listener('authenticate').once();
                         await client.listener('disconnect').once();
                         client.connect();
@@ -389,11 +433,13 @@ describe('Integration tests', () => {
 
         it(
             'Should start out in pending authState and switch to unauthenticated if no token exists',
-            async () => {
+            async () =>
+            {
                 client = create(clientOptions);
                 expect(client.authState).toEqual('unauthenticated');
 
-                (async () => {
+                (async () =>
+                {
                     let status = await client.listener('authStateChange').once();
                     throw new Error('authState should not change after connecting without a token');
                 })();
@@ -404,14 +450,17 @@ describe('Integration tests', () => {
 
         it(
             'Should deal with auth engine errors related to saveToken function',
-            async () => {
+            async () =>
+            {
                 global.localStorage.setItem('asyngular.authToken', validSignedAuthTokenBob);
                 client = create(clientOptions);
 
                 let caughtError;
 
-                (async () => {
-                    for await (let {error} of client.listener('error')) {
+                (async () =>
+                {
+                    for await (let { error } of client.listener('error'))
+                    {
                         caughtError = error;
                     }
                 })();
@@ -419,8 +468,9 @@ describe('Integration tests', () => {
                 await client.listener('connect').once();
 
                 let oldSaveTokenFunction = client.auth.saveToken;
-                client.auth.saveToken = function (tokenName, tokenValue, options) {
-                    let err = new Error('Failed to save token');
+                client.auth.saveToken    = function (tokenName, tokenValue, options)
+                {
+                    let err  = new Error('Failed to save token');
                     err.name = 'FailedToSaveTokenError';
                     return Promise.reject(err);
                 };
@@ -451,7 +501,8 @@ describe('Integration tests', () => {
 
         it(
             'Should gracefully handle authenticate abortion due to disconnection',
-            async () => {
+            async () =>
+            {
                 client = create(clientOptions);
 
                 await client.listener('connect').once();
@@ -459,9 +510,12 @@ describe('Integration tests', () => {
                 let authenticatePromise = await client.authenticate(validSignedAuthTokenBob);
                 client.disconnect();
 
-                try {
+                try
+                {
                     await authenticatePromise;
-                } catch (err) {
+                }
+                catch (err)
+                {
                     expect(err).not.toEqual(null);
                     expect(err.name).toEqual('BadConnectionError');
                     expect(client.authState).toEqual('unauthenticated');
@@ -471,16 +525,19 @@ describe('Integration tests', () => {
 
         it(
             'Should go through the correct sequence of authentication state changes when dealing with disconnections; part 1',
-            async () => {
+            async () =>
+            {
                 client = create(clientOptions);
 
                 let expectedAuthStateChanges = [
                     'unauthenticated->authenticated'
                 ];
-                let authStateChanges = [];
+                let authStateChanges         = [];
 
-                (async () => {
-                    for await (const status of client.listener('authStateChange')) {
+                (async () =>
+                {
+                    for await (const status of client.listener('authStateChange'))
+                    {
                         authStateChanges.push(status.oldAuthState + '->' + status.newAuthState);
                     }
                 })();
@@ -490,15 +547,16 @@ describe('Integration tests', () => {
                 await client.listener('connect').once();
                 expect(client.authState).toEqual('unauthenticated');
 
-                (async () => {
-                    await client.invoke('login', {username: 'bob'});
+                (async () =>
+                {
+                    await client.invoke('login', { username: 'bob' });
                     await client.listener('authenticate').once();
                     client.disconnect();
                 })();
 
                 expect(client.authState).toEqual('unauthenticated');
 
-                let {signedAuthToken, authToken} = await client.listener('authenticate').once();
+                let { signedAuthToken, authToken } = await client.listener('authenticate').once();
 
                 expect(signedAuthToken).not.toEqual(null);
                 expect(authToken).not.toEqual(null);
@@ -520,7 +578,8 @@ describe('Integration tests', () => {
 
         it(
             'Should go through the correct sequence of authentication state changes when dealing with disconnections; part 2',
-            async () => {
+            async () =>
+            {
                 global.localStorage.setItem('asyngular.authToken', validSignedAuthTokenBob);
                 client = create(clientOptions);
 
@@ -530,10 +589,12 @@ describe('Integration tests', () => {
                     'unauthenticated->authenticated',
                     'authenticated->unauthenticated'
                 ];
-                let authStateChanges = [];
+                let authStateChanges         = [];
 
-                (async () => {
-                    for await (const status of client.listener('authStateChange')) {
+                (async () =>
+                {
+                    for await (const status of client.listener('authStateChange'))
+                    {
                         authStateChanges.push(status.oldAuthState + '->' + status.newAuthState);
                     }
                 })();
@@ -564,7 +625,8 @@ describe('Integration tests', () => {
 
         it(
             'Should go through the correct sequence of authentication state changes when dealing with disconnections; part 3',
-            async () => {
+            async () =>
+            {
                 global.localStorage.setItem('asyngular.authToken', validSignedAuthTokenBob);
                 client = create(clientOptions);
 
@@ -572,10 +634,12 @@ describe('Integration tests', () => {
                     'unauthenticated->authenticated',
                     'authenticated->unauthenticated'
                 ];
-                let authStateChanges = [];
+                let authStateChanges         = [];
 
-                (async () => {
-                    for await (let status of client.listener('authStateChange')) {
+                (async () =>
+                {
+                    for await (let status of client.listener('authStateChange'))
+                    {
                         authStateChanges.push(status.oldAuthState + '->' + status.newAuthState);
                     }
                 })();
@@ -588,9 +652,12 @@ describe('Integration tests', () => {
                 let authenticatePromise = client.authenticate(invalidSignedAuthToken);
                 expect(client.authState).toEqual('authenticated');
 
-                try {
+                try
+                {
                     await authenticatePromise;
-                } catch (err) {
+                }
+                catch (err)
+                {
                     expect(err).not.toEqual(null);
                     expect(err.name).toEqual('AuthTokenInvalidError');
                     expect(client.authState).toEqual('unauthenticated');
@@ -601,17 +668,20 @@ describe('Integration tests', () => {
 
         it(
             'Should go through the correct sequence of authentication state changes when authenticating as a user while already authenticated as another user',
-            async () => {
+            async () =>
+            {
                 global.localStorage.setItem('asyngular.authToken', validSignedAuthTokenBob);
                 client = create(clientOptions);
 
                 let expectedAuthStateChanges = [
                     'unauthenticated->authenticated'
                 ];
-                let authStateChanges = [];
+                let authStateChanges         = [];
 
-                (async () => {
-                    for await (let status of client.listener('authStateChange')) {
+                (async () =>
+                {
+                    for await (let status of client.listener('authStateChange'))
+                    {
                         authStateChanges.push(status.oldAuthState + '->' + status.newAuthState);
                     }
                 })();
@@ -620,16 +690,20 @@ describe('Integration tests', () => {
                     validSignedAuthTokenBob,
                     validSignedAuthTokenKate
                 ];
-                let authTokenChanges = [];
+                let authTokenChanges         = [];
 
-                (async () => {
-                    for await (let event of client.listener('authenticate')) {
+                (async () =>
+                {
+                    for await (let event of client.listener('authenticate'))
+                    {
                         authTokenChanges.push(client.signedAuthToken);
                     }
                 })();
 
-                (async () => {
-                    for await (let event of client.listener('deauthenticate')) {
+                (async () =>
+                {
+                    for await (let event of client.listener('deauthenticate'))
+                    {
                         authTokenChanges.push(client.signedAuthToken);
                     }
                 })();
@@ -655,16 +729,17 @@ describe('Integration tests', () => {
 
         it(
             'Should wait for socket to be authenticated before subscribing to waitForAuth channel',
-            async () => {
+            async () =>
+            {
                 client = create(clientOptions);
 
-                let privateChannel = client.subscribe('priv', {waitForAuth: true});
+                let privateChannel = client.subscribe('priv', { waitForAuth: true });
                 expect(privateChannel.state).toEqual('pending');
 
                 await client.listener('connect').once();
                 expect(privateChannel.state).toEqual('pending');
 
-                client.invoke('login', {username: 'bob'});
+                client.invoke('login', { username: 'bob' });
                 await client.listener('subscribe').once();
                 expect(privateChannel.state).toEqual('subscribed');
 
@@ -679,7 +754,8 @@ describe('Integration tests', () => {
 
         it(
             'Subscriptions (including those with waitForAuth option) should have priority over the authenticate action',
-            async () => {
+            async () =>
+            {
                 global.localStorage.setItem('asyngular.authToken', validSignedAuthTokenBob);
                 client = create(clientOptions);
 
@@ -688,51 +764,61 @@ describe('Integration tests', () => {
                     'authenticated->unauthenticated'
                 ];
                 let initialSignedAuthToken;
-                let authStateChanges = [];
+                let authStateChanges         = [];
 
-                (async () => {
-                    for await (let status of client.listener('authStateChange')) {
+                (async () =>
+                {
+                    for await (let status of client.listener('authStateChange'))
+                    {
                         authStateChanges.push(status.oldAuthState + '->' + status.newAuthState);
                     }
                 })();
 
-                (async () => {
+                (async () =>
+                {
                     let error = null;
-                    try {
+                    try
+                    {
                         await client.authenticate(invalidSignedAuthToken);
-                    } catch (err) {
+                    }
+                    catch (err)
+                    {
                         error = err;
                     }
                     expect(error).not.toEqual(null);
                     expect(error.name).toEqual('AuthTokenInvalidError');
                 })();
 
-                let privateChannel = client.subscribe('priv', {waitForAuth: true});
+                let privateChannel = client.subscribe('priv', { waitForAuth: true });
                 expect(privateChannel.state).toEqual('pending');
 
-                (async () => {
-                    let event = await client.listener('connect').once();
+                (async () =>
+                {
+                    let event              = await client.listener('connect').once();
                     initialSignedAuthToken = client.signedAuthToken;
                     expect(event.isAuthenticated).toEqual(true);
                     expect(privateChannel.state).toEqual('pending');
 
                     await Promise.race([
-                        (async () => {
+                        (async () =>
+                        {
                             let err = await privateChannel.listener('subscribeFail').once();
                             // This shouldn't happen because the subscription should be
                             // processed before the authenticate() call with the invalid token fails.
                             throw new Error('Failed to subscribe to channel: ' + err.message);
                         })(),
-                        (async () => {
+                        (async () =>
+                        {
                             await privateChannel.listener('subscribe').once();
                             expect(privateChannel.state).toEqual('subscribed');
                         })()
                     ]);
                 })();
 
-                (async () => {
+                (async () =>
+                {
                     // The subscription already went through so it should still be subscribed.
-                    let {oldSignedAuthToken, oldAuthToken} = await client.listener('deauthenticate').once();
+                    let { oldSignedAuthToken, oldAuthToken } = await client.listener('deauthenticate').once();
                     // The subscription already went through so it should still be subscribed.
                     expect(privateChannel.state).toEqual('subscribed');
                     expect(client.authState).toEqual('unauthenticated');
@@ -742,7 +828,7 @@ describe('Integration tests', () => {
                     expect(oldAuthToken.username).toEqual('bob');
                     expect(oldSignedAuthToken).toEqual(initialSignedAuthToken);
 
-                    let privateChannel2 = client.subscribe('priv2', {waitForAuth: true});
+                    let privateChannel2 = client.subscribe('priv2', { waitForAuth: true });
 
                     await privateChannel2.listener('subscribe').once();
 
@@ -758,23 +844,27 @@ describe('Integration tests', () => {
 
         it(
             'Should trigger the close event if the socket disconnects in the middle of the handshake phase',
-            async () => {
-                client = create(clientOptions);
-                let aborted = false;
+            async () =>
+            {
+                client          = create(clientOptions);
+                let aborted     = false;
                 let diconnected = false;
-                let closed = false;
+                let closed      = false;
 
-                (async () => {
+                (async () =>
+                {
                     await client.listener('connectAbort').once();
                     aborted = true;
                 })();
 
-                (async () => {
+                (async () =>
+                {
                     await client.listener('disconnect').once();
                     diconnected = true;
                 })();
 
-                (async () => {
+                (async () =>
+                {
                     await client.listener('close').once();
                     closed = true;
                 })();
@@ -791,29 +881,35 @@ describe('Integration tests', () => {
 
         it(
             'Should trigger the close event if the socket disconnects after the handshake phase',
-            async () => {
-                client = create(clientOptions);
-                let aborted = false;
+            async () =>
+            {
+                client          = create(clientOptions);
+                let aborted     = false;
                 let diconnected = false;
-                let closed = false;
+                let closed      = false;
 
-                (async () => {
+                (async () =>
+                {
                     await client.listener('connectAbort').once();
                     aborted = true;
                 })();
 
-                (async () => {
+                (async () =>
+                {
                     await client.listener('disconnect').once();
                     diconnected = true;
                 })();
 
-                (async () => {
+                (async () =>
+                {
                     await client.listener('close').once();
                     closed = true;
                 })();
 
-                (async () => {
-                    for await (let event of client.listener('connect')) {
+                (async () =>
+                {
+                    for await (let event of client.listener('connect'))
+                    {
                         client.disconnect();
                     }
                 })();
@@ -827,33 +923,44 @@ describe('Integration tests', () => {
         );
     });
 
-    describe('Emitting remote events', () => {
+    describe('Emitting remote events', () =>
+    {
         it(
             'Should not throw error on socket if ackTimeout elapses before response to event is sent back',
-            async () => {
+            async () =>
+            {
                 client = create(clientOptions);
 
                 let caughtError;
                 let clientError;
 
-                (async () => {
-                    for await (let {error} of client.listener('error')) {
+                (async () =>
+                {
+                    for await (let { error } of client.listener('error'))
+                    {
                         clientError = error;
                     }
                 })();
 
                 let responseError;
 
-                for await (let event of client.listener('connect')) {
-                    try {
+                for await (let event of client.listener('connect'))
+                {
+                    try
+                    {
                         await client.invoke('performTask', 123);
-                    } catch (err) {
+                    }
+                    catch (err)
+                    {
                         responseError = err;
                     }
                     await wait(250);
-                    try {
+                    try
+                    {
                         client.disconnect();
-                    } catch (err) {
+                    }
+                    catch (err)
+                    {
                         caughtError = err;
                     }
                     break;
@@ -865,8 +972,10 @@ describe('Integration tests', () => {
         );
     });
 
-    describe('Reconnecting socket', () => {
-        it('Should disconnect socket with code 1000 and reconnect', async () => {
+    describe('Reconnecting socket', () =>
+    {
+        it('Should disconnect socket with code 1000 and reconnect', async () =>
+        {
             client = create(clientOptions);
 
             await client.listener('connect').once();
@@ -874,9 +983,11 @@ describe('Integration tests', () => {
             let disconnectCode;
             let disconnectReason;
 
-            (async () => {
-                for await (let event of client.listener('disconnect')) {
-                    disconnectCode = event.code;
+            (async () =>
+            {
+                for await (let event of client.listener('disconnect'))
+                {
+                    disconnectCode   = event.code;
                     disconnectReason = event.reason;
                 }
             })();
@@ -890,7 +1001,8 @@ describe('Integration tests', () => {
 
         it(
             'Should disconnect socket with custom code and data when socket.reconnect() is called with arguments',
-            async () => {
+            async () =>
+            {
                 client = create(clientOptions);
 
                 await client.listener('connect').once();
@@ -898,9 +1010,10 @@ describe('Integration tests', () => {
                 let disconnectCode;
                 let disconnectReason;
 
-                (async () => {
-                    let event = await client.listener('disconnect').once();
-                    disconnectCode = event.code;
+                (async () =>
+                {
+                    let event        = await client.listener('disconnect').once();
+                    disconnectCode   = event.code;
                     disconnectReason = event.reason;
                 })();
 
@@ -913,24 +1026,30 @@ describe('Integration tests', () => {
         );
     });
 
-    describe('Order of events', () => {
+    describe('Order of events', () =>
+    {
         it(
             'Should trigger unsubscribe event on channel before disconnect event',
-            async () => {
-                client = create(clientOptions);
+            async () =>
+            {
+                client              = create(clientOptions);
                 let hasUnsubscribed = false;
 
                 let fooChannel = client.subscribe('foo');
 
-                (async () => {
-                    for await (let event of fooChannel.listener('subscribe')) {
+                (async () =>
+                {
+                    for await (let event of fooChannel.listener('subscribe'))
+                    {
                         await wait(100);
                         client.disconnect();
                     }
                 })();
 
-                (async () => {
-                    for await (let event of fooChannel.listener('unsubscribe')) {
+                (async () =>
+                {
+                    for await (let event of fooChannel.listener('unsubscribe'))
+                    {
                         hasUnsubscribed = true;
                     }
                 })();
@@ -942,33 +1061,44 @@ describe('Integration tests', () => {
 
         it(
             'Should not invoke subscribeFail event if connection is aborted',
-            async () => {
-                client = create(clientOptions);
-                let hasSubscribeFailed = false;
+            async () =>
+            {
+                client                    = create(clientOptions);
+                let hasSubscribeFailed    = false;
                 let gotBadConnectionError = false;
-                let wasConnected = false;
+                let wasConnected          = false;
 
-                (async () => {
-                    for await (let event of client.listener('connect')) {
+                (async () =>
+                {
+                    for await (let event of client.listener('connect'))
+                    {
                         wasConnected = true;
-                        (async () => {
-                            try {
+                        (async () =>
+                        {
+                            try
+                            {
                                 await client.invoke('someEvent', 123);
-                            } catch (err) {
-                                if (err.name === 'BadConnectionError') {
+                            }
+                            catch (err)
+                            {
+                                if (err.name === 'BadConnectionError')
+                                {
                                     gotBadConnectionError = true;
                                 }
                             }
                         })();
 
                         let fooChannel = client.subscribe('foo');
-                        (async () => {
-                            for await (let event of fooChannel.listener('subscribeFail')) {
+                        (async () =>
+                        {
+                            for await (let event of fooChannel.listener('subscribeFail'))
+                            {
                                 hasSubscribeFailed = true;
                             }
                         })();
 
-                        (async () => {
+                        (async () =>
+                        {
                             await wait(0);
                             client.disconnect();
                         })();
@@ -985,26 +1115,33 @@ describe('Integration tests', () => {
 
         it(
             'Should resolve invoke Promise with BadConnectionError after triggering the disconnect event',
-            async () => {
-                client = create(clientOptions);
+            async () =>
+            {
+                client          = create(clientOptions);
                 let messageList = [];
 
-                (async () => {
-                    try {
+                (async () =>
+                {
+                    try
+                    {
                         await client.invoke('someEvent', 123);
-                    } catch (err) {
+                    }
+                    catch (err)
+                    {
                         messageList.push({
-                            type: 'error',
+                            type : 'error',
                             error: err
                         });
                     }
                 })();
 
-                (async () => {
-                    for await (let event of client.listener('disconnect')) {
+                (async () =>
+                {
+                    for await (let event of client.listener('disconnect'))
+                    {
                         messageList.push({
-                            type: 'disconnect',
-                            code: event.code,
+                            type  : 'disconnect',
+                            code  : event.code,
                             reason: event.reason
                         });
                     }
@@ -1022,13 +1159,18 @@ describe('Integration tests', () => {
 
         it(
             'Should reconnect if transmit is called on a disconnected socket',
-            async () => {
+            async () =>
+            {
                 let fooReceiverTriggered = false;
 
-                (async () => {
-                    for await (let {socket} of server.listener('connection')) {
-                        (async () => {
-                            for await (let data of socket.receiver('foo')) {
+                (async () =>
+                {
+                    for await (let { socket } of server.listener('connection'))
+                    {
+                        (async () =>
+                        {
+                            for await (let data of socket.receiver('foo'))
+                            {
                                 fooReceiverTriggered = true;
                             }
                         })();
@@ -1039,45 +1181,58 @@ describe('Integration tests', () => {
 
                 let clientError;
 
-                (async () => {
-                    for await (let {error} of client.listener('error')) {
+                (async () =>
+                {
+                    for await (let { error } of client.listener('error'))
+                    {
                         clientError = error;
                     }
                 })();
 
                 let eventList = [];
 
-                (async () => {
-                    for await (let event of client.listener('connecting')) {
+                (async () =>
+                {
+                    for await (let event of client.listener('connecting'))
+                    {
                         eventList.push('connecting');
                     }
                 })();
 
-                (async () => {
-                    for await (let event of client.listener('connect')) {
+                (async () =>
+                {
+                    for await (let event of client.listener('connect'))
+                    {
                         eventList.push('connect');
                     }
                 })();
 
-                (async () => {
-                    for await (let event of client.listener('disconnect')) {
+                (async () =>
+                {
+                    for await (let event of client.listener('disconnect'))
+                    {
                         eventList.push('disconnect');
                     }
                 })();
 
-                (async () => {
-                    for await (let event of client.listener('close')) {
+                (async () =>
+                {
+                    for await (let event of client.listener('close'))
+                    {
                         eventList.push('close');
                     }
                 })();
 
-                (async () => {
-                    for await (let event of client.listener('connectAbort')) {
+                (async () =>
+                {
+                    for await (let event of client.listener('connectAbort'))
+                    {
                         eventList.push('connectAbort');
                     }
                 })();
 
-                (async () => {
+                (async () =>
+                {
                     await client.listener('connect').once();
                     client.disconnect();
                     client.transmit('foo', 123);
@@ -1093,59 +1248,72 @@ describe('Integration tests', () => {
 
         it(
             'Should correctly handle multiple successive connect and disconnect calls',
-            async () => {
+            async () =>
+            {
                 client = create(clientOptions);
 
                 let eventList = [];
 
                 let clientError;
-                (async () => {
-                    for await (let {error} of client.listener('error')) {
+                (async () =>
+                {
+                    for await (let { error } of client.listener('error'))
+                    {
                         clientError = error;
                     }
                 })();
 
-                (async () => {
-                    for await (let event of client.listener('connecting')) {
+                (async () =>
+                {
+                    for await (let event of client.listener('connecting'))
+                    {
                         eventList.push({
                             event: 'connecting'
                         });
                     }
                 })();
 
-                (async () => {
-                    for await (let event of client.listener('connect')) {
+                (async () =>
+                {
+                    for await (let event of client.listener('connect'))
+                    {
                         eventList.push({
                             event: 'connect'
                         });
                     }
                 })();
 
-                (async () => {
-                    for await (let event of client.listener('connectAbort')) {
+                (async () =>
+                {
+                    for await (let event of client.listener('connectAbort'))
+                    {
                         eventList.push({
-                            event: 'connectAbort',
-                            code: event.code,
+                            event : 'connectAbort',
+                            code  : event.code,
                             reason: event.reason
                         });
                     }
                 })();
 
-                (async () => {
-                    for await (let event of client.listener('disconnect')) {
+                (async () =>
+                {
+                    for await (let event of client.listener('disconnect'))
+                    {
                         eventList.push({
-                            event: 'disconnect',
-                            code: event.code,
+                            event : 'disconnect',
+                            code  : event.code,
                             reason: event.reason
                         });
                     }
                 })();
 
-                (async () => {
-                    for await (let event of client.listener('close')) {
+                (async () =>
+                {
+                    for await (let event of client.listener('close'))
+                    {
                         eventList.push({
-                            event: 'close',
-                            code: event.code,
+                            event : 'close',
+                            code  : event.code,
                             reason: event.reason
                         });
                     }
@@ -1155,7 +1323,8 @@ describe('Integration tests', () => {
                 client.connect();
                 client.disconnect(4444, 'Two');
 
-                (async () => {
+                (async () =>
+                {
                     await client.listener('connect').once();
                     client.disconnect(4455, 'Three');
                 })();
@@ -1166,26 +1335,26 @@ describe('Integration tests', () => {
 
                 let expectedEventList = [
                     {
-                        event: 'connectAbort',
-                        code: 1000,
+                        event : 'connectAbort',
+                        code  : 1000,
                         reason: 'One'
                     },
                     {
-                        event: 'close',
-                        code: 1000,
+                        event : 'close',
+                        code  : 1000,
                         reason: 'One'
                     },
                     {
                         event: 'connecting'
                     },
                     {
-                        event: 'connectAbort',
-                        code: 4444,
+                        event : 'connectAbort',
+                        code  : 4444,
                         reason: 'Two'
                     },
                     {
-                        event: 'close',
-                        code: 4444,
+                        event : 'close',
+                        code  : 4444,
                         reason: 'Two'
                     },
                     {
@@ -1195,13 +1364,13 @@ describe('Integration tests', () => {
                         event: 'connect'
                     },
                     {
-                        event: 'disconnect',
-                        code: 4455,
+                        event : 'disconnect',
+                        code  : 4455,
                         reason: 'Three'
                     },
                     {
-                        event: 'close',
-                        code: 4455,
+                        event : 'close',
+                        code  : 4455,
                         reason: 'Three'
                     },
                 ];
@@ -1210,15 +1379,19 @@ describe('Integration tests', () => {
         );
     });
 
-    describe('Ping/pong', () => {
-        it('Should disconnect if ping is not received before timeout', async () => {
+    describe('Ping/pong', () =>
+    {
+        it('Should disconnect if ping is not received before timeout', async () =>
+        {
             clientOptions.connectTimeout = 500;
-            client = create(clientOptions);
+            client                       = create(clientOptions);
 
             expect(client.pingTimeout).toEqual(500);
 
-            (async () => {
-                for await (let event of client.listener('connect')) {
+            (async () =>
+            {
+                for await (let event of client.listener('connect'))
+                {
                     expect(client.transport.pingTimeout).toEqual(server.options.pingTimeout);
                     // Hack to make the client ping independent from the server ping.
                     client.transport.pingTimeout = 500;
@@ -1227,16 +1400,20 @@ describe('Integration tests', () => {
             })();
 
             let disconnectCode = null;
-            let clientError = null;
+            let clientError    = null;
 
-            (async () => {
-                for await (let {error} of client.listener('error')) {
+            (async () =>
+            {
+                for await (let { error } of client.listener('error'))
+                {
                     clientError = error;
                 }
             })();
 
-            (async () => {
-                for await (let event of client.listener('disconnect')) {
+            (async () =>
+            {
+                for await (let event of client.listener('disconnect'))
+                {
                     disconnectCode = event.code;
                 }
             })();
@@ -1250,16 +1427,19 @@ describe('Integration tests', () => {
 
         it(
             'Should not disconnect if ping is not received before timeout when pingTimeoutDisabled is true',
-            async () => {
-                clientOptions.connectTimeout = 500;
+            async () =>
+            {
+                clientOptions.connectTimeout      = 500;
                 clientOptions.pingTimeoutDisabled = true;
-                client = create(clientOptions);
+                client                            = create(clientOptions);
 
                 expect(client.pingTimeout).toEqual(500);
 
                 let clientError = null;
-                (async () => {
-                    for await (let {error} of client.listener('error')) {
+                (async () =>
+                {
+                    for await (let { error } of client.listener('error'))
+                    {
                         clientError = error;
                     }
                 })();
@@ -1270,9 +1450,11 @@ describe('Integration tests', () => {
         );
     });
 
-    describe('Utilities', () => {
-        it('Can encode a string to base64 and then decode it back to utf8', done => {
-            client = create(clientOptions);
+    describe('Utilities', () =>
+    {
+        it('Can encode a string to base64 and then decode it back to utf8', done =>
+        {
+            client            = create(clientOptions);
             let encodedString = client.encodeBase64('This is a string');
             expect(encodedString).toEqual('VGhpcyBpcyBhIHN0cmluZw==');
             let decodedString = client.decodeBase64(encodedString);

@@ -1,5 +1,9 @@
 import * as localStorage from 'localStorage';
-import { JwtVerifyOptions } from 'topgun-jsonwebtoken';
+import { create, SubscribeOptions } from '../src/client';
+import { listen } from '../src/server';
+import { SimpleBroker } from '../src/simple-broker';
+import { EventObject } from '../src/types';
+import { wait } from '../src/utils/wait';
 
 // Add to the global scope like in browser.
 global.localStorage = localStorage;
@@ -23,18 +27,10 @@ let invalidSignedAuthToken = 'fakebGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.fakec2VybmFtZ
 
 let server, client;
 
-function wait(duration) {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            resolve();
-        }, duration);
-    });
-}
-
 async function resolveAfterTimeout(duration, value) {
     await wait(duration);
     return value;
-};
+}
 
 function connectionHandler(socket) {
     (async () => {
@@ -120,7 +116,7 @@ function connectionHandler(socket) {
             rpc.end();
         }
     })();
-};
+}
 
 function destroyTestCase() {
     if (client) {
@@ -129,10 +125,11 @@ function destroyTestCase() {
             client.disconnect();
         }
     }
-};
+}
 
-describe('Integration tests', function () {
-    beforeEach('Run the server before start', async function () {
+describe('Integration tests', () => {
+    // Run the server before start
+    beforeEach(async () => {
         clientOptions = {
             hostname: '127.0.0.1',
             port: portNumber
@@ -142,7 +139,7 @@ describe('Integration tests', function () {
             wsEngine: WS_ENGINE
         };
 
-        server = asyngularServer.listen(portNumber, serverOptions);
+        server = listen(portNumber, serverOptions);
 
         (async () => {
             for await (let {socket} of server.listener('connection')) {
@@ -161,22 +158,23 @@ describe('Integration tests', function () {
         await server.listener('ready').once();
     });
 
-    afterEach('Close server after each test', async function () {
+    // Close server after each test
+    afterEach(async () => {
         portNumber++;
         destroyTestCase();
         server.close();
         global.localStorage.removeItem('asyngular.authToken');
     });
 
-    describe('Socket authentication', function () {
-        it('Should not send back error if JWT is not provided in handshake', async function () {
-            client = asyngularClient.create(clientOptions);
+    describe('Socket authentication', () => {
+        it('Should not send back error if JWT is not provided in handshake', async () => {
+            client = create(clientOptions);
             let event = await client.listener('connect').once();
             expect(event.authError === undefined).toEqual(true);
         });
 
-        it('Should be authenticated on connect if previous JWT token is present', async function () {
-            client = asyngularClient.create(clientOptions);
+        it('Should be authenticated on connect if previous JWT token is present', async () => {
+            client = create(clientOptions);
             await client.listener('connect').once();
             client.invoke('login', {username: 'bob'});
             await client.listener('authenticate').once();
@@ -188,10 +186,10 @@ describe('Integration tests', function () {
             expect(event.authError === undefined).toEqual(true);
         });
 
-        it('Should send back error if JWT is invalid during handshake', async function () {
+        it('Should send back error if JWT is invalid during handshake', async () => {
             global.localStorage.setItem('asyngular.authToken', validSignedAuthTokenBob);
 
-            client = asyngularClient.create(clientOptions);
+            client = create(clientOptions);
 
             await client.listener('connect').once();
             // Change the setAuthKey to invalidate the current token.
@@ -204,7 +202,7 @@ describe('Integration tests', function () {
             expect(event.authError.name).toEqual('AuthTokenInvalidError');
         });
 
-        it('Should allow switching between users', async function () {
+        it('Should allow switching between users', async () => {
             global.localStorage.setItem('asyngular.authToken', validSignedAuthTokenBob);
 
             let authenticateEvents = [];
@@ -239,7 +237,7 @@ describe('Integration tests', function () {
             })();
 
             let clientSocketId;
-            client = asyngularClient.create(clientOptions);
+            client = create(clientOptions);
             await client.listener('connect').once();
             clientSocketId = client.id;
             client.invoke('login', {username: 'alice'});
@@ -266,7 +264,7 @@ describe('Integration tests', function () {
             expect(authStateChangeEvents[0].authToken.username).toEqual('bob');
         });
 
-        it('Should emit correct events/data when socket is deauthenticated', async function () {
+        it('Should emit correct events/data when socket is deauthenticated', async () => {
             global.localStorage.setItem('asyngular.authToken', validSignedAuthTokenBob);
 
             let authenticationStateChangeEvents = [];
@@ -278,7 +276,7 @@ describe('Integration tests', function () {
                 }
             })();
 
-            client = asyngularClient.create(clientOptions);
+            client = create(clientOptions);
 
             (async () => {
                 for await (let event of client.listener('connect')) {
@@ -319,10 +317,10 @@ describe('Integration tests', function () {
             expect(authenticationStateChangeEvents[1].authToken).toEqual(null);
         });
 
-        it('Should not authenticate the client if MIDDLEWARE_AUTHENTICATE blocks the authentication', async function () {
+        it('Should not authenticate the client if MIDDLEWARE_AUTHENTICATE blocks the authentication', async () => {
             global.localStorage.setItem('asyngular.authToken', validSignedAuthTokenAlice);
 
-            client = asyngularClient.create(clientOptions);
+            client = create(clientOptions);
             // The previous test authenticated us as 'alice', so that token will be passed to the server as
             // part of the handshake.
 
@@ -334,9 +332,9 @@ describe('Integration tests', function () {
             expect(event.authError.name).toEqual('AuthenticateMiddlewareError');
         });
 
-        it('Token should be available after Promise resolves if token engine signing is synchronous', async function () {
+        it('Token should be available after Promise resolves if token engine signing is synchronous', async () => {
             portNumber++;
-            server = asyngularServer.listen(portNumber, {
+            server = listen(portNumber, {
                 authKey: serverOptions.authKey,
                 wsEngine: WS_ENGINE,
                 authSignAsync: false
@@ -350,7 +348,7 @@ describe('Integration tests', function () {
 
             await server.listener('ready').once();
 
-            client = asyngularClient.create({
+            client = create({
                 hostname: clientOptions.hostname,
                 port: portNumber
             });
@@ -365,9 +363,9 @@ describe('Integration tests', function () {
             expect(client.authToken.username).toEqual('bob');
         });
 
-        it('If token engine signing is asynchronous, authentication can be captured using the authenticate event', async function () {
+        it('If token engine signing is asynchronous, authentication can be captured using the authenticate event', async () => {
             portNumber++;
-            server = asyngularServer.listen(portNumber, {
+            server = listen(portNumber, {
                 authKey: serverOptions.authKey,
                 wsEngine: WS_ENGINE,
                 authSignAsync: true
@@ -381,7 +379,7 @@ describe('Integration tests', function () {
 
             await server.listener('ready').once();
 
-            client = asyngularClient.create({
+            client = create({
                 hostname: clientOptions.hostname,
                 port: portNumber
             });
@@ -396,9 +394,9 @@ describe('Integration tests', function () {
             expect(client.authToken.username).toEqual('bob');
         });
 
-        it('Should still work if token verification is asynchronous', async function () {
+        it('Should still work if token verification is asynchronous', async () => {
             portNumber++;
-            server = asyngularServer.listen(portNumber, {
+            server = listen(portNumber, {
                 authKey: serverOptions.authKey,
                 wsEngine: WS_ENGINE,
                 authVerifyAsync: false
@@ -412,7 +410,7 @@ describe('Integration tests', function () {
 
             await server.listener('ready').once();
 
-            client = asyngularClient.create({
+            client = create({
                 hostname: clientOptions.hostname,
                 port: portNumber
             });
@@ -433,9 +431,9 @@ describe('Integration tests', function () {
             expect(client.authToken.username).toEqual('bob');
         });
 
-        it('Should set the correct expiry when using expiresIn option when creating a JWT with socket.setAuthToken', async function () {
+        it('Should set the correct expiry when using expiresIn option when creating a JWT with socket.setAuthToken', async () => {
             portNumber++;
-            server = asyngularServer.listen(portNumber, {
+            server = listen(portNumber, {
                 authKey: serverOptions.authKey,
                 wsEngine: WS_ENGINE,
                 authVerifyAsync: false
@@ -449,7 +447,7 @@ describe('Integration tests', function () {
 
             await server.listener('ready').once();
 
-            client = asyngularClient.create({
+            client = create({
                 hostname: clientOptions.hostname,
                 port: portNumber
             });
@@ -466,9 +464,9 @@ describe('Integration tests', function () {
             expect(dateDifference < 1000).toEqual(true);
         });
 
-        it('Should set the correct expiry when adding exp claim when creating a JWT with socket.setAuthToken', async function () {
+        it('Should set the correct expiry when adding exp claim when creating a JWT with socket.setAuthToken', async () => {
             portNumber++;
-            server = asyngularServer.listen(portNumber, {
+            server = listen(portNumber, {
                 authKey: serverOptions.authKey,
                 wsEngine: WS_ENGINE,
                 authVerifyAsync: false
@@ -482,7 +480,7 @@ describe('Integration tests', function () {
 
             await server.listener('ready').once();
 
-            client = asyngularClient.create({
+            client = create({
                 hostname: clientOptions.hostname,
                 port: portNumber
             });
@@ -499,9 +497,9 @@ describe('Integration tests', function () {
             expect(dateDifference < 1000).toEqual(true);
         });
 
-        it('The exp claim should have priority over expiresIn option when using socket.setAuthToken', async function () {
+        it('The exp claim should have priority over expiresIn option when using socket.setAuthToken', async () => {
             portNumber++;
-            server = asyngularServer.listen(portNumber, {
+            server = listen(portNumber, {
                 authKey: serverOptions.authKey,
                 wsEngine: WS_ENGINE,
                 authVerifyAsync: false
@@ -515,7 +513,7 @@ describe('Integration tests', function () {
 
             await server.listener('ready').once();
 
-            client = asyngularClient.create({
+            client = create({
                 hostname: clientOptions.hostname,
                 port: portNumber
             });
@@ -532,9 +530,9 @@ describe('Integration tests', function () {
             expect(dateDifference < 1000).toEqual(true);
         });
 
-        it('Should send back error if socket.setAuthToken tries to set both iss claim and issuer option', async function () {
+        it('Should send back error if socket.setAuthToken tries to set both iss claim and issuer option', async () => {
             portNumber++;
-            server = asyngularServer.listen(portNumber, {
+            server = listen(portNumber, {
                 authKey: serverOptions.authKey,
                 wsEngine: WS_ENGINE,
                 authVerifyAsync: false
@@ -549,7 +547,7 @@ describe('Integration tests', function () {
 
             await server.listener('ready').once();
 
-            client = asyngularClient.create({
+            client = create({
                 hostname: clientOptions.hostname,
                 port: portNumber
             });
@@ -600,9 +598,9 @@ describe('Integration tests', function () {
             expect(warningMap['SocketProtocolError']).not.toEqual(null);
         });
 
-        it('Should trigger an authTokenSigned event and socket.signedAuthToken should be set after calling the socket.setAuthToken method', async function () {
+        it('Should trigger an authTokenSigned event and socket.signedAuthToken should be set after calling the socket.setAuthToken method', async () => {
             portNumber++;
-            server = asyngularServer.listen(portNumber, {
+            server = listen(portNumber, {
                 authKey: serverOptions.authKey,
                 wsEngine: WS_ENGINE,
                 authSignAsync: true
@@ -637,7 +635,7 @@ describe('Integration tests', function () {
 
             await server.listener('ready').once();
 
-            client = asyngularClient.create({
+            client = create({
                 hostname: clientOptions.hostname,
                 port: portNumber
             });
@@ -649,9 +647,9 @@ describe('Integration tests', function () {
             expect(authTokenSignedEventEmitted).toEqual(true);
         });
 
-        it('Should reject Promise returned by socket.setAuthToken if token delivery fails and rejectOnFailedDelivery option is true', async function () {
+        it('Should reject Promise returned by socket.setAuthToken if token delivery fails and rejectOnFailedDelivery option is true', async () => {
             portNumber++;
-            server = asyngularServer.listen(portNumber, {
+            server = listen(portNumber, {
                 authKey: serverOptions.authKey,
                 wsEngine: WS_ENGINE,
                 authSignAsync: true,
@@ -662,7 +660,7 @@ describe('Integration tests', function () {
 
             (async () => {
                 await server.listener('ready').once();
-                client = asyngularClient.create({
+                client = create({
                     hostname: clientOptions.hostname,
                     port: portNumber
                 });
@@ -700,9 +698,9 @@ describe('Integration tests', function () {
             }
         });
 
-        it('Should not reject Promise returned by socket.setAuthToken if token delivery fails and rejectOnFailedDelivery option is not true', async function () {
+        it('Should not reject Promise returned by socket.setAuthToken if token delivery fails and rejectOnFailedDelivery option is not true', async () => {
             portNumber++;
-            server = asyngularServer.listen(portNumber, {
+            server = listen(portNumber, {
                 authKey: serverOptions.authKey,
                 wsEngine: WS_ENGINE,
                 authSignAsync: true,
@@ -713,7 +711,7 @@ describe('Integration tests', function () {
 
             (async () => {
                 await server.listener('ready').once();
-                client = asyngularClient.create({
+                client = create({
                     hostname: clientOptions.hostname,
                     port: portNumber
                 });
@@ -750,11 +748,11 @@ describe('Integration tests', function () {
             }
         });
 
-        it('The verifyToken method of the authEngine receives correct params', async function () {
+        it('The verifyToken method of the authEngine receives correct params', async () => {
             global.localStorage.setItem('asyngular.authToken', validSignedAuthTokenBob);
 
             portNumber++;
-            server = asyngularServer.listen(portNumber, {
+            server = listen(portNumber, {
                 authKey: serverOptions.authKey,
                 wsEngine: WS_ENGINE
             });
@@ -767,13 +765,13 @@ describe('Integration tests', function () {
 
             (async () => {
                 await server.listener('ready').once();
-                client = asyngularClient.create({
+                client = create({
                     hostname: clientOptions.hostname,
                     port: portNumber
                 });
             })();
 
-            return new Promise((resolve) => {
+            return new Promise<void>((resolve) => {
                 server.setAuthEngine({
                     verifyToken: async (signedAuthToken, verificationKey, verificationOptions) => {
                         await wait(500);
@@ -788,9 +786,9 @@ describe('Integration tests', function () {
             });
         });
 
-        it('Should remove client data from the server when client disconnects before authentication process finished', async function () {
+        it('Should remove client data from the server when client disconnects before authentication process finished', async () => {
             portNumber++;
-            server = asyngularServer.listen(portNumber, {
+            server = listen(portNumber, {
                 authKey: serverOptions.authKey,
                 wsEngine: WS_ENGINE
             });
@@ -807,7 +805,7 @@ describe('Integration tests', function () {
             })();
 
             await server.listener('ready').once();
-            client = asyngularClient.create({
+            client = create({
                 hostname: clientOptions.hostname,
                 port: portNumber
             });
@@ -834,10 +832,10 @@ describe('Integration tests', function () {
         });
     });
 
-    describe('Socket handshake', function () {
-        it('Exchange is attached to socket before the handshake event is triggered', async function () {
+    describe('Socket handshake', () => {
+        it('Exchange is attached to socket before the handshake event is triggered', async () => {
             portNumber++;
-            server = asyngularServer.listen(portNumber, {
+            server = listen(portNumber, {
                 authKey: serverOptions.authKey,
                 wsEngine: WS_ENGINE
             });
@@ -850,7 +848,7 @@ describe('Integration tests', function () {
 
             await server.listener('ready').once();
 
-            client = asyngularClient.create({
+            client = create({
                 hostname: clientOptions.hostname,
                 port: portNumber
             });
@@ -860,10 +858,10 @@ describe('Integration tests', function () {
         });
     });
 
-    describe('Socket connection', function () {
-        it('Server-side socket connect event and server connection event should trigger', async function () {
+    describe('Socket connection', () => {
+        it('Server-side socket connect event and server connection event should trigger', async () => {
             portNumber++;
-            server = asyngularServer.listen(portNumber, {
+            server = listen(portNumber, {
                 authKey: serverOptions.authKey,
                 wsEngine: WS_ENGINE
             });
@@ -881,7 +879,7 @@ describe('Integration tests', function () {
 
             await server.listener('ready').once();
 
-            client = asyngularClient.create({
+            client = create({
                 hostname: clientOptions.hostname,
                 port: portNumber
             });
@@ -906,7 +904,7 @@ describe('Integration tests', function () {
             })();
 
             let clientConnectEmitted = false;
-            let clientConnectStatus = false;
+            let clientConnectStatus: EventObject = null;
 
             (async () => {
                 for await (let event of client.listener('connect')) {
@@ -938,17 +936,17 @@ describe('Integration tests', function () {
             expect(clientConnectStatus.pingTimeout).toEqual(server.pingTimeout);
             expect(clientConnectStatus.authError).toEqual(null);
             expect(clientConnectStatus.isAuthenticated).toEqual(false);
-            expect(clientConnectStatus.foo).toEqual(null);
+            expect(clientConnectStatus['foo']).toEqual(null);
             // Client socket status should be a clone of server socket status; not
             // a reference to the same object.
-            expect(clientConnectStatus.foo).not.toEqual(connectStatus.foo);
+            expect(clientConnectStatus['foo']).not.toEqual(connectStatus.foo);
         });
     });
 
-    describe('Socket disconnection', function () {
-        it('Server-side socket disconnect event should not trigger if the socket did not complete the handshake; instead, it should trigger connectAbort', async function () {
+    describe('Socket disconnection', () => {
+        it('Server-side socket disconnect event should not trigger if the socket did not complete the handshake; instead, it should trigger connectAbort', async () => {
             portNumber++;
-            server = asyngularServer.listen(portNumber, {
+            server = listen(portNumber, {
                 authKey: serverOptions.authKey,
                 wsEngine: WS_ENGINE
             });
@@ -969,7 +967,7 @@ describe('Integration tests', function () {
 
             await server.listener('ready').once();
 
-            client = asyngularClient.create({
+            client = create({
                 hostname: clientOptions.hostname,
                 port: portNumber
             });
@@ -1023,9 +1021,9 @@ describe('Integration tests', function () {
             expect(serverDisconnected).toEqual(false);
         });
 
-        it('Server-side socket disconnect event should trigger if the socket completed the handshake (not connectAbort)', async function () {
+        it('Server-side socket disconnect event should trigger if the socket completed the handshake (not connectAbort)', async () => {
             portNumber++;
-            server = asyngularServer.listen(portNumber, {
+            server = listen(portNumber, {
                 authKey: serverOptions.authKey,
                 wsEngine: WS_ENGINE
             });
@@ -1046,7 +1044,7 @@ describe('Integration tests', function () {
 
             await server.listener('ready').once();
 
-            client = asyngularClient.create({
+            client = create({
                 hostname: clientOptions.hostname,
                 port: portNumber
             });
@@ -1101,9 +1099,10 @@ describe('Integration tests', function () {
             expect(serverSocketAborted).toEqual(false);
         });
 
-        it('The close event should trigger when the socket loses the connection before the handshake', async function () {
+        it('The close event should trigger when the socket loses the connection before the handshake', async () => {
+            let connectionOnServer = false;
             portNumber++;
-            server = asyngularServer.listen(portNumber, {
+            server = listen(portNumber, {
                 authKey: serverOptions.authKey,
                 wsEngine: WS_ENGINE
             });
@@ -1122,7 +1121,7 @@ describe('Integration tests', function () {
 
             await server.listener('ready').once();
 
-            client = asyngularClient.create({
+            client = create({
                 hostname: clientOptions.hostname,
                 port: portNumber
             });
@@ -1162,9 +1161,10 @@ describe('Integration tests', function () {
             expect(serverClosure).toEqual(true);
         });
 
-        it('The close event should trigger when the socket loses the connection after the handshake', async function () {
+        it('The close event should trigger when the socket loses the connection after the handshake', async () => {
+            let connectionOnServer = false;
             portNumber++;
-            server = asyngularServer.listen(portNumber, {
+            server = listen(portNumber, {
                 authKey: serverOptions.authKey,
                 wsEngine: WS_ENGINE
             });
@@ -1183,7 +1183,7 @@ describe('Integration tests', function () {
 
             await server.listener('ready').once();
 
-            client = asyngularClient.create({
+            client = create({
                 hostname: clientOptions.hostname,
                 port: portNumber
             });
@@ -1224,10 +1224,10 @@ describe('Integration tests', function () {
         });
     });
 
-    describe('Socket pub/sub', function () {
-        it('Should support subscription batching', async function () {
+    describe('Socket pub/sub', () => {
+        it('Should support subscription batching', async () => {
             portNumber++;
-            server = asyngularServer.listen(portNumber, {
+            server = listen(portNumber, {
                 authKey: serverOptions.authKey,
                 wsEngine: WS_ENGINE
             });
@@ -1254,7 +1254,8 @@ describe('Integration tests', function () {
 
             // Each subscription should pass through the middleware individually, even
             // though they were sent as a batch/array.
-            server.addMiddleware(server.MIDDLEWARE_SUBSCRIBE, function (req, next) {
+            server.addMiddleware(server.MIDDLEWARE_SUBSCRIBE, (req, next) =>
+            {
                 subscribeMiddlewareCounter++;
                 expect(req.channel.indexOf('my-channel-')).toEqual(0);
                 if (req.channel === 'my-channel-10') {
@@ -1271,14 +1272,14 @@ describe('Integration tests', function () {
 
             await server.listener('ready').once();
 
-            client = asyngularClient.create({
+            client = create({
                 hostname: clientOptions.hostname,
                 port: portNumber
             });
 
             let channelList = [];
             for (let i = 0; i < 20; i++) {
-                let subscribeOptions = {
+                let subscribeOptions: SubscribeOptions = {
                     batch: true
                 };
                 if (i === 10) {
@@ -1315,9 +1316,9 @@ describe('Integration tests', function () {
             }
         });
 
-        it('Client should not be able to subscribe to a channel before the handshake has completed', async function () {
+        it('Client should not be able to subscribe to a channel before the handshake has completed', async () => {
             portNumber++;
-            server = asyngularServer.listen(portNumber, {
+            server = listen(portNumber, {
                 authKey: serverOptions.authKey,
                 wsEngine: WS_ENGINE
             });
@@ -1336,7 +1337,7 @@ describe('Integration tests', function () {
 
             await server.listener('ready').once();
 
-            client = asyngularClient.create({
+            client = create({
                 hostname: clientOptions.hostname,
                 port: portNumber
             });
@@ -1360,7 +1361,7 @@ describe('Integration tests', function () {
             };
 
             // Trick the server by sending a fake subscribe before the handshake is done.
-            client.transport.socket.on('open', function () {
+            client.transport.socket.on('open', () => {
                 client.send('{"event":"#subscribe","data":{"channel":"someChannel"},"cid":2}');
             });
 
@@ -1370,9 +1371,9 @@ describe('Integration tests', function () {
             expect(error.name).toEqual('InvalidActionError');
         });
 
-        it('Server should be able to handle invalid #subscribe and #unsubscribe and #publish events without crashing', async function () {
+        it('Server should be able to handle invalid #subscribe and #unsubscribe and #publish events without crashing', async () => {
             portNumber++;
-            server = asyngularServer.listen(portNumber, {
+            server = listen(portNumber, {
                 authKey: serverOptions.authKey,
                 wsEngine: WS_ENGINE
             });
@@ -1385,7 +1386,7 @@ describe('Integration tests', function () {
 
             await server.listener('ready').once();
 
-            client = asyngularClient.create({
+            client = create({
                 hostname: clientOptions.hostname,
                 port: portNumber
             });
@@ -1474,9 +1475,9 @@ describe('Integration tests', function () {
             expect(nullPublishError).not.toEqual(null);
         });
 
-        it('When default SCSimpleBroker broker engine is used, disconnect event should trigger before unsubscribe event', async function () {
+        it('When default SimpleBroker broker engine is used, disconnect event should trigger before unsubscribe event', async () => {
             portNumber++;
-            server = asyngularServer.listen(portNumber, {
+            server = listen(portNumber, {
                 authKey: serverOptions.authKey,
                 wsEngine: WS_ENGINE
             });
@@ -1486,7 +1487,7 @@ describe('Integration tests', function () {
             (async () => {
                 await server.listener('ready').once();
 
-                client = asyngularClient.create({
+                client = create({
                     hostname: clientOptions.hostname,
                     port: portNumber
                 });
@@ -1520,16 +1521,16 @@ describe('Integration tests', function () {
             expect(eventList[1].channel).toEqual('foo');
         });
 
-        it('When default SCSimpleBroker broker engine is used, scServer.exchange should support consuming data from a channel', async function () {
+        it('When default SimpleBroker broker engine is used, scServer.exchange should support consuming data from a channel', async () => {
             portNumber++;
-            server = asyngularServer.listen(portNumber, {
+            server = listen(portNumber, {
                 authKey: serverOptions.authKey,
                 wsEngine: WS_ENGINE
             });
 
             await server.listener('ready').once();
 
-            client = asyngularClient.create({
+            client = create({
                 hostname: clientOptions.hostname,
                 port: portNumber
             });
@@ -1569,16 +1570,16 @@ describe('Integration tests', function () {
             expect(receivedChannelData[1]).toEqual('hi2');
         });
 
-        it('When default SCSimpleBroker broker engine is used, scServer.exchange should support publishing data to a channel', async function () {
+        it('When default SimpleBroker broker engine is used, scServer.exchange should support publishing data to a channel', async () => {
             portNumber++;
-            server = asyngularServer.listen(portNumber, {
+            server = listen(portNumber, {
                 authKey: serverOptions.authKey,
                 wsEngine: WS_ENGINE
             });
 
             await server.listener('ready').once();
 
-            client = asyngularClient.create({
+            client = create({
                 hostname: clientOptions.hostname,
                 port: portNumber
             });
@@ -1614,15 +1615,15 @@ describe('Integration tests', function () {
             expect(receivedChannelData[1]).toEqual('hello2');
         });
 
-        it('When disconnecting a socket, the unsubscribe event should trigger after the disconnect event', async function () {
+        it('When disconnecting a socket, the unsubscribe event should trigger after the disconnect event', async () => {
             portNumber++;
-            let customBrokerEngine = new SCSimpleBroker();
+            let customBrokerEngine = new SimpleBroker();
             let defaultUnsubscribeSocket = customBrokerEngine.unsubscribeSocket;
             customBrokerEngine.unsubscribeSocket = function (socket, channel) {
                 return resolveAfterTimeout(100, defaultUnsubscribeSocket.call(this, socket, channel));
             };
 
-            server = asyngularServer.listen(portNumber, {
+            server = listen(portNumber, {
                 authKey: serverOptions.authKey,
                 wsEngine: WS_ENGINE,
                 brokerEngine: customBrokerEngine
@@ -1632,7 +1633,7 @@ describe('Integration tests', function () {
 
             (async () => {
                 await server.listener('ready').once();
-                client = asyngularClient.create({
+                client = create({
                     hostname: clientOptions.hostname,
                     port: portNumber
                 });
@@ -1670,10 +1671,10 @@ describe('Integration tests', function () {
             expect(eventList[1].channel).toEqual('foo');
         });
 
-        it('Socket should emit an error when trying to unsubscribe to a channel which it is not subscribed to', async function () {
+        it('Socket should emit an error when trying to unsubscribe to a channel which it is not subscribed to', async () => {
             portNumber++;
 
-            server = asyngularServer.listen(portNumber, {
+            server = listen(portNumber, {
                 authKey: serverOptions.authKey,
                 wsEngine: WS_ENGINE
             });
@@ -1692,7 +1693,7 @@ describe('Integration tests', function () {
 
             await server.listener('ready').once();
 
-            client = asyngularClient.create({
+            client = create({
                 hostname: clientOptions.hostname,
                 port: portNumber
             });
@@ -1711,15 +1712,15 @@ describe('Integration tests', function () {
             expect(errorList[0].name).toEqual('BrokerError');
         });
 
-        it('Socket should not receive messages from a channel which it has only just unsubscribed from (accounting for delayed unsubscribe by brokerEngine)', async function () {
+        it('Socket should not receive messages from a channel which it has only just unsubscribed from (accounting for delayed unsubscribe by brokerEngine)', async () => {
             portNumber++;
-            let customBrokerEngine = new SCSimpleBroker();
+            let customBrokerEngine = new SimpleBroker();
             let defaultUnsubscribeSocket = customBrokerEngine.unsubscribeSocket;
             customBrokerEngine.unsubscribeSocket = function (socket, channel) {
                 return resolveAfterTimeout(300, defaultUnsubscribeSocket.call(this, socket, channel));
             };
 
-            server = asyngularServer.listen(portNumber, {
+            server = listen(portNumber, {
                 authKey: serverOptions.authKey,
                 wsEngine: WS_ENGINE,
                 brokerEngine: customBrokerEngine
@@ -1739,14 +1740,14 @@ describe('Integration tests', function () {
 
             await server.listener('ready').once();
 
-            client = asyngularClient.create({
+            client = create({
                 hostname: clientOptions.hostname,
                 port: portNumber
             });
             // Stub the isSubscribed method so that it always returns true.
             // That way the client will always invoke watchers whenever
             // it receives a #publish event.
-            client.isSubscribed = function () { return true; };
+            client.isSubscribed = () => { return true; };
 
             let messageList = [];
 
@@ -1768,10 +1769,10 @@ describe('Integration tests', function () {
             expect(messageList.length).toEqual(0);
         });
 
-        it('Socket channelSubscriptions and channelSubscriptionsCount should update when socket.kickOut(channel) is called', async function () {
+        it('Socket channelSubscriptions and channelSubscriptionsCount should update when socket.kickOut(channel) is called', async () => {
             portNumber++;
 
-            server = asyngularServer.listen(portNumber, {
+            server = listen(portNumber, {
                 authKey: serverOptions.authKey,
                 wsEngine: WS_ENGINE
             });
@@ -1804,7 +1805,7 @@ describe('Integration tests', function () {
 
             await server.listener('ready').once();
 
-            client = asyngularClient.create({
+            client = create({
                 hostname: clientOptions.hostname,
                 port: portNumber
             });
@@ -1818,10 +1819,10 @@ describe('Integration tests', function () {
             expect(Object.keys(serverSocket.channelSubscriptions).length).toEqual(0);
         });
 
-        it('Socket channelSubscriptions and channelSubscriptionsCount should update when socket.kickOut() is called without arguments', async function () {
+        it('Socket channelSubscriptions and channelSubscriptionsCount should update when socket.kickOut() is called without arguments', async () => {
             portNumber++;
 
-            server = asyngularServer.listen(portNumber, {
+            server = listen(portNumber, {
                 authKey: serverOptions.authKey,
                 wsEngine: WS_ENGINE
             });
@@ -1854,7 +1855,7 @@ describe('Integration tests', function () {
 
             await server.listener('ready').once();
 
-            client = asyngularClient.create({
+            client = create({
                 hostname: clientOptions.hostname,
                 port: portNumber
             });
@@ -1870,10 +1871,10 @@ describe('Integration tests', function () {
         });
     });
 
-    describe('Socket destruction', function () {
-        it('Server socket destroy should disconnect the socket', async function () {
+    describe('Socket destruction', () => {
+        it('Server socket destroy should disconnect the socket', async () => {
             portNumber++;
-            server = asyngularServer.listen(portNumber, {
+            server = listen(portNumber, {
                 authKey: serverOptions.authKey,
                 wsEngine: WS_ENGINE
             });
@@ -1887,7 +1888,7 @@ describe('Integration tests', function () {
 
             await server.listener('ready').once();
 
-            client = asyngularClient.create({
+            client = create({
                 hostname: clientOptions.hostname,
                 port: portNumber
             });
@@ -1899,9 +1900,9 @@ describe('Integration tests', function () {
             expect(server.pendingClientsCount).toEqual(0);
         });
 
-        it('Server socket destroy should set the active property on the socket to false', async function () {
+        it('Server socket destroy should set the active property on the socket to false', async () => {
             portNumber++;
-            server = asyngularServer.listen(portNumber, {
+            server = listen(portNumber, {
                 authKey: serverOptions.authKey,
                 wsEngine: WS_ENGINE
             });
@@ -1918,7 +1919,7 @@ describe('Integration tests', function () {
             })();
 
             await server.listener('ready').once();
-            client = asyngularClient.create({
+            client = create({
                 hostname: clientOptions.hostname,
                 port: portNumber
             });
@@ -1928,13 +1929,14 @@ describe('Integration tests', function () {
         });
     });
 
-    describe('Socket Ping/pong', function () {
-        describe('When when pingTimeoutDisabled is not set', function () {
-            beforeEach('Launch server with ping options before start', async function () {
+    describe('Socket Ping/pong', () => {
+        describe('When when pingTimeoutDisabled is not set', () => {
+            // Launch server with ping options before start
+            beforeEach(async () => {
                 portNumber++;
                 // Intentionally make pingInterval higher than pingTimeout, that
                 // way the client will never receive a ping or send back a pong.
-                server = asyngularServer.listen(portNumber, {
+                server = listen(portNumber, {
                     authKey: serverOptions.authKey,
                     wsEngine: WS_ENGINE,
                     pingInterval: 2000,
@@ -1944,13 +1946,14 @@ describe('Integration tests', function () {
                 await server.listener('ready').once();
             });
 
-            afterEach('Shut down server afterwards', async function () {
+            // Shut down server afterwards
+            afterEach(async () => {
                 destroyTestCase();
                 server.close();
             });
 
-            it('Should disconnect socket if server does not receive a pong from client before timeout', async function () {
-                client = asyngularClient.create({
+            it('Should disconnect socket if server does not receive a pong from client before timeout', async () => {
+                client = create({
                     hostname: clientOptions.hostname,
                     port: portNumber
                 });
@@ -1994,12 +1997,13 @@ describe('Integration tests', function () {
             });
         });
 
-        describe('When when pingTimeoutDisabled is true', function () {
-            beforeEach('Launch server with ping options before start', async function () {
+        describe('When when pingTimeoutDisabled is true', () => {
+            // Launch server with ping options before start
+            beforeEach(async () => {
                 portNumber++;
                 // Intentionally make pingInterval higher than pingTimeout, that
                 // way the client will never receive a ping or send back a pong.
-                server = asyngularServer.listen(portNumber, {
+                server = listen(portNumber, {
                     authKey: serverOptions.authKey,
                     wsEngine: WS_ENGINE,
                     pingInterval: 2000,
@@ -2010,13 +2014,14 @@ describe('Integration tests', function () {
                 await server.listener('ready').once();
             });
 
-            afterEach('Shut down server afterwards', async function () {
+            // Shut down server afterwards
+            afterEach(async () => {
                 destroyTestCase();
                 server.close();
             });
 
-            it('Should not disconnect socket if server does not receive a pong from client before timeout', async function () {
-                client = asyngularClient.create({
+            it('Should not disconnect socket if server does not receive a pong from client before timeout', async () => {
+                client = create({
                     hostname: clientOptions.hostname,
                     port: portNumber,
                     pingTimeoutDisabled: true
@@ -2060,32 +2065,34 @@ describe('Integration tests', function () {
         });
     });
 
-    describe('Middleware', function () {
+    describe('Middleware', () => {
         let middlewareFunction;
         let middlewareWasExecuted = false;
 
-        beforeEach('Launch server without middleware before start', async function () {
+        // Launch server without middleware before start
+        beforeEach(async () => {
             portNumber++;
-            server = asyngularServer.listen(portNumber, {
+            server = listen(portNumber, {
                 authKey: serverOptions.authKey,
                 wsEngine: WS_ENGINE
             });
             await server.listener('ready').once();
         });
 
-        afterEach('Shut down server afterwards', async function () {
+        // Shut down server afterwards
+        afterEach(async () => {
             destroyTestCase();
             server.close();
         });
 
-        describe('MIDDLEWARE_AUTHENTICATE', function () {
-            it('Should not run authenticate middleware if JWT token does not exist', async function () {
+        describe('MIDDLEWARE_AUTHENTICATE', () => {
+            it('Should not run authenticate middleware if JWT token does not exist', async () => {
                 middlewareFunction = async function (req) {
                     middlewareWasExecuted = true;
                 };
                 server.addMiddleware(server.MIDDLEWARE_AUTHENTICATE, middlewareFunction);
 
-                client = asyngularClient.create({
+                client = create({
                     hostname: clientOptions.hostname,
                     port: portNumber
                 });
@@ -2094,7 +2101,7 @@ describe('Integration tests', function () {
                 expect(middlewareWasExecuted).not.toEqual(true);
             });
 
-            it('Should run authenticate middleware if JWT token exists', async function () {
+            it('Should run authenticate middleware if JWT token exists', async () => {
                 global.localStorage.setItem('asyngular.authToken', validSignedAuthTokenBob);
 
                 middlewareFunction = async function (req) {
@@ -2102,7 +2109,7 @@ describe('Integration tests', function () {
                 };
                 server.addMiddleware(server.MIDDLEWARE_AUTHENTICATE, middlewareFunction);
 
-                client = asyngularClient.create({
+                client = create({
                     hostname: clientOptions.hostname,
                     port: portNumber
                 });
@@ -2118,8 +2125,8 @@ describe('Integration tests', function () {
             });
         });
 
-        describe('MIDDLEWARE_HANDSHAKE_SC', function () {
-            it('Should trigger correct events if MIDDLEWARE_HANDSHAKE_SC blocks with an error', async function () {
+        describe('MIDDLEWARE_HANDSHAKE_AG', () => {
+            it('Should trigger correct events if MIDDLEWARE_HANDSHAKE_AG blocks with an error', async () => {
                 let middlewareWasExecuted = false;
                 let serverWarnings = [];
                 let clientErrors = [];
@@ -2128,11 +2135,12 @@ describe('Integration tests', function () {
                 middlewareFunction = async function (req) {
                     await wait(100);
                     middlewareWasExecuted = true;
+                    console.log('middlewareWasExecuted!!!');
                     let err = new Error('SC handshake failed because the server was too lazy');
                     err.name = 'TooLazyHandshakeError';
                     throw err;
                 };
-                server.addMiddleware(server.MIDDLEWARE_HANDSHAKE_SC, middlewareFunction);
+                server.addMiddleware(server.MIDDLEWARE_HANDSHAKE_AG, middlewareFunction);
 
                 (async () => {
                     for await (let {warning} of server.listener('warning')) {
@@ -2140,7 +2148,7 @@ describe('Integration tests', function () {
                     }
                 })();
 
-                client = asyngularClient.create({
+                client = create({
                     hostname: clientOptions.hostname,
                     port: portNumber
                 });
@@ -2167,7 +2175,7 @@ describe('Integration tests', function () {
                 expect(abortStatus).not.toEqual(null);
             });
 
-            it('Should send back default 4008 status code if MIDDLEWARE_HANDSHAKE_SC blocks without providing a status code', async function () {
+            it('Should send back default 4008 status code if MIDDLEWARE_HANDSHAKE_AG blocks without providing a status code', async () => {
                 let middlewareWasExecuted = false;
                 let abortStatus;
                 let abortReason;
@@ -2179,9 +2187,9 @@ describe('Integration tests', function () {
                     err.name = 'TooLazyHandshakeError';
                     throw err;
                 };
-                server.addMiddleware(server.MIDDLEWARE_HANDSHAKE_SC, middlewareFunction);
+                server.addMiddleware(server.MIDDLEWARE_HANDSHAKE_AG, middlewareFunction);
 
-                client = asyngularClient.create({
+                client = create({
                     hostname: clientOptions.hostname,
                     port: portNumber
                 });
@@ -2200,7 +2208,7 @@ describe('Integration tests', function () {
                 );
             });
 
-            it('Should send back custom status code if MIDDLEWARE_HANDSHAKE_SC blocks by providing a status code', async function () {
+            it('Should send back custom status code if MIDDLEWARE_HANDSHAKE_AG blocks by providing a status code', async () => {
                 let middlewareWasExecuted = false;
                 let abortStatus;
                 let abortReason;
@@ -2213,12 +2221,12 @@ describe('Integration tests', function () {
                     // Set custom 4501 status code as a property of the error.
                     // We will treat this code as a fatal authentication failure on the front end.
                     // A status code of 4500 or higher means that the client shouldn't try to reconnect.
-                    err.statusCode = 4501;
+                    err['statusCode'] = 4501;
                     throw err;
                 };
-                server.addMiddleware(server.MIDDLEWARE_HANDSHAKE_SC, middlewareFunction);
+                server.addMiddleware(server.MIDDLEWARE_HANDSHAKE_AG, middlewareFunction);
 
-                client = asyngularClient.create({
+                client = create({
                     hostname: clientOptions.hostname,
                     port: portNumber
                 });
@@ -2237,19 +2245,17 @@ describe('Integration tests', function () {
                 );
             });
 
-            it('Should connect with a delay if next() is called after a timeout inside the middleware function', async function () {
+            it('Should connect with a delay if next() is called after a timeout inside the middleware function', async () => {
                 let createConnectionTime = null;
                 let connectEventTime = null;
                 let abortStatus;
                 let abortReason;
 
-                middlewareFunction = async function (req) {
-                    await wait(500);
-                };
-                server.addMiddleware(server.MIDDLEWARE_HANDSHAKE_SC, middlewareFunction);
+                middlewareFunction = async req => await wait(500);
+                server.addMiddleware(server.MIDDLEWARE_HANDSHAKE_AG, middlewareFunction);
 
                 createConnectionTime = Date.now();
-                client = asyngularClient.create({
+                client = create({
                     hostname: clientOptions.hostname,
                     port: portNumber
                 });

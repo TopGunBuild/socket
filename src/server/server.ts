@@ -22,7 +22,8 @@ import {
     MiddlewareFunction,
     Middlewares
 } from '../types';
-import { applyEachSeries } from '../utils/apply-each-series';
+// import { applyEachSeries } from '../utils/apply-each-series';
+import { applyEachSeries } from 'async';
 import { IncomingMessage, RequestObject, TGSocketServerOptions } from './types';
 import { SimpleBroker } from '../simple-broker/simple-broker';
 
@@ -1227,6 +1228,7 @@ export class TGSocketServer extends AsyncStreamEmitter<any>
 
     private _handleSocketConnection(wsSocket: any, upgradeReq?: any): void
     {
+        console.log('_handleSocketConnection !!');
         if (!wsSocket.upgradeReq && upgradeReq)
         {
             // Normalize ws modules to match.

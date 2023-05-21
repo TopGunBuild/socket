@@ -1,30 +1,11 @@
-import global from '../utils/window-or-global';
 import { AsyncStreamEmitter } from '../async-stream-emitter/async-stream-emitter';
 import { CodecEngine, SocketState } from '../types';
 import { SocketClientOptions, TGAuthEngine, TransmitOptions, InvokeOptions } from './types';
 import { EventObject, EventObjectCallback } from '../types';
 import { BadConnectionError, hydrateError, TimeoutError } from '../errors';
 import { TGResponse } from '../response';
+import { createWebSocket } from '../utils/create-websocket';
 
-let WebSocket;
-let createWebSocket;
-
-if (global.WebSocket)
-{
-    WebSocket       = global.WebSocket;
-    createWebSocket = function (uri)
-    {
-        return new WebSocket(uri);
-    };
-}
-else
-{
-    WebSocket       = require('ws');
-    createWebSocket = function (uri, options)
-    {
-        return new WebSocket(uri, null, options);
-    };
-}
 
 /**
  * Constructor
@@ -81,10 +62,10 @@ export class TGTransport extends AsyncStreamEmitter<any>
         // Open the connection.
 
         this.state = this.CONNECTING;
-        const uri    = this.uri();
+        const uri  = this.uri();
 
-        const wsSocket        = createWebSocket(uri, this.options);
-        wsSocket.binaryType = this.options.binaryType;
+        const wsSocket         = createWebSocket(uri, this.options);
+        wsSocket['binaryType'] = this.options.binaryType as BinaryType;
 
         this.socket = wsSocket;
 
@@ -144,7 +125,7 @@ export class TGTransport extends AsyncStreamEmitter<any>
     {
         let query: string|{[key: string]: string|number|boolean} =
                 this.options.query || {};
-        const schema                                               = this.options.secure ? 'wss' : 'ws';
+        const schema                                             = this.options.secure ? 'wss' : 'ws';
 
         if (this.options.timestampRequests)
         {
@@ -478,14 +459,14 @@ export class TGTransport extends AsyncStreamEmitter<any>
 
         if (this.state === this.OPEN)
         {
-            this.state      = this.CLOSED;
+            this.state        = this.CLOSED;
             const donePromise = this.listener('close').once();
             this._abortAllPendingEventsDueToBadConnection('disconnect', donePromise);
             this.emit('close', { code, data });
         }
         else if (this.state === this.CONNECTING)
         {
-            this.state      = this.CLOSED;
+            this.state        = this.CLOSED;
             const donePromise = this.listener('openAbort').once();
             this._abortAllPendingEventsDueToBadConnection('connectAbort', donePromise);
             this.emit('openAbort', { code, data });

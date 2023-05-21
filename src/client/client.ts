@@ -16,7 +16,7 @@ import { StreamDemux } from '../stream-demux/stream-demux';
 import * as formatter from '../formatter';
 import global from '../utils/window-or-global';
 import Buffer from 'topgun-buffer';
-import { wait } from './utils/wait';
+import { wait } from '../utils/wait';
 import { TGResponse } from '../response';
 import { TGChannel } from '../channel/channel';
 import { ChannelState, SCChannelOptions } from '../channel/types';
