@@ -172,8 +172,6 @@ describe('Integration tests', () => {
             client = create(clientOptions);
             let event = await client.listener('connect').once();
             expect(event.authError === undefined).toEqual(true);
-            // const tr = true;
-            // expect(tr).toBeTruthy();
         });
 
         it('Should be authenticated on connect if previous JWT token is present', async () => {
