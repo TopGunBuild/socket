@@ -69,77 +69,77 @@ function connectionHandler(socket)
     handlePerformTask();
 }
 
+beforeEach(async () =>
+{
+    serverOptions = {
+        authKey   : 'testkey',
+        ackTimeout: 200
+    };
+
+    server = listen(PORT_NUMBER, serverOptions);
+
+    async function handleServerConnection()
+    {
+        for await (let { socket } of server.listener('connection'))
+        {
+            connectionHandler(socket);
+        }
+    }
+
+    handleServerConnection();
+
+    server.addMiddleware(server.MIDDLEWARE_AUTHENTICATE, async function (req)
+    {
+        if (req.authToken.username === 'alice')
+        {
+            let err  = new Error('Blocked by MIDDLEWARE_AUTHENTICATE');
+            err.name = 'AuthenticateMiddlewareError';
+            throw err;
+        }
+    });
+
+    clientOptions = {
+        hostname  : '127.0.0.1',
+        port      : PORT_NUMBER,
+        ackTimeout: 200
+    };
+
+    await server.listener('ready').once();
+});
+
+afterEach(async () =>
+{
+    let cleanupTasks = [];
+    global.localStorage.removeItem('asyngular.authToken');
+    if (client)
+    {
+        if (client.state !== client.CLOSED)
+        {
+            cleanupTasks.push(
+                Promise.race([
+                    client.listener('disconnect').once(),
+                    client.listener('connectAbort').once()
+                ])
+            );
+            client.disconnect();
+        }
+        else
+        {
+            client.disconnect();
+        }
+    }
+    cleanupTasks.push(
+        (async () =>
+        {
+            server.httpServer.close();
+            await server.close();
+        })()
+    );
+    await Promise.all(cleanupTasks);
+});
+
 describe('Integration tests', () =>
 {
-    beforeEach(async () =>
-    {
-        serverOptions = {
-            authKey   : 'testkey',
-            ackTimeout: 200
-        };
-
-        server = listen(PORT_NUMBER, serverOptions);
-
-        async function handleServerConnection()
-        {
-            for await (let { socket } of server.listener('connection'))
-            {
-                connectionHandler(socket);
-            }
-        }
-
-        handleServerConnection();
-
-        server.addMiddleware(server.MIDDLEWARE_AUTHENTICATE, async function (req)
-        {
-            if (req.authToken.username === 'alice')
-            {
-                let err  = new Error('Blocked by MIDDLEWARE_AUTHENTICATE');
-                err.name = 'AuthenticateMiddlewareError';
-                throw err;
-            }
-        });
-
-        clientOptions = {
-            hostname  : '127.0.0.1',
-            port      : PORT_NUMBER,
-            ackTimeout: 200
-        };
-
-        await server.listener('ready').once();
-    });
-
-    afterEach(async () =>
-    {
-        let cleanupTasks = [];
-        global.localStorage.removeItem('asyngular.authToken');
-        if (client)
-        {
-            if (client.state !== client.CLOSED)
-            {
-                cleanupTasks.push(
-                    Promise.race([
-                        client.listener('disconnect').once(),
-                        client.listener('connectAbort').once()
-                    ])
-                );
-                client.disconnect();
-            }
-            else
-            {
-                client.disconnect();
-            }
-        }
-        cleanupTasks.push(
-            (async () =>
-            {
-                server.httpServer.close();
-                await server.close();
-            })()
-        );
-        await Promise.all(cleanupTasks);
-    });
-
     describe('Creation', () =>
     {
 

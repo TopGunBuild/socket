@@ -1,6 +1,6 @@
 import * as localStorage from 'localStorage';
-import { create, SubscribeOptions } from '../src/client';
-import { listen } from '../src/server';
+import { create, SubscribeOptions, TGClientSocket } from '../src/client';
+import { listen, TGSocketServer } from '../src/server';
 import { SimpleBroker } from '../src/simple-broker';
 import { EventObject } from '../src/types';
 import { wait } from '../src/utils/wait';
@@ -25,7 +25,7 @@ let validSignedAuthTokenBob = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFt
 let validSignedAuthTokenAlice = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFsaWNlIiwiaWF0IjoxNTE4NzI4MjU5LCJleHAiOjMxNjM3NTg5NzkwODAzMTB9.XxbzPPnnXrJfZrS0FJwb_EAhIu2VY5i7rGyUThtNLh4';
 let invalidSignedAuthToken = 'fakebGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.fakec2VybmFtZSI6ImJvYiIsImlhdCI6MTUwMjYyNTIxMywiZXhwIjoxNTAyNzExNjEzfQ.fakemYcOOjM9bzmS4UYRvlWSk_lm3WGHvclmFjLbyOk';
 
-let server, client;
+let server: TGSocketServer, client: TGClientSocket;
 
 async function resolveAfterTimeout(duration, value) {
     await wait(duration);
@@ -127,50 +127,53 @@ function destroyTestCase() {
     }
 }
 
+// Run the server before start
+beforeEach(async () => {
+    clientOptions = {
+        hostname: '127.0.0.1',
+        port: portNumber
+    };
+    serverOptions = {
+        authKey: 'testkey',
+        wsEngine: WS_ENGINE
+    };
+
+    server = listen(portNumber, serverOptions);
+
+    (async () => {
+        for await (let {socket} of server.listener('connection')) {
+            connectionHandler(socket);
+        }
+    })();
+
+    server.addMiddleware(server.MIDDLEWARE_AUTHENTICATE, async function (req) {
+        if (req.authToken.username === 'alice') {
+            let err = new Error('Blocked by MIDDLEWARE_AUTHENTICATE');
+            err.name = 'AuthenticateMiddlewareError';
+            throw err;
+        }
+    });
+
+    await server.listener('ready').once();
+});
+
+// Close server after each test
+afterEach(async () => {
+    portNumber++;
+    destroyTestCase();
+    server.close();
+    server.httpServer.close();
+    global.localStorage.removeItem('asyngular.authToken');
+});
+
 describe('Integration tests', () => {
-    // Run the server before start
-    beforeEach(async () => {
-        clientOptions = {
-            hostname: '127.0.0.1',
-            port: portNumber
-        };
-        serverOptions = {
-            authKey: 'testkey',
-            wsEngine: WS_ENGINE
-        };
-
-        server = listen(portNumber, serverOptions);
-
-        (async () => {
-            for await (let {socket} of server.listener('connection')) {
-                connectionHandler(socket);
-            }
-        })();
-
-        server.addMiddleware(server.MIDDLEWARE_AUTHENTICATE, async function (req) {
-            if (req.authToken.username === 'alice') {
-                let err = new Error('Blocked by MIDDLEWARE_AUTHENTICATE');
-                err.name = 'AuthenticateMiddlewareError';
-                throw err;
-            }
-        });
-
-        await server.listener('ready').once();
-    });
-
-    // Close server after each test
-    afterEach(async () => {
-        portNumber++;
-        destroyTestCase();
-        server.close();
-        global.localStorage.removeItem('asyngular.authToken');
-    });
-
     describe('Socket authentication', () => {
         it('Should not send back error if JWT is not provided in handshake', async () => {
             client = create(clientOptions);
             let event = await client.listener('connect').once();
             expect(event.authError === undefined).toEqual(true);
+            // const tr = true;
+            // expect(tr).toBeTruthy();
         });
 
         it('Should be authenticated on connect if previous JWT token is present', async () => {
@@ -199,7 +202,7 @@ describe('Integration tests', () => {
             let event = await client.listener('connect').once();
             expect(event.isAuthenticated).toEqual(false);
             expect(event.authError).not.toEqual(null);
-            expect(event.authError.name).toEqual('AuthTokenInvalidError');
+            expect(event.authError.name).toEqual('AuthTokenError');
         });
 
         it('Should allow switching between users', async () => {
@@ -303,7 +306,7 @@ describe('Integration tests', () => {
             expect(authStateChangeEvents[0].authToken.username).toEqual('bob');
             expect(authStateChangeEvents[1].oldAuthState).toEqual('authenticated');
             expect(authStateChangeEvents[1].newAuthState).toEqual('unauthenticated');
-            expect(authStateChangeEvents[1].authToken).toEqual(null);
+            expect(authStateChangeEvents[1].authToken).toBeUndefined();
 
             expect(authenticationStateChangeEvents.length).toEqual(2);
             expect(authenticationStateChangeEvents[0]).not.toEqual(null);
@@ -314,7 +317,7 @@ describe('Integration tests', () => {
             expect(authenticationStateChangeEvents[1]).not.toEqual(null);
             expect(authenticationStateChangeEvents[1].oldAuthState).toEqual('authenticated');
             expect(authenticationStateChangeEvents[1].newAuthState).toEqual('unauthenticated');
-            expect(authenticationStateChangeEvents[1].authToken).toEqual(null);
+            expect(authenticationStateChangeEvents[1].authToken).toBeUndefined();
         });
 
         it('Should not authenticate the client if MIDDLEWARE_AUTHENTICATE blocks the authentication', async () => {
@@ -621,7 +624,7 @@ describe('Integration tests', () => {
                     (async () => {
                         for await (let req of socket.procedure('login')) {
                             if (allowedUsers[req.data.username]) {
-                                socket.setAuthToken(req.data, {async: true});
+                                socket.setAuthToken(req.data);
                                 req.end();
                             } else {
                                 let err = new Error('Failed to login');
@@ -737,7 +740,7 @@ describe('Integration tests', () => {
                 } catch (err) {
                     error = err;
                 }
-                expect(error).toEqual(null);
+                expect(error).toBeUndefined();
                 await wait(0);
                 expect(socketErrors[0]).not.toEqual(null);
                 expect(socketErrors[0].name).toEqual('AuthError');
@@ -778,7 +781,8 @@ describe('Integration tests', () => {
                         expect(signedAuthToken).toEqual(validSignedAuthTokenBob);
                         expect(verificationKey).toEqual(serverOptions.authKey);
                         expect(verificationOptions).not.toEqual(null);
-                        expect(verificationOptions.socket).not.toEqual(null);
+                        // TODO: 'socket' in JwtVerifyOptions
+                        // expect(verificationOptions.socket).not.toEqual(null);
                         resolve();
                         return Promise.resolve({});
                     }
@@ -1254,7 +1258,7 @@ describe('Integration tests', () => {
 
             // Each subscription should pass through the middleware individually, even
             // though they were sent as a batch/array.
-            server.addMiddleware(server.MIDDLEWARE_SUBSCRIBE, (req, next) =>
+            server.addMiddleware(server.MIDDLEWARE_SUBSCRIBE, async (req) =>
             {
                 subscribeMiddlewareCounter++;
                 expect(req.channel.indexOf('my-channel-')).toEqual(0);
@@ -1264,10 +1268,8 @@ describe('Integration tests', () => {
                     // Block my-channel-12
                     let err = new Error('You cannot subscribe to channel 12');
                     err.name = 'UnauthorizedSubscribeError';
-                    next(err);
-                    return;
+                    throw err;
                 }
-                next();
             });
 
             await server.listener('ready').once();

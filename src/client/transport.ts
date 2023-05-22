@@ -30,11 +30,11 @@ export class TGTransport extends AsyncStreamEmitter<any>
     callIdGenerator: any;
     authTokenName: any;
     socket: any;
-
-    private _pingTimeoutTicker: any;
-    private readonly _callbackMap: {
+    readonly _callbackMap: {
         [cid: number]: EventObject;
     };
+
+    private _pingTimeoutTicker: any;
     private _batchSendList: any[];
     private readonly _connectTimeoutRef: any;
     private _batchTimeout: any;

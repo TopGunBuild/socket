@@ -26,19 +26,20 @@ import {
 import { applyEachSeries } from 'async';
 import { IncomingMessage, RequestObject, TGSocketServerOptions } from './types';
 import { SimpleBroker } from '../simple-broker/simple-broker';
+import { isNode } from '../utils/is-node';
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 export class TGSocketServer extends AsyncStreamEmitter<any>
 {
     options: TGSocketServerOptions;
-    MIDDLEWARE_HANDSHAKE_WS: string;
-    MIDDLEWARE_HANDSHAKE_AG: string;
-    MIDDLEWARE_TRANSMIT: string;
-    MIDDLEWARE_INVOKE: string;
-    MIDDLEWARE_SUBSCRIBE: string;
-    MIDDLEWARE_PUBLISH_IN: string;
-    MIDDLEWARE_PUBLISH_OUT: string;
-    MIDDLEWARE_AUTHENTICATE: string;
+    MIDDLEWARE_HANDSHAKE_WS: Middlewares;
+    MIDDLEWARE_HANDSHAKE_AG: Middlewares;
+    MIDDLEWARE_TRANSMIT: Middlewares;
+    MIDDLEWARE_INVOKE: Middlewares;
+    MIDDLEWARE_SUBSCRIBE: Middlewares;
+    MIDDLEWARE_PUBLISH_IN: Middlewares;
+    MIDDLEWARE_PUBLISH_OUT: Middlewares;
+    MIDDLEWARE_AUTHENTICATE: Middlewares;
 
     origins: string;
     ackTimeout: number;
@@ -302,22 +303,37 @@ export class TGSocketServer extends AsyncStreamEmitter<any>
         this.emit('warning', { warning });
     }
 
-    close(): Promise<void>
+    close(keepSocketsOpen?: boolean): Promise<void>
     {
         this.isReady = false;
         return new Promise((resolve, reject) =>
         {
-            this.wsServer.close((err) =>
+            if (isNode())
             {
-                if (err)
+                this.wsServer.close((err: any) =>
                 {
-                    reject(err);
-                    return;
+                    if (err)
+                    {
+                        reject(err);
+                        return;
+                    }
+                    resolve();
+                });
+            }
+            else
+            {
+                // TODO: Terminate for serverless
+            }
+
+            if (!keepSocketsOpen)
+            {
+                for (const socket of Object.values(this.clients))
+                {
+                    socket.terminate();
                 }
-                resolve();
-            });
+            }
         });
-    };
+    }
 
     getPath(): string
     {
@@ -1228,7 +1244,6 @@ export class TGSocketServer extends AsyncStreamEmitter<any>
 
     private _handleSocketConnection(wsSocket: any, upgradeReq?: any): void
     {
-        console.log('_handleSocketConnection !!');
         if (!wsSocket.upgradeReq && upgradeReq)
         {
             // Normalize ws modules to match.

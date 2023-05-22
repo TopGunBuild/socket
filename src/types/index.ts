@@ -51,16 +51,24 @@ export interface CodecEngine {
     encode: (object: any) => any;
 }
 
-export const MIDDLEWARE_HANDSHAKE = 'handshake';
-export const MIDDLEWARE_INBOUND_RAW = 'inboundRaw';
-export const MIDDLEWARE_INBOUND = 'inbound';
-export const MIDDLEWARE_OUTBOUND = 'outbound';
+export const MIDDLEWARE_HANDSHAKE_WS = 'handshakeWS';
+export const MIDDLEWARE_HANDSHAKE_AG = 'handshakeAG';
+export const MIDDLEWARE_TRANSMIT = 'transmit';
+export const MIDDLEWARE_INVOKE = 'invoke';
+export const MIDDLEWARE_SUBSCRIBE = 'subscribe';
+export const MIDDLEWARE_PUBLISH_IN = 'publishIn';
+export const MIDDLEWARE_PUBLISH_OUT = 'publishOut';
+export const MIDDLEWARE_AUTHENTICATE = 'authenticate';
 
 export type Middlewares =
-    | typeof MIDDLEWARE_HANDSHAKE
-    | typeof MIDDLEWARE_INBOUND_RAW
-    | typeof MIDDLEWARE_INBOUND
-    | typeof MIDDLEWARE_OUTBOUND;
+    typeof MIDDLEWARE_HANDSHAKE_WS
+    | typeof MIDDLEWARE_HANDSHAKE_AG
+    | typeof MIDDLEWARE_TRANSMIT
+    | typeof MIDDLEWARE_INVOKE
+    | typeof MIDDLEWARE_SUBSCRIBE
+    | typeof MIDDLEWARE_PUBLISH_IN
+    | typeof MIDDLEWARE_PUBLISH_OUT
+    | typeof MIDDLEWARE_AUTHENTICATE;
 
 export type MiddlewareFunction = (request: any) => Promise<void>;
 
