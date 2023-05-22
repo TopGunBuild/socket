@@ -926,21 +926,21 @@ describe('Integration tests', () => {
             expect(connectionEvent).not.toEqual(null);
             expect(connectionEvent.id).toEqual(socketId);
             expect(connectionEvent.pingTimeout).toEqual(server.pingTimeout);
-            expect(connectionEvent.authError).toEqual(null);
+            expect(connectionEvent.authError).toBeUndefined();
             expect(connectionEvent.isAuthenticated).toEqual(false);
 
             expect(connectStatus).not.toEqual(null);
             expect(connectStatus.id).toEqual(socketId);
             expect(connectStatus.pingTimeout).toEqual(server.pingTimeout);
-            expect(connectStatus.authError).toEqual(null);
+            expect(connectStatus.authError).toBeUndefined();
             expect(connectStatus.isAuthenticated).toEqual(false);
 
             expect(clientConnectStatus).not.toEqual(null);
             expect(clientConnectStatus.id).toEqual(socketId);
             expect(clientConnectStatus.pingTimeout).toEqual(server.pingTimeout);
-            expect(clientConnectStatus.authError).toEqual(null);
+            expect(clientConnectStatus.authError).toBeUndefined();
             expect(clientConnectStatus.isAuthenticated).toEqual(false);
-            expect(clientConnectStatus['foo']).toEqual(null);
+            expect(clientConnectStatus['foo']).toBeUndefined();
             // Client socket status should be a clone of server socket status; not
             // a reference to the same object.
             expect(clientConnectStatus['foo']).not.toEqual(connectStatus.foo);
