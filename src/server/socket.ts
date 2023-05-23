@@ -114,9 +114,10 @@ export class TGSocket extends AsyncStreamEmitter<any>
             this.emitError(err);
         });
 
-        this._on('close', async (code, data) =>
+        this._on('close', async (code, reasonBuffer) =>
         {
-            this._onClose(code, data);
+            const reason = reasonBuffer && reasonBuffer.toString();
+            this._onClose(code, reason);
         });
 
         if (!this.server.pingTimeoutDisabled)

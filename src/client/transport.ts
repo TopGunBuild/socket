@@ -1,6 +1,6 @@
 import { AsyncStreamEmitter } from '../async-stream-emitter/async-stream-emitter';
 import { CodecEngine, SocketState } from '../types';
-import { SocketClientOptions, TGAuthEngine, TransmitOptions, InvokeOptions } from './types';
+import { TGSocketClientOptions, TGAuthEngine, TransmitOptions, InvokeOptions } from './types';
 import { EventObject, EventObjectCallback } from '../types';
 import { BadConnectionError, hydrateError, TimeoutError } from '../errors';
 import { TGResponse } from '../response';
@@ -23,7 +23,7 @@ export class TGTransport extends AsyncStreamEmitter<any>
     state: SocketState;
     auth: TGAuthEngine;
     codec: CodecEngine;
-    options: SocketClientOptions;
+    options: TGSocketClientOptions;
     connectTimeout: any;
     pingTimeout: any;
     pingTimeoutDisabled: boolean;
@@ -42,7 +42,7 @@ export class TGTransport extends AsyncStreamEmitter<any>
     /**
      * Constructor
      */
-    constructor(authEngine: TGAuthEngine, codecEngine: CodecEngine, options: SocketClientOptions)
+    constructor(authEngine: TGAuthEngine, codecEngine: CodecEngine, options: TGSocketClientOptions)
     {
         super();
         this.state               = this.CLOSED;

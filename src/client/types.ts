@@ -36,7 +36,7 @@ export interface AutoReconnectOptions
     maxDelay?: number|undefined;
 }
 
-export interface SocketClientOptions
+export interface TGSocketClientOptions
 {
     // (milliseconds) - This is the timeout for getting a response to a AGClientSocket invoke action.
     ackTimeout?: number|undefined;
@@ -169,19 +169,6 @@ export interface AuthStatus
 {
     isAuthenticated: AuthState;
     authError: Error;
-}
-
-export interface SubscribeFailData
-{
-    error: Error;
-    channel: string;
-    subscriptionOptions: SubscribeOptions;
-}
-
-export interface KickOutData
-{
-    channel: string;
-    message?: string|undefined;
 }
 
 export interface SubscribeOptions

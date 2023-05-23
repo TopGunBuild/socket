@@ -1,5 +1,5 @@
 import { AsyncStreamEmitter } from '../async-stream-emitter/async-stream-emitter';
-import { AuthStatus, SocketClientOptions, ProtocolVersions, IClientSocket, SubscribeOptions, TransmitOptions } from './types';
+import { AuthStatus, TGSocketClientOptions, ProtocolVersions, IClientSocket, SubscribeOptions, TransmitOptions } from './types';
 import {
     BadConnectionError,
     hydrateError,
@@ -55,7 +55,7 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
     readonly ignoreStatuses = TGClientSocket.ignoreStatuses;
     readonly errorStatuses  = TGClientSocket.errorStatuses;
 
-    options: SocketClientOptions;
+    options: TGSocketClientOptions;
 
     id: string|null;
     clientId?: string|undefined;
@@ -70,7 +70,7 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
     authToken: AuthToken|null;
     authTokenName: string;
 
-    wsOptions?: SocketClientOptions|undefined;
+    wsOptions?: TGSocketClientOptions|undefined;
 
     pendingReconnect: boolean;
     pendingReconnectTimeout: number;
@@ -119,12 +119,12 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
     /**
      * Constructor
      */
-    constructor(socketOptions?: SocketClientOptions)
+    constructor(socketOptions?: TGSocketClientOptions)
     {
         super();
         socketOptions = socketOptions || {};
 
-        const defaultOptions: SocketClientOptions = {
+        const defaultOptions: TGSocketClientOptions = {
             path                  : '/socketcluster/',
             secure                : false,
             autoConnect           : true,
