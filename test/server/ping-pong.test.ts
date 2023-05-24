@@ -1,6 +1,7 @@
 import { listen, TGSocketServer, TGSocketServerOptions } from '../../src/server';
 import { create, TGSocketClientOptions, TGClientSocket } from '../../src/client';
 import { wait } from '../../src/utils/wait';
+import { cleanupTasks } from '../cleanup-tasks';
 
 const WS_ENGINE = 'ws';
 let portNumber  = 8358;
@@ -15,18 +16,6 @@ const serverOptions: TGSocketServerOptions = {
 };
 
 let server: TGSocketServer, client: TGClientSocket;
-
-function destroyTestCase(): void
-{
-    if (client)
-    {
-        if (client.state !== client.CLOSED)
-        {
-            client.closeAllListeners();
-            client.disconnect();
-        }
-    }
-}
 
 describe('Socket Ping/pong', () =>
 {
@@ -51,9 +40,7 @@ describe('Socket Ping/pong', () =>
         // Shut down server afterwards
         afterEach(async () =>
         {
-            destroyTestCase();
-            server.close();
-            server.httpServer.close();
+            await cleanupTasks(client, server);
         });
 
         it('Should disconnect socket if server does not receive a pong from client before timeout', async () =>
@@ -132,9 +119,7 @@ describe('Socket Ping/pong', () =>
         // Shut down server afterwards
         afterEach(async () =>
         {
-            destroyTestCase();
-            server.close();
-            server.httpServer.close();
+            await cleanupTasks(client, server);
         });
 
         it('Should not disconnect socket if server does not receive a pong from client before timeout', async () =>

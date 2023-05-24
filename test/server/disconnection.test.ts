@@ -1,7 +1,8 @@
 import { listen, TGSocketServer, TGSocketServerOptions } from '../../src/server';
 import { create, TGClientSocket, TGSocketClientOptions } from '../../src/client';
 import { wait } from '../../src/utils/wait';
-import { connectionHandler, destroyTestCase, resolveAfterTimeout, WS_ENGINE } from '../utils';
+import { connectionHandler, resolveAfterTimeout, WS_ENGINE } from './utils';
+import { cleanupTasks } from '../cleanup-tasks';
 
 let portNumber                             = 8208;
 const clientOptions: TGSocketClientOptions = {
@@ -17,7 +18,7 @@ let server: TGSocketServer, client: TGClientSocket;
 // Shut down server afterwards
 afterEach(async () =>
 {
-    destroyTestCase(client, server);
+    await cleanupTasks(client, server);
 });
 
 describe('Socket disconnection', () =>

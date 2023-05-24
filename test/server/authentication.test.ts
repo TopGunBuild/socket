@@ -2,13 +2,14 @@ import { create, TGClientSocket, TGSocketClientOptions } from '../../src/client'
 import { listen, TGSocketServer, TGSocketServerOptions } from '../../src/server';
 import * as localStorage from 'localStorage';
 import {
-    connectionHandler, destroyTestCase, resolveAfterTimeout,
+    connectionHandler, resolveAfterTimeout,
     TEN_DAYS_IN_SECONDS,
     validSignedAuthTokenAlice,
     validSignedAuthTokenBob,
     WS_ENGINE
-} from '../utils';
+} from './utils';
 import { wait } from '../../src/utils/wait';
+import { cleanupTasks } from '../cleanup-tasks';
 
 // Add to the global scope like in browser.
 global.localStorage = localStorage;
@@ -62,8 +63,7 @@ beforeEach(async () =>
 afterEach(async () =>
 {
     portNumber++;
-    destroyTestCase(client, server);
-    global.localStorage.removeItem('asyngular.authToken');
+    await cleanupTasks(client, server);
 });
 
 describe('Socket authentication', () =>

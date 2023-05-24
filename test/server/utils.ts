@@ -1,6 +1,6 @@
-import { wait } from '../src/utils/wait';
-import { TGClientSocket } from '../src/client';
-import { TGSocketServer } from '../src/server';
+import { wait } from '../../src/utils/wait';
+import { TGClientSocket } from '../../src/client';
+import { TGSocketServer } from '../../src/server';
 
 export const TEN_DAYS_IN_SECONDS = 60 * 60 * 24 * 10;
 export const WS_ENGINE           = 'ws';
@@ -12,23 +12,6 @@ export let invalidSignedAuthToken    = 'fakebGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.fak
 export async function resolveAfterTimeout(duration, value) {
     await wait(duration);
     return value;
-}
-
-export function destroyTestCase(client: TGClientSocket, server: TGSocketServer): void
-{
-    if (server)
-    {
-        server.close();
-        server.httpServer.close();
-    }
-    if (client)
-    {
-        if (client.state !== client.CLOSED)
-        {
-            client.closeAllListeners();
-            client.disconnect();
-        }
-    }
 }
 
 export function connectionHandler(socket, allowedUsers, server) {

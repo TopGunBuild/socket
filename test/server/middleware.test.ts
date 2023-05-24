@@ -2,11 +2,12 @@ import { create, TGClientSocket, TGSocketClientOptions } from '../../src/client'
 import { listen, TGSocketServer, TGSocketServerOptions } from '../../src/server';
 import { wait } from '../../src/utils/wait';
 import * as localStorage from 'localStorage';
-import { destroyTestCase, validSignedAuthTokenBob, WS_ENGINE } from '../utils';
+import { validSignedAuthTokenBob, WS_ENGINE } from './utils';
+import { cleanupTasks } from '../cleanup-tasks';
 
 // Add to the global scope like in browser.
 global.localStorage = localStorage;
-let portNumber  = 8308;
+let portNumber      = 8308;
 
 const clientOptions: TGSocketClientOptions = {
     hostname: '127.0.0.1',
@@ -23,54 +24,67 @@ let middlewareFunction;
 let middlewareWasExecuted = false;
 
 // Launch server without middleware before start
-beforeEach(async () => {
+beforeEach(async () =>
+{
     portNumber++;
     server = listen(portNumber, {
-        authKey: serverOptions.authKey,
+        authKey : serverOptions.authKey,
         wsEngine: WS_ENGINE
     });
     await server.listener('ready').once();
 });
 
 // Shut down server afterwards
-afterEach(async () => {
-    destroyTestCase(client, server);
+afterEach(async () =>
+{
+    await cleanupTasks(client, server);
 });
 
-describe('Middleware', () => {
-    describe('MIDDLEWARE_AUTHENTICATE', () => {
-        it('Should not run authenticate middleware if JWT token does not exist', async () => {
-            middlewareFunction = async function (req) {
+describe('Middleware', () =>
+{
+    describe('MIDDLEWARE_AUTHENTICATE', () =>
+    {
+        it('Should not run authenticate middleware if JWT token does not exist', async () =>
+        {
+            middlewareFunction = async function (req)
+            {
                 middlewareWasExecuted = true;
             };
             server.addMiddleware(server.MIDDLEWARE_AUTHENTICATE, middlewareFunction);
 
             client = create({
                 hostname: clientOptions.hostname,
-                port: portNumber
+                port    : portNumber
             });
 
             await client.listener('connect').once();
             expect(middlewareWasExecuted).not.toEqual(true);
         });
 
-        it('Should run authenticate middleware if JWT token exists', async () => {
+        it('Should run authenticate middleware if JWT token exists', async () =>
+        {
             global.localStorage.setItem('asyngular.authToken', validSignedAuthTokenBob);
 
-            middlewareFunction = async function (req) {
+            middlewareFunction = async function (req)
+            {
                 middlewareWasExecuted = true;
             };
             server.addMiddleware(server.MIDDLEWARE_AUTHENTICATE, middlewareFunction);
 
             client = create({
                 hostname: clientOptions.hostname,
-                port: portNumber
+                port    : portNumber
             });
 
-            (async () => {
-                try {
-                    await client.invoke('login', {username: 'bob'});
-                } catch (err) {}
+            (async () =>
+            {
+                try
+                {
+                    await client.invoke('login', { username: 'bob' });
+                }
+                catch (err)
+                {
+                }
             })();
 
             await client.listener('authenticate').once();
@@ -78,41 +92,49 @@ describe('Middleware', () => {
         });
     });
 
-    describe('MIDDLEWARE_HANDSHAKE_AG', () => {
-        it('Should trigger correct events if MIDDLEWARE_HANDSHAKE_AG blocks with an error', async () => {
+    describe('MIDDLEWARE_HANDSHAKE_AG', () =>
+    {
+        it('Should trigger correct events if MIDDLEWARE_HANDSHAKE_AG blocks with an error', async () =>
+        {
             let middlewareWasExecuted = false;
-            let serverWarnings = [];
-            let clientErrors = [];
+            let serverWarnings        = [];
+            let clientErrors          = [];
             let abortStatus;
 
-            middlewareFunction = async function (req) {
+            middlewareFunction = async function (req)
+            {
                 await wait(100);
                 middlewareWasExecuted = true;
-                let err = new Error('SC handshake failed because the server was too lazy');
-                err.name = 'TooLazyHandshakeError';
+                let err               = new Error('SC handshake failed because the server was too lazy');
+                err.name              = 'TooLazyHandshakeError';
                 throw err;
             };
             server.addMiddleware(server.MIDDLEWARE_HANDSHAKE_AG, middlewareFunction);
 
-            (async () => {
-                for await (let {warning} of server.listener('warning')) {
+            (async () =>
+            {
+                for await (let { warning } of server.listener('warning'))
+                {
                     serverWarnings.push(warning);
                 }
             })();
 
             client = create({
                 hostname: clientOptions.hostname,
-                port: portNumber
+                port    : portNumber
             });
 
-            (async () => {
-                for await (let {error} of client.listener('error')) {
+            (async () =>
+            {
+                for await (let { error } of client.listener('error'))
+                {
                     clientErrors.push(error);
                 }
             })();
 
-            (async () => {
-                let event = await client.listener('connectAbort').once();
+            (async () =>
+            {
+                let event   = await client.listener('connectAbort').once();
                 abortStatus = event.code;
             })();
 
@@ -127,27 +149,30 @@ describe('Middleware', () => {
             expect(abortStatus).not.toEqual(null);
         });
 
-        it('Should send back default 4008 status code if MIDDLEWARE_HANDSHAKE_AG blocks without providing a status code', async () => {
+        it('Should send back default 4008 status code if MIDDLEWARE_HANDSHAKE_AG blocks without providing a status code', async () =>
+        {
             let middlewareWasExecuted = false;
             let abortStatus;
             let abortReason;
 
-            middlewareFunction = async function (req) {
+            middlewareFunction = async function (req)
+            {
                 await wait(100);
                 middlewareWasExecuted = true;
-                let err = new Error('SC handshake failed because the server was too lazy');
-                err.name = 'TooLazyHandshakeError';
+                let err               = new Error('SC handshake failed because the server was too lazy');
+                err.name              = 'TooLazyHandshakeError';
                 throw err;
             };
             server.addMiddleware(server.MIDDLEWARE_HANDSHAKE_AG, middlewareFunction);
 
             client = create({
                 hostname: clientOptions.hostname,
-                port: portNumber
+                port    : portNumber
             });
 
-            (async () => {
-                let event = await client.listener('connectAbort').once();
+            (async () =>
+            {
+                let event   = await client.listener('connectAbort').once();
                 abortStatus = event.code;
                 abortReason = event.reason;
             })();
@@ -160,16 +185,18 @@ describe('Middleware', () => {
             );
         });
 
-        it('Should send back custom status code if MIDDLEWARE_HANDSHAKE_AG blocks by providing a status code', async () => {
+        it('Should send back custom status code if MIDDLEWARE_HANDSHAKE_AG blocks by providing a status code', async () =>
+        {
             let middlewareWasExecuted = false;
             let abortStatus;
             let abortReason;
 
-            middlewareFunction = async function (req) {
+            middlewareFunction = async function (req)
+            {
                 await wait(100);
                 middlewareWasExecuted = true;
-                let err = new Error('SC handshake failed because of invalid query auth parameters');
-                err.name = 'InvalidAuthQueryHandshakeError';
+                let err               = new Error('SC handshake failed because of invalid query auth parameters');
+                err.name              = 'InvalidAuthQueryHandshakeError';
                 // Set custom 4501 status code as a property of the error.
                 // We will treat this code as a fatal authentication failure on the front end.
                 // A status code of 4500 or higher means that the client shouldn't try to reconnect.
@@ -180,11 +207,12 @@ describe('Middleware', () => {
 
             client = create({
                 hostname: clientOptions.hostname,
-                port: portNumber
+                port    : portNumber
             });
 
-            (async () => {
-                let event = await client.listener('connectAbort').once();
+            (async () =>
+            {
+                let event   = await client.listener('connectAbort').once();
                 abortStatus = event.code;
                 abortReason = event.reason;
             })();
@@ -197,9 +225,10 @@ describe('Middleware', () => {
             );
         });
 
-        it('Should connect with a delay if next() is called after a timeout inside the middleware function', async () => {
+        it('Should connect with a delay if next() is called after a timeout inside the middleware function', async () =>
+        {
             let createConnectionTime = null;
-            let connectEventTime = null;
+            let connectEventTime     = null;
             let abortStatus;
             let abortReason;
 
@@ -207,13 +236,14 @@ describe('Middleware', () => {
             server.addMiddleware(server.MIDDLEWARE_HANDSHAKE_AG, middlewareFunction);
 
             createConnectionTime = Date.now();
-            client = create({
+            client               = create({
                 hostname: clientOptions.hostname,
-                port: portNumber
+                port    : portNumber
             });
 
-            (async () => {
-                let event = await client.listener('connectAbort').once();
+            (async () =>
+            {
+                let event   = await client.listener('connectAbort').once();
                 abortStatus = event.code;
                 abortReason = event.reason;
             })();

@@ -2,7 +2,8 @@ import { listen, TGSocketServer, TGSocketServerOptions } from '../../src/server'
 import { create, SubscribeOptions, TGClientSocket, TGSocketClientOptions } from '../../src/client';
 import { wait } from '../../src/utils/wait';
 import { SimpleBroker } from '../../src/simple-broker';
-import { connectionHandler, destroyTestCase, resolveAfterTimeout, WS_ENGINE } from '../utils';
+import { connectionHandler, resolveAfterTimeout, WS_ENGINE } from './utils';
+import { cleanupTasks } from '../cleanup-tasks';
 
 let server: TGSocketServer, client: TGClientSocket;
 
@@ -19,7 +20,7 @@ const clientOptions: TGSocketClientOptions = {
 // Shut down server afterwards
 afterEach(async () =>
 {
-    destroyTestCase(client, server);
+    await cleanupTasks(client, server);
     portNumber++;
 });
 

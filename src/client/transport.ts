@@ -364,6 +364,21 @@ export class TGTransport extends AsyncStreamEmitter<any>
         }
     }
 
+    _resetPingTimeout(): void
+    {
+        if (this.pingTimeoutDisabled)
+        {
+            return;
+        }
+
+        clearTimeout(this._pingTimeoutTicker);
+        this._pingTimeoutTicker = setTimeout(() =>
+        {
+            this._onClose(4000);
+            this.socket.close(4000);
+        }, this.pingTimeout);
+    }
+
     // -----------------------------------------------------------------------------------------------------
     // @ Private methods
     // -----------------------------------------------------------------------------------------------------
@@ -544,21 +559,6 @@ export class TGTransport extends AsyncStreamEmitter<any>
     private _onError(error: Error): void
     {
         this.emit('error', { error });
-    }
-
-    private _resetPingTimeout(): void
-    {
-        if (this.pingTimeoutDisabled)
-        {
-            return;
-        }
-
-        clearTimeout(this._pingTimeoutTicker);
-        this._pingTimeoutTicker = setTimeout(() =>
-        {
-            this._onClose(4000);
-            this.socket.close(4000);
-        }, this.pingTimeout);
     }
 
     private _handleEventAckTimeout(eventObject: EventObject): void

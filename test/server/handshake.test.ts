@@ -1,6 +1,7 @@
 import { listen, TGSocketServer, TGSocketServerOptions } from '../../src/server';
 import { create, TGClientSocket, TGSocketClientOptions } from '../../src/client';
-import { connectionHandler, destroyTestCase, WS_ENGINE } from '../utils';
+import { connectionHandler, WS_ENGINE } from './utils';
+import { cleanupTasks } from '../cleanup-tasks';
 
 let portNumber                             = 8258;
 const clientOptions: TGSocketClientOptions = {
@@ -16,7 +17,7 @@ let server: TGSocketServer, client: TGClientSocket;
 // Shut down server afterwards
 afterEach(async () =>
 {
-    destroyTestCase(client, server);
+    await cleanupTasks(client, server);
 });
 
 describe('Socket handshake', () =>
