@@ -105,7 +105,7 @@ export function decode(input: any): any
 // (e.g. binary ArrayBuffer or string with any kind of compression) so long as your decode
 // function is able to rehydrate that object back into its original JavaScript Object format
 // (which adheres to the SC protocol).
-// See https://github.com/SocketCluster/socketcluster/blob/master/socketcluster-protocol.md
+// See https://github.com/TopGunSocket/socketcluster/blob/master/socketcluster-protocol.md
 // for details about the SC protocol.
 export function encode(object: any): string
 {

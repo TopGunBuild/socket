@@ -63,7 +63,7 @@ describe('Middleware', () =>
 
         it('Should run authenticate middleware if JWT token exists', async () =>
         {
-            global.localStorage.setItem('asyngular.authToken', validSignedAuthTokenBob);
+            global.localStorage.setItem('topgunsocket.authToken', validSignedAuthTokenBob);
 
             middlewareFunction = async function (req)
             {

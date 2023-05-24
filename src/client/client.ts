@@ -125,7 +125,7 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
         socketOptions = socketOptions || {};
 
         const defaultOptions: TGSocketClientOptions = {
-            path                  : '/socketcluster/',
+            path                  : '/topgunsocket/',
             secure                : false,
             autoConnect           : true,
             autoReconnect         : true,
@@ -134,7 +134,7 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
             ackTimeout            : 10000,
             timestampRequests     : false,
             timestampParam        : 't',
-            authTokenName         : 'asyngular.authToken',
+            authTokenName         : 'topgunsocket.authToken',
             binaryType            : 'arraybuffer',
             cloneData             : false
         };

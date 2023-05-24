@@ -8,7 +8,7 @@ let client: TGClientSocket,
     clientOptions: TGSocketClientOptions,
     serverOptions: TGSocketServerOptions;
 
-const PORT_NUMBER = 7259;
+const PORT_NUMBER = 7559;
 
 beforeEach(async () =>
 {
@@ -39,7 +39,6 @@ describe('Order of events', () =>
         {
             client              = create(clientOptions);
             let hasUnsubscribed = false;
-
             let fooChannel = client.subscribe('foo');
 
             (async () =>

@@ -77,8 +77,8 @@ export interface TGSocketClientOptions
     // Lets you set a custom codec engine. This allows you to specify how data gets encoded before being sent over the wire and how it gets decoded
     // once it reaches the other side. The codecEngine must be an object which exposes an encode(object) and a decode(encodedData) function.
     // The encode function can return any data type - Commonly a string or a Buffer/ArrayBuffer. The decode function needs to return a JavaScript
-    // object which adheres to the SC protocol. The idea of using a custom codec is that it allows you to compress SocketCluster packets in any format
-    // you like (optimized for any use case) - By decoding these packets back into their original protocol form, SocketCluster will be able process
+    // object which adheres to the SC protocol. The idea of using a custom codec is that it allows you to compress TopGunSocket packets in any format
+    // you like (optimized for any use case) - By decoding these packets back into their original protocol form, TopGunSocket will be able process
     // them appropriately. Note that if you provide a codecEngine when creating a client socket, you will need to make sure that the server uses the
     // same codec by passing the same engine to the AGServer constructor (using the codecEngine option).
     codecEngine?: CodecEngine|null|undefined;
@@ -98,7 +98,7 @@ export interface TGSocketClientOptions
     // Defaults to 80 if !secure otherwise defaults to 443.
     port?: number|undefined;
 
-    // The URL which SocketCluster uses to make the initial handshake for the WebSocket. Defaults to '/socketcluster/'.
+    // The URL which TopGunSocket uses to make the initial handshake for the WebSocket. Defaults to '/topgunsocket/'.
     path?: string|undefined;
 
     // The type to use to represent binary on the client. Defaults to 'arraybuffer'.
@@ -111,7 +111,7 @@ export interface TGSocketClientOptions
 
     callIdGenerator?: CallIdGenerator|undefined;
 
-    // The name of the JWT auth token (provided to the authEngine - By default this is the localStorage variable name); defaults to 'socketcluster.authToken'.
+    // The name of the JWT auth token (provided to the authEngine - By default this is the localStorage variable name); defaults to 'topgunsocket.authToken'.
     authTokenName?: string|undefined;
 
     // A map of key-value pairs which will be used as query parameters for the initial HTTP handshake which will initiate the WebSocket connection.

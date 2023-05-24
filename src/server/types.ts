@@ -44,7 +44,7 @@ export interface TGSocketServerOptions {
     authAlgorithm?: string;
 
     // Can be 1 or 2. Version 1 is for maximum backwards
-    // compatibility with SocketCluster clients.
+    // compatibility with TopGunSocket clients.
     protocolVersion?: 1 | 2;
 
     // In milliseconds - If the socket handshake hasn't been
@@ -77,7 +77,7 @@ export interface TGSocketServerOptions {
     // middleware function
     middlewareEmitFailures?: boolean;
 
-    // The URL path reserved by SocketCluster clients to
+    // The URL path reserved by TopGunSocket clients to
     // interact with the server.
     path?: string;
 

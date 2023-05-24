@@ -8,7 +8,7 @@ global.localStorage = localStorage;
 export async function cleanupTasks(client: TGClientSocket, server?: TGSocketServer): Promise<void>
 {
     let cleanupTasks = [];
-    global.localStorage.removeItem('asyngular.authToken');
+    global.localStorage.removeItem('topgunsocket.authToken');
     if (client)
     {
         if (client.state !== client.CLOSED)

@@ -70,7 +70,7 @@ describe('Authentication', () =>
         'Should be authenticated on connect if previous JWT token is present',
         async () =>
         {
-            global.localStorage.setItem('asyngular.authToken', validSignedAuthTokenBob);
+            global.localStorage.setItem('topgunsocket.authToken', validSignedAuthTokenBob);
             client = create(clientOptions);
 
             let event = await client.listener('connect').once();
@@ -82,7 +82,7 @@ describe('Authentication', () =>
 
     it('Should send back error if JWT is invalid during handshake', async () =>
     {
-        global.localStorage.setItem('asyngular.authToken', validSignedAuthTokenBob);
+        global.localStorage.setItem('topgunsocket.authToken', validSignedAuthTokenBob);
         client = create(clientOptions);
 
         let event = await client.listener('connect').once();
@@ -117,7 +117,7 @@ describe('Authentication', () =>
 
     it('Should allow switching between users', async () =>
     {
-        global.localStorage.setItem('asyngular.authToken', validSignedAuthTokenBob);
+        global.localStorage.setItem('topgunsocket.authToken', validSignedAuthTokenBob);
         client                       = create(clientOptions);
         let authenticateTriggered    = false;
         let authStateChangeTriggered = false;
@@ -296,7 +296,7 @@ describe('Authentication', () =>
         'Should deal with auth engine errors related to saveToken function',
         async () =>
         {
-            global.localStorage.setItem('asyngular.authToken', validSignedAuthTokenBob);
+            global.localStorage.setItem('topgunsocket.authToken', validSignedAuthTokenBob);
             client = create(clientOptions);
 
             let caughtError;
@@ -424,7 +424,7 @@ describe('Authentication', () =>
         'Should go through the correct sequence of authentication state changes when dealing with disconnections; part 2',
         async () =>
         {
-            global.localStorage.setItem('asyngular.authToken', validSignedAuthTokenBob);
+            global.localStorage.setItem('topgunsocket.authToken', validSignedAuthTokenBob);
             client = create(clientOptions);
 
             let expectedAuthStateChanges = [
@@ -471,7 +471,7 @@ describe('Authentication', () =>
         'Should go through the correct sequence of authentication state changes when dealing with disconnections; part 3',
         async () =>
         {
-            global.localStorage.setItem('asyngular.authToken', validSignedAuthTokenBob);
+            global.localStorage.setItem('topgunsocket.authToken', validSignedAuthTokenBob);
             client = create(clientOptions);
 
             let expectedAuthStateChanges = [
@@ -514,7 +514,7 @@ describe('Authentication', () =>
         'Should go through the correct sequence of authentication state changes when authenticating as a user while already authenticated as another user',
         async () =>
         {
-            global.localStorage.setItem('asyngular.authToken', validSignedAuthTokenBob);
+            global.localStorage.setItem('topgunsocket.authToken', validSignedAuthTokenBob);
             client = create(clientOptions);
 
             let expectedAuthStateChanges = [
@@ -600,7 +600,7 @@ describe('Authentication', () =>
         'Subscriptions (including those with waitForAuth option) should have priority over the authenticate action',
         async () =>
         {
-            global.localStorage.setItem('asyngular.authToken', validSignedAuthTokenBob);
+            global.localStorage.setItem('topgunsocket.authToken', validSignedAuthTokenBob);
             client = create(clientOptions);
 
             let expectedAuthStateChanges = [

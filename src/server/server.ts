@@ -98,7 +98,7 @@ export class TGSocketServer extends AsyncStreamEmitter<any>
             pingInterval          : 8000,
             origins               : '*:*',
             appName               : uuidv4(),
-            path                  : '/socketcluster/',
+            path                  : '/topgunsocket/',
             authDefaultExpiry     : 86400,
             authSignAsync         : false,
             authVerifyAsync       : true,

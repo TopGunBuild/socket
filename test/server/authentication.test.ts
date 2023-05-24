@@ -91,7 +91,7 @@ describe('Socket authentication', () =>
 
     it('Should send back error if JWT is invalid during handshake', async () =>
     {
-        global.localStorage.setItem('asyngular.authToken', validSignedAuthTokenBob);
+        global.localStorage.setItem('topgunsocket.authToken', validSignedAuthTokenBob);
 
         client = create(clientOptions);
 
@@ -108,7 +108,7 @@ describe('Socket authentication', () =>
 
     it('Should allow switching between users', async () =>
     {
-        global.localStorage.setItem('asyngular.authToken', validSignedAuthTokenBob);
+        global.localStorage.setItem('topgunsocket.authToken', validSignedAuthTokenBob);
 
         let authenticateEvents              = [];
         let deauthenticateEvents            = [];
@@ -181,7 +181,7 @@ describe('Socket authentication', () =>
 
     it('Should emit correct events/data when socket is deauthenticated', async () =>
     {
-        global.localStorage.setItem('asyngular.authToken', validSignedAuthTokenBob);
+        global.localStorage.setItem('topgunsocket.authToken', validSignedAuthTokenBob);
 
         let authenticationStateChangeEvents = [];
         let authStateChangeEvents           = [];
@@ -241,7 +241,7 @@ describe('Socket authentication', () =>
 
     it('Should not authenticate the client if MIDDLEWARE_AUTHENTICATE blocks the authentication', async () =>
     {
-        global.localStorage.setItem('asyngular.authToken', validSignedAuthTokenAlice);
+        global.localStorage.setItem('topgunsocket.authToken', validSignedAuthTokenAlice);
 
         client = create(clientOptions);
         // The previous test authenticated us as 'alice', so that token will be passed to the server as
@@ -733,7 +733,7 @@ describe('Socket authentication', () =>
 
     it('The verifyToken method of the authEngine receives correct params', async () =>
     {
-        global.localStorage.setItem('asyngular.authToken', validSignedAuthTokenBob);
+        global.localStorage.setItem('topgunsocket.authToken', validSignedAuthTokenBob);
 
         portNumber++;
         server = listen(portNumber, {
