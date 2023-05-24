@@ -58,19 +58,21 @@ let socket = TopGunSocket.create({
 // From the server socket, it can be handled using either:
 // - for await (let data of socket.receiver('foo')) {}
 // - let data = await socket.receiver('foo').once()
-socket.transmit("foo", 123);
+socket.transmit('foo', 123);
 ```
 
 ### Invoke an RPC
 
 ```js
 (async () => {
-    // Invoke an RPC on the server.
-    // It expects a response from the server.
-    // From the server socket, it can be handled using either:
-    // - for await (let req of socket.procedure('myProc')) {}
-    // - let req = await socket.procedure('myProc').once()
-    let result = await socket.invoke("myProc", 123);
+
+  // Invoke an RPC on the server.
+  // It expects a response from the server.
+  // From the server socket, it can be handled using either:
+  // - for await (let req of socket.procedure('myProc')) {}
+  // - let req = await socket.procedure('myProc').once()
+  let result = await socket.invoke('myProc', 123);
+
 })();
 ```
 
@@ -78,11 +80,13 @@ socket.transmit("foo", 123);
 
 ```js
 (async () => {
-    // Subscribe to a channel.
-    let myChannel = socket.subscribe("myChannel");
 
-    await myChannel.listener("subscribe").once();
-    // myChannel.state is now 'subscribed'.
+  // Subscribe to a channel.
+  let myChannel = socket.subscribe('myChannel');
+
+  await myChannel.listener('subscribe').once();
+  // myChannel.state is now 'subscribed'.
+
 })();
 ```
 
@@ -90,12 +94,14 @@ socket.transmit("foo", 123);
 
 ```js
 (async () => {
-    let myChannel = socket.channel("myChannel");
 
-    // Can subscribe to the channel later as a separate step.
-    myChannel.subscribe();
-    await myChannel.listener("subscribe").once();
-    // myChannel.state is now 'subscribed'.
+  let myChannel = socket.channel('myChannel');
+
+  // Can subscribe to the channel later as a separate step.
+  myChannel.subscribe();
+  await myChannel.listener('subscribe').once();
+  // myChannel.state is now 'subscribed'.
+
 })();
 ```
 
@@ -103,37 +109,21 @@ socket.transmit("foo", 123);
 
 ```js
 // Publish data to the channel.
-myChannel.transmitPublish("This is a message");
+myChannel.publish('This is a message');
 
 // Publish data to the channel from the socket.
-socket.transmitPublish("myChannel", "This is a message");
-
-(async () => {
-    // Publish data to the channel and await for the message
-    // to reach the server.
-    try {
-        await myChannel.invokePublish("This is a message");
-    } catch (error) {
-        // Handle error.
-    }
-
-    // Publish data to the channel from the socket and await for
-    // the message to reach the server.
-    try {
-        await socket.invokePublish("myChannel", "This is a message");
-    } catch (error) {
-        // Handle error.
-    }
-})();
+socket.publish('myChannel', 'This is a message');
 ```
 
 ### Consume data from a channel
 
 ```js
 (async () => {
-    for await (let data of myChannel) {
-        // ...
-    }
+
+  for await (let data of myChannel) {
+    // ...
+  }
+
 })();
 ```
 
@@ -141,10 +131,10 @@ socket.transmitPublish("myChannel", "This is a message");
 
 ```js
 let options = {
-    hostname: "securedomain.com",
-    secure: true,
-    port: 443,
-    rejectUnauthorized: false, // Only necessary during debug if using a self-signed certificate
+  hostname: 'securedomain.com',
+  secure: true,
+  port: 443,
+  rejectUnauthorized: false // Only necessary during debug if using a self-signed certificate
 };
 // Initiate the connection to the server
 let socket = TopGunSocket.create(options);
@@ -154,177 +144,72 @@ let socket = TopGunSocket.create(options);
 
 ```js
 let options = {
-    path: "/topgunsocket/",
-    port: 8000,
-    hostname: "127.0.0.1",
-    autoConnect: true,
-    secure: false,
-    rejectUnauthorized: false,
-    connectTimeout: 10000, // milliseconds
-    ackTimeout: 10000, // milliseconds
-    channelPrefix: null,
-    disconnectOnUnload: true,
-    autoReconnectOptions: {
-        initialDelay: 10000, // milliseconds
-        randomness: 10000, // milliseconds
-        multiplier: 1.5, // decimal
-        maxDelay: 60000, // milliseconds
-    },
-    authEngine: null,
-    codecEngine: null,
-    subscriptionRetryOptions: {},
-    query: {
-        yourparam: "hello",
-    },
+  path: '/topgunsocket/',
+  port: 8000,
+  hostname: '127.0.0.1',
+  autoConnect: true,
+  secure: false,
+  rejectUnauthorized: false,
+  connectTimeout: 10000, //milliseconds
+  ackTimeout: 10000, //milliseconds
+  channelPrefix: null,
+  disconnectOnUnload: true,
+  multiplex: true,
+  autoReconnectOptions: {
+    initialDelay: 10000, //milliseconds
+    randomness: 10000, //milliseconds
+    multiplier: 1.5, //decimal
+    maxDelay: 60000 //milliseconds
+  },
+  authEngine: null,
+  codecEngine: null,
+  subscriptionRetryOptions: {},
+  query: {
+    yourparam: 'hello'
+  }
 };
 ```
 
-## Compatibility mode
-
-For compatibility with an existing TopGunSocket server, set the `protocolVersion` to `1` and make sure that the `path` matches your old server path:
-
-```js
-let socket = TopGunSocket.create({
-    protocolVersion: 1,
-    path: "/topgunsocket/",
-});
-```
+For more detailed examples of how to use topgun-socket, see `test` folder.
 
 ## How to use server module
 
-You need to attach it to an existing Node.js http or https server (example) and pass wsEngine:
-
+You need to attach it to an existing Node.js http or https server (example):
 ```js
-const http = require("http");
+const http = require('http');
 const topGunSocketServer = require("topgun-socket/server");
 
 let httpServer = http.createServer();
-let tgServer = topGunSocketServer.attach(httpServer, {
-    path: "/topgunsocket/",
-});
+let agServer = topGunSocketServer.attach(httpServer);
 
 (async () => {
-    // Handle new inbound sockets.
-    for await (let { socket } of tgServer.listener("connection")) {
-        (async () => {
-            // Set up a loop to handle and respond to RPCs for a procedure.
-            for await (let req of socket.procedure("customProc")) {
-                if (req.data.bad) {
-                    let error = new Error("Server failed to execute the procedure");
-                    error.name = "BadCustomError";
-                    req.error(error);
-                } else {
-                    req.end("Success");
-                }
-            }
-        })();
+  // Handle new inbound sockets.
+  for await (let {socket} of agServer.listener('connection')) {
 
-        (async () => {
-            // Set up a loop to handle remote transmitted events.
-            for await (let data of socket.receiver("customRemoteEvent")) {
-                // ...
-            }
-        })();
-    }
+    (async () => {
+      // Set up a loop to handle and respond to RPCs for a procedure.
+      for await (let req of socket.procedure('customProc')) {
+        if (req.data.bad) {
+          let error = new Error('Server failed to execute the procedure');
+          error.name = 'BadCustomError';
+          req.error(error);
+        } else {
+          req.end('Success');
+        }
+      }
+    })();
+
+    (async () => {
+      // Set up a loop to handle remote transmitted events.
+      for await (let data of socket.receiver('customRemoteEvent')) {
+        // ...
+      }
+    })();
+
+  }
 })();
 
 httpServer.listen(8000);
-```
-
-TopGunSocket can work without the `for-await-of` loop; a `while` loop with `await` statements can be used instead.
-
-## Usage
-
-### Consuming using async loops
-
-```js
-let demux = new StreamDemux();
-
-(async () => {
-    // Consume data from 'abc' stream.
-    let substream = demux.stream("abc");
-    for await (let packet of substream) {
-        console.log("ABC:", packet);
-    }
-})();
-
-(async () => {
-    // Consume data from 'def' stream.
-    let substream = demux.stream("def");
-    for await (let packet of substream) {
-        console.log("DEF:", packet);
-    }
-})();
-
-(async () => {
-    // Consume data from 'def' stream.
-    // Can also work with a while loop for older environments.
-    // Can have multiple loops consuming the same stream at
-    // the same time.
-    // Note that you can optionally pass a number n to the
-    // createConsumer(n) method to force the iteration to
-    // timeout after n milliseconds of inactivity.
-    let consumer = demux.stream("def").createConsumer();
-    while (true) {
-        let packet = await consumer.next();
-        if (packet.done) break;
-        console.log("DEF (while loop):", packet.value);
-    }
-})();
-
-(async () => {
-    for (let i = 0; i < 10; i++) {
-        await wait(10);
-        demux.write("abc", "message-abc-" + i);
-        demux.write("def", "message-def-" + i);
-    }
-    demux.close("abc");
-    demux.close("def");
-})();
-
-// Utility function for using setTimeout() with async/await.
-function wait(duration) {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            resolve();
-        }, duration);
-    });
-}
-```
-
-### Consuming using the once method
-
-```js
-// Log the next received packet from the abc stream.
-(async () => {
-    // The returned promise never times out.
-    let packet = await demux.stream("abc").once();
-    console.log("Packet:", packet);
-})();
-
-// Same as above, except with a timeout of 10 seconds.
-(async () => {
-    try {
-        let packet = await demux.stream("abc").once(10000);
-        console.log("Packet:", packet);
-    } catch (err) {
-        // If no packets are written to the 'abc' stream before
-        // the timeout, an error will be thrown and handled here.
-        // The err.name property will be 'TimeoutError'.
-        console.log("Error:", err);
-    }
-})();
-```
-
-## Compatibility mode
-
-For compatibility with existing TopGunSocket clients, set the `protocolVersion` to `1` and make sure that the `path` matches your old client path:
-
-```js
-let tgServer = TopGunSocket.attach(httpServer, {
-    protocolVersion: 1,
-    path: "/topgunsocket/",
-});
 ```
 
 ## Running the tests
