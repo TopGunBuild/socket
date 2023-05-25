@@ -127,8 +127,9 @@ export class TGSocket extends AsyncStreamEmitter<any>
         this._resetPongTimeout();
 
         // Receive incoming raw messages
-        this._on('message', async (message) =>
+        this._on('message', async (msg) =>
         {
+            const message = isNode() ? msg : msg.data;
             this._resetPongTimeout();
 
             this.emit('message', { message });
@@ -824,20 +825,7 @@ export class TGSocket extends AsyncStreamEmitter<any>
         }
         else
         {
-            switch (event)
-            {
-            case 'message':
-                this.socket['addEventListener'](event, (event: any) =>
-                    cb(event.data)
-                );
-                break;
-            case 'close':
-            case 'error':
-                this.socket['addEventListener'](event, (event: any) =>
-                    cb(event)
-                );
-                break;
-            }
+            this.socket['addEventListener'](event, cb);
         }
     }
 }

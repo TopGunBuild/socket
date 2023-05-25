@@ -285,7 +285,10 @@ export class TGSocketServer extends AsyncStreamEmitter<any>
         }
         else
         {
-            // TODO: serverless logic here
+            this.wsServer = WSServer;
+            this.wsServer.addEventListener('close', this._handleServerError.bind(this));
+            this.wsServer.addEventListener('error', this._handleServerError.bind(this));
+            this._handleSocketConnection(WSServer);
         }
     }
 
