@@ -277,10 +277,16 @@ export class TGSocketServer extends AsyncStreamEmitter<any>
             wsServerOptions.clientTracking = false;
         }
 
-        this.wsServer = new WSServer(wsServerOptions);
-
-        this.wsServer.on('error', this._handleServerError.bind(this));
-        this.wsServer.on('connection', this._handleSocketConnection.bind(this));
+        if (isNode())
+        {
+            this.wsServer = new WSServer(wsServerOptions);
+            this.wsServer.on('error', this._handleServerError.bind(this));
+            this.wsServer.on('connection', this._handleSocketConnection.bind(this));
+        }
+        else
+        {
+            // TODO: serverless logic here
+        }
     }
 
     setAuthEngine(authEngine: AuthEngineType): void
