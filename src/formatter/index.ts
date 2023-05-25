@@ -1,3 +1,5 @@
+import global from '../utils/window-or-global';
+
 const base64Chars         = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 const validJSONStartRegex = /^[ \n\r\t]*[{\[]/;
 
