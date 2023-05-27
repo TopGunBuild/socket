@@ -7,7 +7,7 @@ import { cleanupTasks } from '../cleanup-tasks';
 
 let server: TGSocketServer, client: TGClientSocket;
 
-let portNumber                             = 80588;
+let portNumber                             = 1510;
 const serverOptions: TGSocketServerOptions = {
     authKey : 'testkey',
     wsEngine: WS_ENGINE

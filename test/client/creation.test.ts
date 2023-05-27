@@ -1,7 +1,7 @@
 import { create, TGClientSocket, TGSocketClientOptions } from '../../src/client';
 import { cleanupTasks } from '../cleanup-tasks';
 
-const PORT_NUMBER = 7059;
+const PORT_NUMBER = 110;
 
 let client: TGClientSocket, clientOptions: TGSocketClientOptions;
 

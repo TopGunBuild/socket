@@ -7,7 +7,7 @@ import { cleanupTasks } from '../cleanup-tasks';
 
 // Add to the global scope like in browser.
 global.localStorage = localStorage;
-let portNumber      = 8308;
+let portNumber      = 1310;
 
 const clientOptions: TGSocketClientOptions = {
     hostname: '127.0.0.1',

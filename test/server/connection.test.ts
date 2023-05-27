@@ -5,7 +5,7 @@ import { wait } from '../../src/utils/wait';
 import { connectionHandler, WS_ENGINE } from './utils';
 import { cleanupTasks } from '../cleanup-tasks';
 
-let portNumber                             = 8108;
+let portNumber                             = 910;
 const clientOptions: TGSocketClientOptions = {
     hostname: '127.0.0.1',
     port    : portNumber

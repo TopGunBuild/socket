@@ -4,7 +4,7 @@ import { listen, TGSocketServer, TGSocketServerOptions } from '../../src/server'
 import { cleanupTasks } from '../cleanup-tasks';
 import { handleServerConnection } from './utils';
 
-const PORT_NUMBER = 7159;
+const PORT_NUMBER = 210;
 
 let client: TGClientSocket,
     server: TGSocketServer,

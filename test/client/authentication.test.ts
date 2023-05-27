@@ -13,7 +13,7 @@ import { cleanupTasks } from '../cleanup-tasks';
 // Add to the global scope like in browser.
 global.localStorage = localStorage;
 
-const PORT_NUMBER = 7009;
+const PORT_NUMBER = 10;
 
 let client: TGClientSocket,
     server: TGSocketServer,

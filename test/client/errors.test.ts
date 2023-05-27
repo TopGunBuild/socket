@@ -8,7 +8,7 @@ let client: TGClientSocket,
     clientOptions: TGSocketClientOptions,
     serverOptions: TGSocketServerOptions;
 
-const PORT_NUMBER = 7409;
+const PORT_NUMBER = 310;
 
 beforeEach(async () =>
 {

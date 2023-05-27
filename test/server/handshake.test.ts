@@ -3,7 +3,7 @@ import { create, TGClientSocket, TGSocketClientOptions } from '../../src/client'
 import { connectionHandler, WS_ENGINE } from './utils';
 import { cleanupTasks } from '../cleanup-tasks';
 
-let portNumber                             = 8258;
+let portNumber                             = 1210;
 const clientOptions: TGSocketClientOptions = {
     hostname: '127.0.0.1',
     port    : portNumber
