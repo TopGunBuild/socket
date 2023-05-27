@@ -38,7 +38,7 @@ export function listen(
 
         const gateway      = attach(httpServer, options);
         gateway.httpServer = httpServer;
-        httpServer.listen(port, fn);
+        gateway.httpServer.listen(port, fn);
 
         return gateway;
     }

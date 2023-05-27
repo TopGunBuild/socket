@@ -24,6 +24,33 @@ let server: TGSocketServer,
     clientOptions: TGSocketClientOptions,
     serverOptions: TGSocketServerOptions;
 
+const getServer = async () =>
+{
+    const _server = listen(portNumber, serverOptions);
+
+    (async () =>
+    {
+        for await (let { socket } of _server.listener('connection'))
+        {
+            connectionHandler(socket, allowedUsers, _server);
+        }
+    })();
+
+    _server.addMiddleware(_server.MIDDLEWARE_AUTHENTICATE, async function (req)
+    {
+        if (req.authToken.username === 'alice')
+        {
+            let err  = new Error('Blocked by MIDDLEWARE_AUTHENTICATE');
+            err.name = 'AuthenticateMiddlewareError';
+            throw err;
+        }
+    });
+
+    await _server.listener('ready').once();
+
+    return _server;
+};
+
 // Run the server before start
 beforeEach(async () =>
 {
@@ -35,28 +62,6 @@ beforeEach(async () =>
         hostname: '127.0.0.1',
         port    : portNumber
     };
-
-    server = listen(portNumber, serverOptions);
-
-    (async () =>
-    {
-        for await (let { socket } of server.listener('connection'))
-        {
-            connectionHandler(socket, allowedUsers, server);
-        }
-    })();
-
-    server.addMiddleware(server.MIDDLEWARE_AUTHENTICATE, async function (req)
-    {
-        if (req.authToken.username === 'alice')
-        {
-            let err  = new Error('Blocked by MIDDLEWARE_AUTHENTICATE');
-            err.name = 'AuthenticateMiddlewareError';
-            throw err;
-        }
-    });
-
-    await server.listener('ready').once();
 });
 
 // Close server after each test
@@ -70,6 +75,7 @@ describe('Socket authentication', () =>
 {
     it('Should not send back error if JWT is not provided in handshake', async () =>
     {
+        server = await getServer();
         client    = create(clientOptions);
         let event = await client.listener('connect').once();
         expect(event.authError === undefined).toEqual(true);
@@ -77,6 +83,7 @@ describe('Socket authentication', () =>
 
     it('Should be authenticated on connect if previous JWT token is present', async () =>
     {
+        server = await getServer();
         client = create(clientOptions);
         await client.listener('connect').once();
         client.invoke('login', { username: 'bob' });
@@ -92,7 +99,7 @@ describe('Socket authentication', () =>
     it('Should send back error if JWT is invalid during handshake', async () =>
     {
         global.localStorage.setItem('topgunsocket.authToken', validSignedAuthTokenBob);
-
+        server = await getServer();
         client = create(clientOptions);
 
         await client.listener('connect').once();
@@ -114,6 +121,8 @@ describe('Socket authentication', () =>
         let deauthenticateEvents            = [];
         let authenticationStateChangeEvents = [];
         let authStateChangeEvents           = [];
+
+        server = await getServer();
 
         (async () =>
         {
@@ -186,6 +195,8 @@ describe('Socket authentication', () =>
         let authenticationStateChangeEvents = [];
         let authStateChangeEvents           = [];
 
+        server = await getServer();
+
         (async () =>
         {
             for await (let stateChangePacket of server.listener('authenticationStateChange'))
@@ -243,6 +254,7 @@ describe('Socket authentication', () =>
     {
         global.localStorage.setItem('topgunsocket.authToken', validSignedAuthTokenAlice);
 
+        server = await getServer();
         client = create(clientOptions);
         // The previous test authenticated us as 'alice', so that token will be passed to the server as
         // part of the handshake.
