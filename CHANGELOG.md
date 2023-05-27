@@ -1,3 +1,16 @@
+# [1.4.0](https://github.com/topgunjs/topgun-socket/compare/v1.3.3...v1.4.0) (2023-05-27)
+
+
+### Bug Fixes
+
+* fix encode for serverless ([335a78c](https://github.com/topgunjs/topgun-socket/commit/335a78cd147b7810f27784eb6b09e0a00c9b5c33))
+* fix global ([f6b26f8](https://github.com/topgunjs/topgun-socket/commit/f6b26f8d907a87e0120e199a80f8a1f2a5f19cdf))
+
+
+### Features
+
+* rename paths and keys ([e38afe4](https://github.com/topgunjs/topgun-socket/commit/e38afe4ad4b63b297fe39d1a11c8f03cbac85730))
+
 ## [1.3.3](https://github.com/topgunjs/topgun-socket/compare/v1.3.2...v1.3.3) (2023-05-03)
 
 
