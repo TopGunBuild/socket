@@ -1,4 +1,5 @@
 import global from '../utils/window-or-global';
+import { isNode } from '../utils/is-node';
 
 const base64Chars         = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 const validJSONStartRegex = /^[ \n\r\t]*[{\[]/;
@@ -116,5 +117,5 @@ export function encode(object: any): string
     {
         return object;
     }
-    return JSON.stringify(object, binaryToBase64Replacer);
+    return isNode() ? JSON.stringify(object, binaryToBase64Replacer) : JSON.stringify(object);
 }
