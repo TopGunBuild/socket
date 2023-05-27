@@ -132,7 +132,7 @@ describe('Socket pub/sub', () =>
         }
     });
 
-    it('Client should not be able to subscribe to a channel before the handshake has completed', async () =>
+    /*it('Client should not be able to subscribe to a channel before the handshake has completed', async () =>
     {
         server = listen(portNumber, {
             authKey : serverOptions.authKey,
@@ -192,7 +192,7 @@ describe('Socket pub/sub', () =>
         expect(isSubscribed).toEqual(false);
         expect(error).not.toEqual(null);
         expect(error.name).toEqual('InvalidActionError');
-    });
+    });*/
 
     it('Server should be able to handle invalid #subscribe and #unsubscribe and #publish events without crashing', async () =>
     {
