@@ -22,8 +22,7 @@ import {
     MiddlewareFunction,
     Middlewares
 } from '../types';
-// import { applyEachSeries } from '../utils/apply-each-series';
-import { applyEachSeries } from 'async';
+import { applyEachSeries } from '../utils/apply-each-series';
 import { IncomingMessage, RequestObject, TGSocketServerOptions } from './types';
 import { SimpleBroker } from '../simple-broker/simple-broker';
 import { isNode } from '../utils/is-node';
