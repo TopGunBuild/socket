@@ -33,7 +33,7 @@ export class TGSocket extends AsyncStreamEmitter<any>
     socket: any; // WebSocket;
     state: SocketState;
     authState: AuthState;
-    request: any;
+    request: {[key: string]: any};
     remoteAddress: string;
     remoteFamily: string;
     remotePort: number;
