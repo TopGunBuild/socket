@@ -62,6 +62,7 @@ describe('Socket pub/sub', () =>
         // though they were sent as a batch/array.
         server.addMiddleware(server.MIDDLEWARE_SUBSCRIBE, async (req) =>
         {
+            console.log(req);
             subscribeMiddlewareCounter++;
             expect(req.channel.indexOf('my-channel-')).toEqual(0);
             if (req.channel === 'my-channel-10')

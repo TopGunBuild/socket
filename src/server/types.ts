@@ -1,5 +1,6 @@
 import { JwtSecret } from 'topgun-jsonwebtoken';
 import { AuthEngineType, CodecEngine } from '../types';
+import { TGSocket } from './socket';
 
 export interface TGSocketServerOptions {
     // An instance of a Node.js HTTP server.
@@ -128,7 +129,7 @@ export interface IncomingMessage {
 
 export interface RequestObject
 {
-    socket?: any;
+    socket?: TGSocket;
     authTokenExpiredError?: Error;
     channel?: string;
     data?: any;
