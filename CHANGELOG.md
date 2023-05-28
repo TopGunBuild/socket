@@ -1,3 +1,10 @@
+## [1.4.1](https://github.com/topgunjs/topgun-socket/compare/v1.4.0...v1.4.1) (2023-05-28)
+
+
+### Bug Fixes
+
+* **server:** set missing typings ([c7c9637](https://github.com/topgunjs/topgun-socket/commit/c7c96375e2f9f8e02470608dd50b12991b6b899b))
+
 # [1.4.0](https://github.com/topgunjs/topgun-socket/compare/v1.3.3...v1.4.0) (2023-05-27)
 
 
