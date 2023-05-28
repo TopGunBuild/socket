@@ -1,3 +1,4 @@
+import { JwtSecret } from 'topgun-jsonwebtoken';
 import { AsyncStreamEmitter } from '../async-stream-emitter/async-stream-emitter';
 import { uuidv4 } from '../utils/uuidv4';
 import { generateId } from '../utils/generate-id';
@@ -22,10 +23,11 @@ import {
     MiddlewareFunction,
     Middlewares
 } from '../types';
-import { applyEachSeries } from '../utils/apply-each-series';
+import { applyEachSeries, AsyncFunction } from '../utils/apply-each-series';
 import { IncomingMessage, RequestObject, TGSocketServerOptions } from './types';
 import { SimpleBroker } from '../simple-broker/simple-broker';
 import { isNode } from '../utils/is-node';
+import { SimpleExchange } from '../simple-broker';
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 export class TGSocketServer extends AsyncStreamEmitter<any>
@@ -47,17 +49,17 @@ export class TGSocketServer extends AsyncStreamEmitter<any>
     pingTimeout: number;
     pingTimeoutDisabled: boolean;
     allowClientPublish: boolean;
-    perMessageDeflate: any;
+    perMessageDeflate: boolean | object;
     httpServer: any;
-    socketChannelLimit: any;
-    brokerEngine: any;
-    appName: any;
-    middlewareEmitWarnings: any;
+    socketChannelLimit: number;
+    brokerEngine: SimpleBroker;
+    appName: string;
+    middlewareEmitWarnings: boolean;
     isReady: boolean;
-    signatureKey: any;
-    verificationKey: any;
-    authVerifyAsync: any;
-    authSignAsync: any;
+    signatureKey: JwtSecret;
+    verificationKey: JwtSecret;
+    authVerifyAsync: boolean;
+    authSignAsync: boolean;
     defaultVerificationOptions: any;
     defaultSignatureOptions: any;
     auth: AuthEngineType;
@@ -70,9 +72,9 @@ export class TGSocketServer extends AsyncStreamEmitter<any>
         [id: string]: TGSocket
     };
     pendingClientsCount: number;
-    exchange: any;
+    exchange: SimpleExchange;
 
-    private readonly _middleware: {[key: string]: any[]};
+    private readonly _middleware: {[key: string]: AsyncFunction[]};
     private readonly _allowAllOrigins: boolean;
     private readonly wsServer: any;
     private readonly _path: string;
