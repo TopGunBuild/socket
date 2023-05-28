@@ -75,6 +75,8 @@ describe('Ping/pong', () =>
         expect(disconnectCode).toEqual(4000);
         expect(clientError).not.toEqual(null);
         expect(clientError.name).toEqual('SocketProtocolError');
+
+        await new Promise<void>(resolve => setTimeout(() => resolve(), 2000));
     });
 
     it(

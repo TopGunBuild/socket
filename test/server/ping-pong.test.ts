@@ -94,6 +94,8 @@ describe('Socket Ping/pong', () =>
             expect(serverWarning).not.toEqual(null);
             expect(serverWarning.name).toEqual('SocketProtocolError');
             expect(serverDisconnectionCode).toEqual(4001);
+
+            await new Promise<void>(resolve => setTimeout(() => resolve(), 2000));
         });
     });
 

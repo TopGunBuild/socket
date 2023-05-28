@@ -47,10 +47,8 @@ export function connectionHandler(socket: TGSocket, server: TGSocketServer): voi
     {
         for await (let rpc of socket.procedure('performTask'))
         {
-            setTimeout(() =>
-            {
-                rpc.end();
-            }, 1000);
+            jest.setTimeout(1000);
+            rpc.end();
         }
     }
 

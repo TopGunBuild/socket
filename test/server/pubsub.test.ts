@@ -20,6 +20,7 @@ const clientOptions: TGSocketClientOptions = {
 // Shut down server afterwards
 afterEach(async () =>
 {
+    await new Promise<void>(resolve => setTimeout(() => resolve(), 2000));
     await cleanupTasks(client, server);
     portNumber++;
 });
@@ -62,7 +63,6 @@ describe('Socket pub/sub', () =>
         // though they were sent as a batch/array.
         server.addMiddleware(server.MIDDLEWARE_SUBSCRIBE, async (req) =>
         {
-            console.log(req);
             subscribeMiddlewareCounter++;
             expect(req.channel.indexOf('my-channel-')).toEqual(0);
             if (req.channel === 'my-channel-10')
