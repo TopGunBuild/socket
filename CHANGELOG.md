@@ -1,3 +1,10 @@
+## [1.4.4](https://github.com/topgunjs/topgun-socket/compare/v1.4.3...v1.4.4) (2023-05-29)
+
+
+### Bug Fixes
+
+* use WSServer only in nodejs ([4ee532d](https://github.com/topgunjs/topgun-socket/commit/4ee532d5b0bccedb73607834c84197bb66ef2e27))
+
 ## [1.4.3](https://github.com/topgunjs/topgun-socket/compare/v1.4.2...v1.4.3) (2023-05-29)
 
 
