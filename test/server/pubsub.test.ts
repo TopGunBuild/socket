@@ -20,7 +20,7 @@ const clientOptions: TGSocketClientOptions = {
 // Shut down server afterwards
 afterEach(async () =>
 {
-    await new Promise<void>(resolve => setTimeout(() => resolve(), 2000));
+    // await new Promise<void>(resolve => setTimeout(() => resolve(), 2000));
     await cleanupTasks(client, server);
     portNumber++;
 });
