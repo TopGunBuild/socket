@@ -1,3 +1,10 @@
+## [1.4.3](https://github.com/topgunjs/topgun-socket/compare/v1.4.2...v1.4.3) (2023-05-29)
+
+
+### Bug Fixes
+
+* possible handle socket connection directly ([f907895](https://github.com/topgunjs/topgun-socket/commit/f9078957ca9af4c3e2b073ad760907ace69c09fe))
+
 ## [1.4.2](https://github.com/topgunjs/topgun-socket/compare/v1.4.1...v1.4.2) (2023-05-28)
 
 
