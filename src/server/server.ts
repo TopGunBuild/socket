@@ -164,16 +164,6 @@ export class TGSocketServer extends AsyncStreamEmitter<any>
             })();
         }
 
-        const wsEngine = typeof opts.wsEngine === 'string' ? require(opts.wsEngine) : opts.wsEngine;
-        if (!wsEngine || !wsEngine.Server)
-        {
-            throw new InvalidOptionsError(
-                'The wsEngine option must be a path or module name which points ' +
-                'to a valid WebSocket engine module with a compatible interface'
-            );
-        }
-        const WSServer = wsEngine.Server;
-
         if (opts.authPrivateKey != null || opts.authPublicKey != null)
         {
             if (opts.authPrivateKey == null)
@@ -280,6 +270,16 @@ export class TGSocketServer extends AsyncStreamEmitter<any>
 
         if (isNode())
         {
+            const wsEngine = typeof opts.wsEngine === 'string' ? require(opts.wsEngine) : opts.wsEngine;
+            if (!wsEngine || !wsEngine.Server)
+            {
+                throw new InvalidOptionsError(
+                    'The wsEngine option must be a path or module name which points ' +
+                    'to a valid WebSocket engine module with a compatible interface'
+                );
+            }
+            const WSServer = wsEngine.Server;
+
             this.wsServer = new WSServer(wsServerOptions);
             this.wsServer.on('error', this._handleServerError.bind(this));
             this.wsServer.on('connection', this.handleSocketConnection.bind(this));
