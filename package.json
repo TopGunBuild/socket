@@ -81,20 +81,48 @@
             "server": [
                 "./dist/server.d.ts"
             ],
-            "writable-consumable-stream": [
-                "./dist/writable-consumable-stream.d.ts"
-            ],
             "channel": [
                 "./dist/channel.d.ts"
+            ],
+            "async-stream-emitter": [
+                "./dist/async-stream-emitter.d.ts"
+            ],
+            "auth": [
+                "./dist/auth.d.ts"
+            ],
+            "errors": [
+                "./dist/errors.d.ts"
+            ],
+            "formatter": [
+                "./dist/formatter.d.ts"
+            ],
+            "response": [
+                "./dist/response.d.ts"
+            ],
+            "simple-broker": [
+                "./dist/simple-broker.d.ts"
+            ],
+            "stream-demux": [
+                "./dist/stream-demux.d.ts"
+            ],
+            "types": [
+                "./dist/types.d.ts"
             ]
         }
     },
     "files": [
         "dist",
+        "async-stream-emitter",
+        "auth",
+        "channel",
         "client",
+        "errors",
+        "formatter",
+        "response",
         "server",
-        "writable-consumable-stream",
-        "channel"
+        "simple-broker",
+        "stream-demux",
+        "types"
     ],
     "keywords": [
         "websocket",
