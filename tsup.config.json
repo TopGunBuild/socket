@@ -14,6 +14,14 @@
     "entry": {
         "client": "src/client/index.ts",
         "server": "src/server/index.ts",
-        "channel": "src/channel/index.ts"
+        "channel": "src/channel/index.ts",
+        "async-stream-emitter": "src/async-stream-emitter/index.ts",
+        "auth": "src/auth/index.ts",
+        "errors": "src/errors/index.ts",
+        "formatter": "src/formatter/index.ts",
+        "response": "src/response/index.ts",
+        "simple-broker": "src/simple-broker/index.ts",
+        "stream-demux": "src/stream-demux/index.ts",
+        "types": "src/types/index.ts"
     }
 }
