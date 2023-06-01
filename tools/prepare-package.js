@@ -1,7 +1,19 @@
 const fs = require('fs');
 const path = require('path');
 
-const PACKAGE_DIRS = ['channel', 'client', 'server', 'writable-consumable-stream'];
+const PACKAGE_DIRS = [
+    'async-stream-emitter',
+    'auth',
+    'channel',
+    'client',
+    'errors',
+    'formatter',
+    'response',
+    'server',
+    'simple-broker',
+    'stream-demux',
+    'types'
+];
 
 const getContent = function (name)
 {
