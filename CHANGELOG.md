@@ -1,3 +1,10 @@
+## [1.4.6](https://github.com/topgunjs/topgun-socket/compare/v1.4.5...v1.4.6) (2023-06-01)
+
+
+### Bug Fixes
+
+* **tools:** update package list ([46d9241](https://github.com/topgunjs/topgun-socket/commit/46d9241d1ca0736c37fdd575b3fdd9e28ae5e621))
+
 ## [1.4.5](https://github.com/topgunjs/topgun-socket/compare/v1.4.4...v1.4.5) (2023-06-01)
 
 
