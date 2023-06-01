@@ -1,3 +1,10 @@
+## [1.4.5](https://github.com/topgunjs/topgun-socket/compare/v1.4.4...v1.4.5) (2023-06-01)
+
+
+### Bug Fixes
+
+* add missing packages to export ([28b0f50](https://github.com/topgunjs/topgun-socket/commit/28b0f501cc050b34101c906af9f1589c781377c4))
+
 ## [1.4.4](https://github.com/topgunjs/topgun-socket/compare/v1.4.3...v1.4.4) (2023-05-29)
 
 
