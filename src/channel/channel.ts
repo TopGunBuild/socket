@@ -1,4 +1,4 @@
-import { AsyncIterableStream } from '../stream-demux/async-iterable-stream';
+import { AsyncIterableStream } from 'topgun-async-stream-emitter';
 import { IClientSocket } from '../client/types';
 import { ChannelState, SCChannelOptions } from './types';
 
