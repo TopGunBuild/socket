@@ -1,3 +1,10 @@
+## [1.4.8](https://github.com/topgunjs/topgun-socket/compare/v1.4.7...v1.4.8) (2023-06-28)
+
+
+### Bug Fixes
+
+* install topgun-async-stream-emitter, remove local async-stream-emitter ([9c5ad84](https://github.com/topgunjs/topgun-socket/commit/9c5ad8424779bee48bc9fd81930ed9f57d164fa7))
+
 ## [1.4.7](https://github.com/topgunjs/topgun-socket/compare/v1.4.6...v1.4.7) (2023-06-01)
 
 
