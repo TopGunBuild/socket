@@ -1,5 +1,4 @@
-import { AsyncStreamEmitter } from '../async-stream-emitter/async-stream-emitter';
-import { StreamDemux } from '../stream-demux/stream-demux';
+import { AsyncStreamEmitter, StreamDemux, DemuxedAsyncIterableStream } from 'topgun-async-stream-emitter';
 import {
     AuthError,
     hydrateError, InvalidArgumentsError,
@@ -13,7 +12,6 @@ import { cloneDeep } from '../utils/clone-deep';
 import { SocketState } from '../types';
 import { TGSocketServer } from './server';
 import { SimpleExchange } from '../simple-broker/simple-exchange';
-import { DemuxedAsyncIterableStream } from '../stream-demux/demuxed-async-iterable-stream';
 import { isNode } from '../utils/is-node';
 
 export class TGSocket extends AsyncStreamEmitter<any>

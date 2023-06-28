@@ -1,4 +1,4 @@
-import { AsyncStreamEmitter } from '../async-stream-emitter/async-stream-emitter';
+import { AsyncStreamEmitter } from 'topgun-async-stream-emitter';
 import { CodecEngine, SocketState } from '../types';
 import { TGSocketClientOptions, TGAuthEngine, TransmitOptions, InvokeOptions } from './types';
 import { EventObject, EventObjectCallback } from '../types';

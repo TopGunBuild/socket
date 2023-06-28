@@ -1,4 +1,4 @@
-import { AsyncStreamEmitter } from '../async-stream-emitter/async-stream-emitter';
+import { AsyncStreamEmitter, StreamDemux, DemuxedAsyncIterableStream } from 'topgun-async-stream-emitter';
 import { AuthStatus, TGSocketClientOptions, ProtocolVersions, IClientSocket, SubscribeOptions, TransmitOptions } from './types';
 import {
     BadConnectionError,
@@ -12,7 +12,6 @@ import { AuthState, AuthToken, CodecEngine, EventObject, SocketState } from '../
 import { AuthEngine } from './auth';
 import { TGTransport } from './transport';
 import { Item, LinkedList } from './linked-list';
-import { StreamDemux } from '../stream-demux/stream-demux';
 import * as formatter from '../formatter';
 import global from '../utils/window-or-global';
 import Buffer from 'topgun-buffer';
@@ -20,7 +19,6 @@ import { wait } from '../utils/wait';
 import { TGResponse } from '../response';
 import { TGChannel } from '../channel/channel';
 import { ChannelState, SCChannelOptions } from '../channel/types';
-import { DemuxedAsyncIterableStream } from '../stream-demux/demuxed-async-iterable-stream';
 import { cloneDeep } from '../utils/clone-deep';
 
 const isBrowser = typeof window !== 'undefined';

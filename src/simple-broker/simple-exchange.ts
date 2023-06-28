@@ -1,6 +1,5 @@
-import { AsyncStreamEmitter } from '../async-stream-emitter/async-stream-emitter';
+import { AsyncStreamEmitter, StreamDemux } from 'topgun-async-stream-emitter';
 import { SimpleChannel } from './types';
-import { StreamDemux } from '../stream-demux/stream-demux';
 import { TGChannel } from '../channel/channel';
 import { SimpleBroker } from './simple-broker';
 import { ChannelState } from '../channel/types';
