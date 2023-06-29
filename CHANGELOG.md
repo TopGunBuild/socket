@@ -1,3 +1,15 @@
+## [1.4.9](https://github.com/topgunjs/topgun-socket/compare/v1.4.8...v1.4.9) (2023-06-29)
+
+
+### Bug Fixes
+
+* add missing packages to export ([7c7e08a](https://github.com/topgunjs/topgun-socket/commit/7c7e08a943c1fe333d8379f48a34b09e9531e239))
+* build packages ([7cae744](https://github.com/topgunjs/topgun-socket/commit/7cae744d117889cbf8caf5931fa2b0f10b9ced94))
+* possible handle socket connection directly ([c9cbeb9](https://github.com/topgunjs/topgun-socket/commit/c9cbeb9a2ddf33eb3408bb75161e17ad15e45bf2))
+* refactor code for compatibility with topgun-async-stream-emitter ([0cb7aeb](https://github.com/topgunjs/topgun-socket/commit/0cb7aeb7549b6745ad15e44c019a306bd852268c))
+* **tools:** update package list ([f68230b](https://github.com/topgunjs/topgun-socket/commit/f68230bf5c47949d10b75a9bc03b68e2221b13e8))
+* use WSServer only in nodejs ([0195b66](https://github.com/topgunjs/topgun-socket/commit/0195b668a17df999fd713bdcf03a3ca1f47f92c6))
+
 ## [1.4.8](https://github.com/topgunjs/topgun-socket/compare/v1.4.7...v1.4.8) (2023-06-28)
 
 
