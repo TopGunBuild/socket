@@ -2,7 +2,6 @@ const fs = require('fs');
 const path = require('path');
 
 const PACKAGE_DIRS = [
-    'async-stream-emitter',
     'auth',
     'channel',
     'client',
@@ -11,7 +10,6 @@ const PACKAGE_DIRS = [
     'response',
     'server',
     'simple-broker',
-    'stream-demux',
     'types'
 ];
 
