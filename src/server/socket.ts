@@ -1,4 +1,4 @@
-import { AsyncStreamEmitter, StreamDemux, DemuxedAsyncIterableStream } from 'topgun-async-stream-emitter';
+import { AsyncStreamEmitter, StreamDemux, DemuxedConsumableStream } from 'topgun-async-stream-emitter';
 import {
     AuthError,
     hydrateError, InvalidArgumentsError,
@@ -178,7 +178,7 @@ export class TGSocket extends AsyncStreamEmitter<any>
     // @ Public methods
     // -----------------------------------------------------------------------------------------------------
 
-    receiver(receiverName: string): DemuxedAsyncIterableStream<any>
+    receiver(receiverName: string): DemuxedConsumableStream<any>
     {
         return this._receiverDemux.stream(receiverName);
     }
@@ -188,7 +188,7 @@ export class TGSocket extends AsyncStreamEmitter<any>
         this._receiverDemux.close(receiverName);
     }
 
-    procedure(procedureName: string): DemuxedAsyncIterableStream<any>
+    procedure(procedureName: string): DemuxedConsumableStream<any>
     {
         return this._procedureDemux.stream(procedureName);
     }

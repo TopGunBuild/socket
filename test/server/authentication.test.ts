@@ -592,7 +592,7 @@ describe('Socket authentication', () =>
                 {
                     for await (let req of socket.procedure('login'))
                     {
-                        console.log(req);
+                        // console.log(req);
                         if (allowedUsers[req.data.username])
                         {
                             socket.setAuthToken(req.data);

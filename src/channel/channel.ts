@@ -1,8 +1,13 @@
-import { AsyncIterableStream } from 'topgun-async-stream-emitter';
+import {
+    ConsumableStream,
+    ConsumableStreamConsumer,
+    DemuxedConsumableStream,
+    StreamDemux
+} from 'topgun-async-stream-emitter';
 import { IClientSocket } from '../client/types';
 import { ChannelState, SCChannelOptions } from './types';
 
-export class TGChannel<T> extends AsyncIterableStream<T>
+export class TGChannel<T> extends ConsumableStream<T>
 {
     static PENDING: ChannelState      = 'pending';
     static SUBSCRIBED: ChannelState   = 'subscribed';
@@ -16,13 +21,13 @@ export class TGChannel<T> extends AsyncIterableStream<T>
     client: IClientSocket;
     _pendingSubscriptionCid: number;
 
-    private _eventDemux: any;
-    private _dataStream: any;
+    private _eventDemux: StreamDemux<T>;
+    private _dataStream: DemuxedConsumableStream<T>;
 
     /**
      * Constructor
      */
-    constructor(name: string, client: IClientSocket, eventDemux, dataStream)
+    constructor(name: string, client: IClientSocket, eventDemux: StreamDemux<T>, dataStream: DemuxedConsumableStream<T>)
     {
         super();
         this.PENDING      = TGChannel.PENDING;
@@ -64,12 +69,12 @@ export class TGChannel<T> extends AsyncIterableStream<T>
     // @ Public methods
     // -----------------------------------------------------------------------------------------------------
 
-    createAsyncIterator(timeout?: number): AsyncIterator<T>
+    createConsumer(timeout?: number): ConsumableStreamConsumer<T>
     {
-        return this._dataStream.createAsyncIterator(timeout);
+        return this._dataStream.createConsumer(timeout);
     }
 
-    listener(eventName: string)
+    listener(eventName: string): DemuxedConsumableStream<T>
     {
         return this._eventDemux.stream(`${this.name}/${eventName}`);
     }
@@ -104,7 +109,7 @@ export class TGChannel<T> extends AsyncIterableStream<T>
         return this.client.isSubscribed(this.name, includePending);
     }
 
-    publish(data)
+    publish(data: any): void
     {
         return this.client.publish(this.name, data);
     }

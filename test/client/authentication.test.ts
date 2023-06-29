@@ -58,6 +58,96 @@ afterEach(async () =>
 describe('Authentication', () =>
 {
     it(
+        'Subscriptions (including those with waitForAuth option) should have priority over the authenticate action',
+        async () =>
+        {
+            global.localStorage.setItem('topgunsocket.authToken', validSignedAuthTokenBob);
+            client = create(clientOptions);
+
+            let expectedAuthStateChanges = [
+                'unauthenticated->authenticated',
+                'authenticated->unauthenticated'
+            ];
+            let initialSignedAuthToken;
+            let authStateChanges         = [];
+
+            (async () =>
+            {
+                for await (let status of client.listener('authStateChange'))
+                {
+                    authStateChanges.push(status.oldAuthState + '->' + status.newAuthState);
+                }
+            })();
+
+            (async () =>
+            {
+                let error = null;
+                try
+                {
+                    await client.authenticate(invalidSignedAuthToken);
+                }
+                catch (err)
+                {
+                    error = err;
+                }
+                expect(error).not.toEqual(null);
+                expect(error.name).toEqual('AuthTokenError');
+            })();
+
+            let privateChannel = client.subscribe('priv', { waitForAuth: true });
+            expect(privateChannel.state).toEqual('pending');
+
+            (async () =>
+            {
+                let event              = await client.listener('connect').once();
+                initialSignedAuthToken = client.signedAuthToken;
+                expect(event.isAuthenticated).toEqual(true);
+                expect(privateChannel.state).toEqual('pending');
+
+                await Promise.race([
+                    (async () =>
+                    {
+                        let err = await privateChannel.listener('subscribeFail').once();
+                        // This shouldn't happen because the subscription should be
+                        // processed before the authenticate() call with the invalid token fails.
+                        throw new Error('Failed to subscribe to channel: ' + err.message);
+                    })(),
+                    (async () =>
+                    {
+                        await privateChannel.listener('subscribe').once();
+                        expect(privateChannel.state).toEqual('subscribed');
+                    })()
+                ]);
+            })();
+
+            (async () =>
+            {
+                // The subscription already went through so it should still be subscribed.
+                let { oldSignedAuthToken, oldAuthToken } = await client.listener('deauthenticate').once();
+                // The subscription already went through so it should still be subscribed.
+                expect(privateChannel.state).toEqual('subscribed');
+                expect(client.authState).toEqual('unauthenticated');
+                expect(client.authToken).toEqual(null);
+
+                expect(oldAuthToken).not.toEqual(null);
+                expect(oldAuthToken.username).toEqual('bob');
+                expect(oldSignedAuthToken).toEqual(initialSignedAuthToken);
+
+                let privateChannel2 = client.subscribe('priv2', { waitForAuth: true });
+
+                await privateChannel2.listener('subscribe').once();
+
+                // This line should not execute.
+                throw new Error('Should not subscribe because the socket is not authenticated');
+            })();
+
+            await wait(1000);
+            client.closeListener('authStateChange');
+            expect(JSON.stringify(authStateChanges)).toEqual(JSON.stringify(expectedAuthStateChanges));
+        }
+    );
+
+    it(
         'Should not send back error if JWT is not provided in handshake',
         async () =>
         {
@@ -594,96 +684,6 @@ describe('Authentication', () =>
             client.authenticate(validSignedAuthTokenBob);
             await client.listener('subscribe').once();
             expect(privateChannel.state).toEqual('subscribed');
-        }
-    );
-
-    it(
-        'Subscriptions (including those with waitForAuth option) should have priority over the authenticate action',
-        async () =>
-        {
-            global.localStorage.setItem('topgunsocket.authToken', validSignedAuthTokenBob);
-            client = create(clientOptions);
-
-            let expectedAuthStateChanges = [
-                'unauthenticated->authenticated',
-                'authenticated->unauthenticated'
-            ];
-            let initialSignedAuthToken;
-            let authStateChanges         = [];
-
-            (async () =>
-            {
-                for await (let status of client.listener('authStateChange'))
-                {
-                    authStateChanges.push(status.oldAuthState + '->' + status.newAuthState);
-                }
-            })();
-
-            (async () =>
-            {
-                let error = null;
-                try
-                {
-                    await client.authenticate(invalidSignedAuthToken);
-                }
-                catch (err)
-                {
-                    error = err;
-                }
-                expect(error).not.toEqual(null);
-                expect(error.name).toEqual('AuthTokenError');
-            })();
-
-            let privateChannel = client.subscribe('priv', { waitForAuth: true });
-            expect(privateChannel.state).toEqual('pending');
-
-            (async () =>
-            {
-                let event              = await client.listener('connect').once();
-                initialSignedAuthToken = client.signedAuthToken;
-                expect(event.isAuthenticated).toEqual(true);
-                expect(privateChannel.state).toEqual('pending');
-
-                await Promise.race([
-                    (async () =>
-                    {
-                        let err = await privateChannel.listener('subscribeFail').once();
-                        // This shouldn't happen because the subscription should be
-                        // processed before the authenticate() call with the invalid token fails.
-                        throw new Error('Failed to subscribe to channel: ' + err.message);
-                    })(),
-                    (async () =>
-                    {
-                        await privateChannel.listener('subscribe').once();
-                        expect(privateChannel.state).toEqual('subscribed');
-                    })()
-                ]);
-            })();
-
-            (async () =>
-            {
-                // The subscription already went through so it should still be subscribed.
-                let { oldSignedAuthToken, oldAuthToken } = await client.listener('deauthenticate').once();
-                // The subscription already went through so it should still be subscribed.
-                expect(privateChannel.state).toEqual('subscribed');
-                expect(client.authState).toEqual('unauthenticated');
-                expect(client.authToken).toEqual(null);
-
-                expect(oldAuthToken).not.toEqual(null);
-                expect(oldAuthToken.username).toEqual('bob');
-                expect(oldSignedAuthToken).toEqual(initialSignedAuthToken);
-
-                let privateChannel2 = client.subscribe('priv2', { waitForAuth: true });
-
-                await privateChannel2.listener('subscribe').once();
-
-                // This line should not execute.
-                throw new Error('Should not subscribe because the socket is not authenticated');
-            })();
-
-            await wait(1000);
-            client.closeListener('authStateChange');
-            expect(JSON.stringify(authStateChanges)).toEqual(JSON.stringify(expectedAuthStateChanges));
         }
     );
 

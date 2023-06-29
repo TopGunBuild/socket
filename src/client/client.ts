@@ -1,4 +1,4 @@
-import { AsyncStreamEmitter, StreamDemux, DemuxedAsyncIterableStream } from 'topgun-async-stream-emitter';
+import { AsyncStreamEmitter, StreamDemux, DemuxedConsumableStream } from 'topgun-async-stream-emitter';
 import { AuthStatus, TGSocketClientOptions, ProtocolVersions, IClientSocket, SubscribeOptions, TransmitOptions } from './types';
 import {
     BadConnectionError,
@@ -432,7 +432,7 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
 
             (async () =>
             {
-                const asyncIterator = transport.listener('open').createAsyncIterator();
+                const asyncIterator = transport.listener('open').createConsumer();
                 while (true)
                 {
                     const packet = await asyncIterator.next();
@@ -444,7 +444,7 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
 
             (async () =>
             {
-                const asyncIterator = transport.listener('error').createAsyncIterator();
+                const asyncIterator = transport.listener('error').createConsumer();
                 while (true)
                 {
                     const packet = await asyncIterator.next();
@@ -455,7 +455,7 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
 
             (async () =>
             {
-                const asyncIterator = transport.listener('close').createAsyncIterator();
+                const asyncIterator = transport.listener('close').createConsumer();
                 while (true)
                 {
                     const packet = await asyncIterator.next();
@@ -467,7 +467,7 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
 
             (async () =>
             {
-                const asyncIterator = transport.listener('openAbort').createAsyncIterator();
+                const asyncIterator = transport.listener('openAbort').createConsumer();
                 while (true)
                 {
                     const packet = await asyncIterator.next();
@@ -479,7 +479,7 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
 
             (async () =>
             {
-                const asyncIterator = transport.listener('event').createAsyncIterator();
+                const asyncIterator = transport.listener('event').createConsumer();
                 while (true)
                 {
                     const packet = await asyncIterator.next();
@@ -490,7 +490,7 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
 
             (async () =>
             {
-                const asyncIterator = transport.listener('inboundTransmit').createAsyncIterator();
+                const asyncIterator = transport.listener('inboundTransmit').createConsumer();
                 while (true)
                 {
                     const packet = await asyncIterator.next();
@@ -501,7 +501,7 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
 
             (async () =>
             {
-                const asyncIterator = transport.listener('inboundInvoke').createAsyncIterator();
+                const asyncIterator = transport.listener('inboundInvoke').createConsumer();
                 while (true)
                 {
                     const packet = await asyncIterator.next();
@@ -758,7 +758,7 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
         return {};
     }
 
-    receiver(receiverName: string): DemuxedAsyncIterableStream<any>
+    receiver(receiverName: string): DemuxedConsumableStream<any>
     {
         return this._receiverDemux.stream(receiverName);
     }
@@ -768,7 +768,7 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
         this._receiverDemux.close(receiverName);
     }
 
-    procedure(procedureName: string): DemuxedAsyncIterableStream<any>
+    procedure(procedureName: string): DemuxedConsumableStream<any>
     {
         return this._procedureDemux.stream(procedureName);
     }
@@ -1420,7 +1420,7 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
 
         (async () =>
         {
-            const asyncIterator = this.listener('connecting').createAsyncIterator();
+            const asyncIterator = this.listener('connecting').createConsumer();
             while (true)
             {
                 const packet = await asyncIterator.next();
@@ -1431,7 +1431,7 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
 
         (async () =>
         {
-            const asyncIterator = this.listener('close').createAsyncIterator();
+            const asyncIterator = this.listener('close').createConsumer();
             while (true)
             {
                 const packet = await asyncIterator.next();

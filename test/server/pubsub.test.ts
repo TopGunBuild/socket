@@ -4,6 +4,7 @@ import { wait } from '../../src/utils/wait';
 import { SimpleBroker } from '../../src/simple-broker';
 import { connectionHandler, resolveAfterTimeout, WS_ENGINE } from './utils';
 import { cleanupTasks } from '../cleanup-tasks';
+import { TGChannel } from '../../src/channel';
 
 let server: TGSocketServer, client: TGClientSocket;
 
@@ -85,7 +86,7 @@ describe('Socket pub/sub', () =>
             port    : portNumber
         });
 
-        let channelList = [];
+        let channelList: TGChannel<any>[] = [];
         for (let i = 0; i < 20; i++)
         {
             let subscribeOptions: SubscribeOptions = {
