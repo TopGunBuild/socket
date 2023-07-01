@@ -1,4 +1,4 @@
-import { ChannelState, HandlerFunction, SCChannelOptions } from '../channel/types';
+import { ChannelState, SCChannelOptions } from '../channel/types';
 import { TGChannel } from '../channel/channel';
 import { AuthEngine } from './auth';
 import { AuthState, AuthToken, CodecEngine } from '../types';
@@ -12,12 +12,6 @@ export interface IClientSocket
     isSubscribed?(channelName: string, includePending?: boolean): boolean;
 
     publish?(channelName: string, data: any, callback?: (err?: Error) => void): void;
-
-    watch?(channelName: string, handler: HandlerFunction): void;
-
-    unwatch?(channelName: string, handler?: HandlerFunction): void;
-
-    watchers?(channelName: string): HandlerFunction[];
 
     destroyChannel?(channelName: string): void;
 
