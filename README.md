@@ -1,15 +1,12 @@
-<h1 align="center" style="border-bottom: none;">🚀 topgun-socket</h1>
+<h1 align="center" style="border-bottom: none;">🚀 @topgunbuild/socket</h1>
 <h3 align="center">Pub/sub and RPC toolkit for <a href="https://github.com/TopGunBuild/topgun">TopGun</a></h3>
 
 <p align="center">
-  <a href="https://github.com/semantic-release/semantic-release">
-      <img alt="semantic-release" src="https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg">
+  <a href="https://npm.im/@topgunbuild/socket">
+    <img alt="npm" src="https://badgen.net/npm/v/@topgunbuild/socket">
   </a>
-  <a href="https://npm.im/topgun-socket">
-    <img alt="npm" src="https://badgen.net/npm/v/topgun-socket">
-  </a>
-  <a href="https://bundlephobia.com/result?p=topgun-socket">
-    <img alt="bundlephobia" src="https://img.shields.io/bundlephobia/minzip/topgun-socket.svg">
+  <a href="https://bundlephobia.com/result?p=@topgunbuild/socket">
+    <img alt="bundlephobia" src="https://img.shields.io/bundlephobia/minzip/@topgunbuild/socket.svg">
   </a>
   <a href="https://opensource.org/licenses/MIT">
       <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg">
@@ -24,7 +21,7 @@
 To install this module:
 
 ```bash
-npm install topgun-socket
+npm install @topgunbuild/socket
 ```
 
 ## How to use client module
@@ -33,7 +30,7 @@ The socket-client script is called `client.js`(ESM) or `client.global.js`(iife) 
 Embed it in your HTML page like this:
 
 ```html
-<script type="text/javascript" src="https://unpkg.com/topgun-socket@latest/dist/client.global.js"></script>
+<script type="text/javascript" src="https://unpkg.com/@topgunbuild/socket@latest/dist/client.global.js"></script>
 ```
 
 \* Note that the src attribute may be different depending on how you setup your HTTP server.
@@ -170,14 +167,14 @@ let options = {
 };
 ```
 
-For more detailed examples of how to use topgun-socket, see `test` folder.
+For more detailed examples of how to use @topgunbuild/socket, see `test` folder.
 
 ## How to use server module
 
 You need to attach it to an existing Node.js http or https server (example):
 ```js
 const http = require('http');
-const topGunSocketServer = require("topgun-socket/server");
+const topGunSocketServer = require("@topgunbuild/socket/server");
 
 let httpServer = http.createServer();
 let agServer = topGunSocketServer.attach(httpServer);
@@ -214,8 +211,8 @@ httpServer.listen(8000);
 
 ## Running the tests
 
--   Clone this repo: `git clone git@github.com:TopGunBuild/topgun-socket.git`
--   Navigate to project directory: `cd topgun-socket`
+-   Clone this repo: `git clone git@github.com:TopGunBuild/@topgunbuild/socket.git`
+-   Navigate to project directory: `cd @topgunbuild/socket`
 -   Install all dependencies: `npm install`
 -   Run the tests: `npm test`
 

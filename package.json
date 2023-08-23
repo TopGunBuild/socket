@@ -1,6 +1,6 @@
 {
-    "name": "topgun-socket",
-    "version": "1.4.9",
+    "name": "@topgunbuild/socket",
+    "version": "0.0.0",
     "description": "Scalable realtime pub/sub and RPC serverless framework",
     "publishConfig": {
         "access": "public"
@@ -134,15 +134,15 @@
     ],
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/topgunjs/topgun-socket.git"
+        "url": "git+https://github.com/topgunjs/socket.git"
     },
     "readmeFilename": "README.md",
     "license": "MIT",
-    "author": "Ivan Kalashnik",
+    "author": "ivan@topgun.build",
     "bugs": {
-        "url": "https://github.com/topgunjs/topgun-socket/issues"
+        "url": "https://github.com/topgunjs/socket/issues"
     },
-    "homepage": "https://github.com/topgunjs/topgun-socket#readme",
+    "homepage": "https://github.com/topgunjs/socket#readme",
     "dependencies": {
         "@topgunbuild/async-stream-emitter": "^0.0.1",
         "@topgunbuild/buffer": "^0.0.1",
