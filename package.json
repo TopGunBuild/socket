@@ -12,7 +12,8 @@
         "test": "jest",
         "lint": "eslint \"src/**/*.ts\" --fix",
         "prepare": "simple-git-hooks",
-        "semantic-release": "semantic-release"
+        "release": "release-it",
+        "tarball": "rimraf tar && pnpm pack --pack-destination ./tar"
     },
     "browser": "./dist/client.global.js",
     "exports": {
@@ -150,12 +151,6 @@
         "ws": "^8.9.0"
     },
     "devDependencies": {
-        "@semantic-release/changelog": "^6.0.3",
-        "@semantic-release/commit-analyzer": "^9.0.2",
-        "@semantic-release/git": "^10.0.1",
-        "@semantic-release/github": "^8.0.7",
-        "@semantic-release/npm": "^10.0.3",
-        "@semantic-release/release-notes-generator": "^10.0.3",
         "@types/jest": "^29.5.0",
         "@types/node": "^18.15.11",
         "@types/ws": "^8.5.4",
@@ -168,7 +163,8 @@
         "lint-staged": "^13.2.1",
         "localStorage": "^1.0.4",
         "prettier": "^2.8.7",
-        "semantic-release": "^21.0.1",
+        "release-it": "^16.1.5",
+        "rimraf": "^5.0.1",
         "simple-git-hooks": "^2.8.1",
         "ts-jest": "^29.1.0",
         "tsup": "6.5.0",
