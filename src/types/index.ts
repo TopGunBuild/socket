@@ -1,5 +1,5 @@
-import { JwtSignOptions } from 'topgun-jsonwebtoken';
-import { JwtPayload } from 'topgun-jsonwebtoken';
+import { JwtSignOptions } from '@topgunbuild/jsonwebtoken';
+import { JwtPayload } from '@topgunbuild/jsonwebtoken';
 import { AuthEngine } from '../auth';
 
 export interface EventObject

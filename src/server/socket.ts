@@ -1,4 +1,4 @@
-import { AsyncStreamEmitter, StreamDemux, DemuxedConsumableStream } from 'topgun-async-stream-emitter';
+import { AsyncStreamEmitter, StreamDemux, DemuxedConsumableStream } from '@topgunbuild/async-stream-emitter';
 import {
     AuthError,
     hydrateError, InvalidArgumentsError,

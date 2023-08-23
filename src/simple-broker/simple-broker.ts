@@ -1,4 +1,4 @@
-import { AsyncStreamEmitter } from 'topgun-async-stream-emitter';
+import { AsyncStreamEmitter } from '@topgunbuild/async-stream-emitter';
 import { SimpleExchange } from './simple-exchange';
 import { SimpleSocket } from './types';
 

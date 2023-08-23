@@ -6,7 +6,7 @@ import {
     JwtSecret,
     sign,
     verify,
-} from 'topgun-jsonwebtoken';
+} from '@topgunbuild/jsonwebtoken';
 
 export class AuthEngine
 {

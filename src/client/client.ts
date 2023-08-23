@@ -1,4 +1,4 @@
-import { AsyncStreamEmitter, StreamDemux, DemuxedConsumableStream } from 'topgun-async-stream-emitter';
+import { AsyncStreamEmitter, StreamDemux, DemuxedConsumableStream } from '@topgunbuild/async-stream-emitter';
 import { AuthStatus, TGSocketClientOptions, ProtocolVersions, IClientSocket, SubscribeOptions, TransmitOptions } from './types';
 import {
     BadConnectionError,
@@ -14,7 +14,7 @@ import { TGTransport } from './transport';
 import { Item, LinkedList } from './linked-list';
 import * as formatter from '../formatter';
 import global from '../utils/window-or-global';
-import Buffer from 'topgun-buffer';
+import Buffer from '@topgunbuild/buffer';
 import { wait } from '../utils/wait';
 import { TGResponse } from '../response';
 import { TGChannel } from '../channel/channel';

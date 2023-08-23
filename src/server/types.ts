@@ -1,4 +1,4 @@
-import { JwtSecret } from 'topgun-jsonwebtoken';
+import { JwtSecret } from '@topgunbuild/jsonwebtoken';
 import { AuthEngineType, CodecEngine } from '../types';
 import { TGSocket } from './socket';
 

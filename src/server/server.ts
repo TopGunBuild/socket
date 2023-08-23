@@ -1,5 +1,5 @@
-import { JwtSecret } from 'topgun-jsonwebtoken';
-import { AsyncStreamEmitter } from 'topgun-async-stream-emitter';
+import { JwtSecret } from '@topgunbuild/jsonwebtoken';
+import { AsyncStreamEmitter } from '@topgunbuild/async-stream-emitter';
 import { uuidv4 } from '../utils/uuidv4';
 import { generateId } from '../utils/generate-id';
 import {

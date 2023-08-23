@@ -5,15 +5,15 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
-  topgun-async-stream-emitter:
-    specifier: 1.1.0
-    version: 1.1.0
-  topgun-buffer:
-    specifier: 1.0.6
-    version: 1.0.6
-  topgun-jsonwebtoken:
-    specifier: ^1.0.2
-    version: 1.0.2
+  '@topgunbuild/async-stream-emitter':
+    specifier: ^0.0.1
+    version: 0.0.1
+  '@topgunbuild/buffer':
+    specifier: ^0.0.1
+    version: 0.0.1
+  '@topgunbuild/jsonwebtoken':
+    specifier: ^0.0.3
+    version: 0.0.3
   ws:
     specifier: ^8.9.0
     version: 8.9.0
@@ -940,7 +940,7 @@ packages:
     resolution: {integrity: sha512-izNRxPoaeJeg/AyH8hER6s+H7p4itk+03QCa4sbxI3lNdseQYCuxzgsuNK8bTXChtLTjpJz6NmXKA73qLa3rCA==}
     dependencies:
       asn1js: 3.0.5
-      pvtsutils: 1.3.2
+      pvtsutils: 1.3.5
       tslib: 2.5.0
     dev: false
 
@@ -957,7 +957,7 @@ packages:
     dependencies:
       '@peculiar/asn1-schema': 2.3.6
       '@peculiar/json-schema': 1.1.12
-      pvtsutils: 1.3.2
+      pvtsutils: 1.3.5
       tslib: 2.5.0
       webcrypto-core: 1.7.7
     dev: false
@@ -1129,6 +1129,27 @@ packages:
     resolution: {integrity: sha512-XCuKFP5PS55gnMVu3dty8KPatLqUoy/ZYzDzAGCQ8JNFCkLXzmI7vNHCR+XpbZaMWQK/vQubr7PkYq8g470J/A==}
     engines: {node: '>= 10'}
     dev: true
+
+  /@topgunbuild/async-stream-emitter@0.0.1:
+    resolution: {integrity: sha512-pJuvS9TuH5k164UC8qxU2iJfPQjakGOsIJhvsxTGjGJocaIlKoDsY4gwfPMZyOU5bZm60pi0BlM9QVfh94evEw==}
+    dev: false
+
+  /@topgunbuild/buffer@0.0.1:
+    resolution: {integrity: sha512-5t0A8OG3TnYITWsnNivkX793gJ1r+0u3d+UV5gIQFMoXp2hJ7e+CNOLO5Pw1T5vnzE58YZwYCifEhKNjQ1e+Sw==}
+    dev: false
+
+  /@topgunbuild/jsonwebtoken@0.0.3:
+    resolution: {integrity: sha512-S/RRyfDqFGJ/j4zjvZIhkyDWkAmLuDjPKC9o3W1uMKpzUQ98ShRzDSn3lLxEPx9MpcLSbYp8zEXcsBaslgcp9w==}
+    dependencies:
+      '@topgunbuild/webcrypto': 0.0.1
+      ms: 2.1.2
+    dev: false
+
+  /@topgunbuild/webcrypto@0.0.1:
+    resolution: {integrity: sha512-YsChvYOkXU6FAWsMVqMCXXeEsB7qJO6UkZ9MUSz7DKU19xG2SS27bHh4k2On1DzWdWkTg8vcSpB4I8RmxJ37Kg==}
+    dependencies:
+      '@peculiar/webcrypto': 1.4.3
+    dev: false
 
   /@types/babel__core@7.20.0:
     resolution: {integrity: sha512-+n8dL/9GWblDO0iU6eZAwEIJVr5DWigtle+Q6HLOrh/pdbXOhOtqzq8VPPE2zvNJzSKY4vH/z3iT3tn0A3ypiQ==}
@@ -1560,7 +1581,7 @@ packages:
     resolution: {integrity: sha512-FVnvrKJwpt9LP2lAMl8qZswRNm3T4q9CON+bxldk2iwk3FFpuwhx2FfinyitizWHsVYyaY+y5JzDR0rCMV5yTQ==}
     engines: {node: '>=12.0.0'}
     dependencies:
-      pvtsutils: 1.3.2
+      pvtsutils: 1.3.5
       pvutils: 1.1.3
       tslib: 2.5.0
     dev: false
@@ -4789,10 +4810,10 @@ packages:
     resolution: {integrity: sha512-t+x1zEHDjBwkDGY5v5ApnZ/utcd4XYDiJsaQQoptTXgUXX95sDg1elCdJghzicm7n2mbCBJ3uYWr6M22SO19rg==}
     dev: true
 
-  /pvtsutils@1.3.2:
-    resolution: {integrity: sha512-+Ipe2iNUyrZz+8K/2IOo+kKikdtfhRKzNpQbruF2URmqPtoqAs8g3xS7TJvFF2GcPXjh7DkqMnpVveRFq4PgEQ==}
+  /pvtsutils@1.3.5:
+    resolution: {integrity: sha512-ARvb14YB9Nm2Xi6nBq1ZX6dAM0FsJnuk+31aUp4TrcZEdKUlSqOqsxJHUPJDNE3qiIp+iUPEIeR6Je/tgV7zsA==}
     dependencies:
-      tslib: 2.5.0
+      tslib: 2.6.2
     dev: false
 
   /pvutils@1.1.3:
@@ -5503,27 +5524,6 @@ packages:
       is-number: 7.0.0
     dev: true
 
-  /topgun-async-stream-emitter@1.1.0:
-    resolution: {integrity: sha512-vcBSzgNudjyengH8QFDvIDiEi41P0lsjNZkq4ljRsU4qCwF1Z4NkXWRpKCuBMJxPIBGA52wQmci130a3vxlvrA==}
-    dev: false
-
-  /topgun-buffer@1.0.6:
-    resolution: {integrity: sha512-7K0v9lOXz7X3Cfzcyq9dC3YPG8BvaqmJC7vpQVXYHqo9L2buSkY2GKJ1Gl1j0e37/Gmh4VR0tEpP6V4qSvKXuw==}
-    dev: false
-
-  /topgun-jsonwebtoken@1.0.2:
-    resolution: {integrity: sha512-J/5H7kz+tcR8fiZuxn6BpuytevvPqo1/f3jv15/UOfYJFFzo/0QrQEO44MYoCDUwzIsvT7pF9pRHK/7GzqhsNQ==}
-    dependencies:
-      ms: 2.1.2
-      topgun-webcrypto: 1.0.5
-    dev: false
-
-  /topgun-webcrypto@1.0.5:
-    resolution: {integrity: sha512-OyFjBRKvr3Sg0MQNeTc8nzA4NsPNZGSPZKAeJH19hZsYO22YwOeQS2xpNS9jk+rsxymXrPEMMpWo2qPmdyNHJg==}
-    dependencies:
-      '@peculiar/webcrypto': 1.4.3
-    dev: false
-
   /tr46@0.0.3:
     resolution: {integrity: sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==}
     dev: true
@@ -5602,6 +5602,10 @@ packages:
 
   /tslib@2.5.0:
     resolution: {integrity: sha512-336iVw3rtn2BUK7ORdIAHTyxHGRIHVReokCR3XjbckJMK7ms8FysBfhLR8IXnAgy7T0PTPNBWKiH514FOW/WSg==}
+
+  /tslib@2.6.2:
+    resolution: {integrity: sha512-AEYxH93jGFPn/a2iVAwW87VuUIkR1FVUKB77NwMF7nBTDkDrrT/Hpt/IrCJ0QXhW27jTBDcf5ZY7w6RiqTMw2Q==}
+    dev: false
 
   /tsup@6.5.0(typescript@4.9.4):
     resolution: {integrity: sha512-36u82r7rYqRHFkD15R20Cd4ercPkbYmuvRkz3Q1LCm5BsiFNUgpo36zbjVhCOgvjyxNBWNKHsaD5Rl8SykfzNA==}
@@ -5801,7 +5805,7 @@ packages:
       '@peculiar/asn1-schema': 2.3.6
       '@peculiar/json-schema': 1.1.12
       asn1js: 3.0.5
-      pvtsutils: 1.3.2
+      pvtsutils: 1.3.5
       tslib: 2.5.0
     dev: false
 

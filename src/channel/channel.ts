@@ -3,7 +3,7 @@ import {
     ConsumableStreamConsumer,
     DemuxedConsumableStream,
     StreamDemux
-} from 'topgun-async-stream-emitter';
+} from '@topgunbuild/async-stream-emitter';
 import { IClientSocket } from '../client/types';
 import { ChannelState, SCChannelOptions } from './types';
 
