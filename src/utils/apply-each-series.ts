@@ -12,11 +12,11 @@ async function asyncForEach(array, callback)
 
 export async function applyEachSeries<T extends AsyncFunction[]>(tasks: T, ...args: Parameters<T[number]>) :Async<Array<ReturnType<T[number]>>>
 {
-    let callback = typeof args[args.length - 1] === 'function' ? args.pop() : () =>
+    const callback = typeof args[args.length - 1] === 'function' ? args.pop() : () =>
     {
     };
     let err = null;
-    let results = [];
+    const results = [];
 
     await asyncForEach(tasks, async (task) =>
     {
@@ -26,7 +26,8 @@ export async function applyEachSeries<T extends AsyncFunction[]>(tasks: T, ...ar
             {
                 const result = await task(...args);
                 results.push(result);
-            } catch (e)
+            }
+            catch (e)
             {
                 results.push(undefined);
                 err = e;
