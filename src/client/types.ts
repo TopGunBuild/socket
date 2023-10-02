@@ -1,4 +1,4 @@
-import { ChannelState, SCChannelOptions } from '../channel/types';
+import { ChannelState, TGChannelOptions } from '../channel/types';
 import { TGChannel } from '../channel/channel';
 import { AuthEngine } from './auth';
 import { AuthState, AuthToken, CodecEngine } from '../types';
@@ -17,7 +17,7 @@ export interface IClientSocket
 
     getChannelState?(channelName: string): ChannelState;
 
-    getChannelOptions?(channelName: string): SCChannelOptions;
+    getChannelOptions?(channelName: string): TGChannelOptions;
 
     closeChannel?(channelName: string): void;
 }

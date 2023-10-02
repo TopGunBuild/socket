@@ -443,7 +443,7 @@ describe('Socket pub/sub', () =>
 
         (async () =>
         {
-            let subscription = client.subscribe('bar');
+            let subscription = client.subscribe('bar', {data: 123});
             for await (let data of subscription)
             {
                 receivedSubscribedData.push(data);

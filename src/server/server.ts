@@ -24,7 +24,7 @@ import {
     Middlewares
 } from '../types';
 import { applyEachSeries, AsyncFunction } from '../utils/apply-each-series';
-import { IncomingMessage, RequestObject, TGSocketServerOptions } from './types';
+import { IncomingMessage, RequestObject, TGServerChannelOptions, TGSocketServerOptions } from './types';
 import { SimpleBroker } from '../simple-broker/simple-broker';
 import { isNode } from '../utils/is-node';
 import { SimpleExchange } from '../simple-broker';
@@ -1198,7 +1198,7 @@ export class TGSocketServer extends AsyncStreamEmitter<any>
         }
     }
 
-    private async _subscribeSocket(socket: TGSocket, channelOptions): Promise<void>
+    private async _subscribeSocket(socket: TGSocket, channelOptions: TGServerChannelOptions): Promise<void>
     {
         if (!channelOptions)
         {
@@ -1231,7 +1231,7 @@ export class TGSocketServer extends AsyncStreamEmitter<any>
 
         try
         {
-            await this.brokerEngine.subscribeSocket(socket, channelName);
+            await this.brokerEngine.subscribeSocket(socket, channelOptions);
         }
         catch (err)
         {
