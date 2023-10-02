@@ -1,6 +1,7 @@
 import { AsyncStreamEmitter } from '@topgunbuild/async-stream-emitter';
 import { SimpleExchange } from './simple-exchange';
 import { SimpleSocket } from './types';
+import { TGServerChannelOptions } from '../server';
 
 export class SimpleBroker extends AsyncStreamEmitter<any>
 {
@@ -9,6 +10,11 @@ export class SimpleBroker extends AsyncStreamEmitter<any>
     private readonly _clientSubscribers: {
         [channelName: string]: {
             [socketId: string]: SimpleSocket
+        }
+    };
+    private readonly _clientSubscribersOptions: {
+        [channelName: string]: {
+            [socketId: string]: TGServerChannelOptions
         }
     };
     private readonly _clientSubscribersCounter: {
@@ -24,6 +30,7 @@ export class SimpleBroker extends AsyncStreamEmitter<any>
         this.isReady                   = false;
         this._exchangeClient           = new SimpleExchange(this);
         this._clientSubscribers        = {};
+        this._clientSubscribersOptions = {};
         this._clientSubscribersCounter = {};
 
         setTimeout(() =>
@@ -42,11 +49,14 @@ export class SimpleBroker extends AsyncStreamEmitter<any>
         return this._exchangeClient;
     }
 
-    subscribeSocket(socket: SimpleSocket, channelName: string): Promise<any>
+    subscribeSocket(socket: SimpleSocket, channelOptions: TGServerChannelOptions): Promise<any>
     {
+        const channelName = channelOptions.channel;
+
         if (!this._clientSubscribers[channelName])
         {
             this._clientSubscribers[channelName]        = {};
+            this._clientSubscribersOptions[channelName] = {};
             this._clientSubscribersCounter[channelName] = 0;
         }
         if (!this._clientSubscribers[channelName][socket.id])
@@ -56,7 +66,8 @@ export class SimpleBroker extends AsyncStreamEmitter<any>
                 channel: channelName
             });
         }
-        this._clientSubscribers[channelName][socket.id] = socket;
+        this._clientSubscribers[channelName][socket.id]        = socket;
+        this._clientSubscribersOptions[channelName][socket.id] = channelOptions;
         return Promise.resolve();
     }
 
@@ -68,6 +79,7 @@ export class SimpleBroker extends AsyncStreamEmitter<any>
             {
                 this._clientSubscribersCounter[channelName]--;
                 delete this._clientSubscribers[channelName][socket.id];
+                delete this._clientSubscribersOptions[channelName][socket.id];
 
                 if (this._clientSubscribersCounter[channelName] <= 0)
                 {
@@ -94,7 +106,7 @@ export class SimpleBroker extends AsyncStreamEmitter<any>
 
     publish(channelName: string, data: any, suppressEvent?: boolean): Promise<void>
     {
-        const packet              = {
+        const packet            = {
             channel: channelName,
             data
         };

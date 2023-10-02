@@ -5,7 +5,7 @@ import {
     StreamDemux
 } from '@topgunbuild/async-stream-emitter';
 import { IClientSocket } from '../client/types';
-import { ChannelState, SCChannelOptions } from './types';
+import { ChannelState, TGChannelOptions } from './types';
 
 export class TGChannel<T> extends ConsumableStream<T>
 {
@@ -55,12 +55,12 @@ export class TGChannel<T> extends ConsumableStream<T>
         throw new Error('Cannot directly set channel state');
     }
 
-    get options(): SCChannelOptions
+    get options(): TGChannelOptions
     {
         return this.client.getChannelOptions(this.name);
     }
 
-    set options(value: SCChannelOptions)
+    set options(value: TGChannelOptions)
     {
         throw new Error('Cannot directly set channel options');
     }
@@ -94,7 +94,7 @@ export class TGChannel<T> extends ConsumableStream<T>
         this.client.closeChannel(this.name);
     }
 
-    subscribe(options: SCChannelOptions): void
+    subscribe(options: TGChannelOptions): void
     {
         this.client.subscribe(this.name, options);
     }

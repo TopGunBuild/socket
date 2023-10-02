@@ -15,6 +15,11 @@ export async function resolveAfterTimeout(duration, value) {
 }
 
 export function connectionHandler(socket, allowedUsers, server) {
+
+    console.log(
+        socket.request.url
+    );
+
     (async () => {
         for await (let rpc of socket.procedure('login')) {
             if (allowedUsers[rpc.data.username]) {

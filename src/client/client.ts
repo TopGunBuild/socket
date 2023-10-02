@@ -18,7 +18,7 @@ import Buffer from '@topgunbuild/buffer';
 import { wait } from '../utils/wait';
 import { TGResponse } from '../response';
 import { TGChannel } from '../channel/channel';
-import { ChannelState, SCChannelOptions } from '../channel/types';
+import { ChannelState, TGChannelOptions } from '../channel/types';
 import { cloneDeep } from '../utils/clone-deep';
 
 const isBrowser = typeof window !== 'undefined';
@@ -748,7 +748,7 @@ export class TGClientSocket extends AsyncStreamEmitter<any> implements IClientSo
         return TGChannel.UNSUBSCRIBED;
     }
 
-    getChannelOptions(channelName: string): SCChannelOptions
+    getChannelOptions(channelName: string): TGChannelOptions
     {
         const channel = this._channelMap[channelName];
         if (channel)

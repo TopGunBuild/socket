@@ -1,6 +1,7 @@
 import { JwtSecret } from '@topgunbuild/jsonwebtoken';
 import { AuthEngineType, CodecEngine } from '../types';
 import { TGSocket } from './socket';
+import { SimpleBroker } from '../simple-broker';
 
 export interface TGSocketServerOptions {
     // An instance of a Node.js HTTP server.
@@ -12,6 +13,9 @@ export interface TGSocketServerOptions {
     // This can be the name of an npm module or a path to a
     // Node.js module to use as the WebSocket server engine.
     wsEngine?: string | { Server: any };
+
+    brokerEngine?: SimpleBroker;
+    maxPayload?: any;
 
     // Custom options to pass to the wsEngine when it is being
     // instantiated.
@@ -40,6 +44,10 @@ export interface TGSocketServerOptions {
 
     // The default expiry for auth tokens in seconds
     authDefaultExpiry?: number;
+
+    authSignAsync?: boolean;
+    authVerifyAsync?: boolean;
+    pubSubBatchDuration?: number;
 
     // The algorithm to use to sign and verify JWT tokens.
     authAlgorithm?: string;
@@ -72,6 +80,10 @@ export interface TGSocketServerOptions {
     // How many milliseconds to wait without receiving a ping
     // before closing the socket.
     pingTimeout?: number;
+
+    pingTimeoutDisabled?: boolean;
+
+    appName?: string;
 
     // Whether or not an error should be emitted on
     // the socket whenever an action is blocked by a
@@ -136,4 +148,10 @@ export interface RequestObject
     ackData?: any;
     event?: string;
     waitForAuth?: boolean;
+}
+
+export interface TGServerChannelOptions
+{
+    channel: string;
+    data?: any;
 }

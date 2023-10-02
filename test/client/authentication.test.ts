@@ -64,6 +64,8 @@ describe('Authentication', () =>
             global.localStorage.setItem('topgunsocket.authToken', validSignedAuthTokenBob);
             client = create(clientOptions);
 
+            console.log(client.transport.uri());
+
             let expectedAuthStateChanges = [
                 'unauthenticated->authenticated',
                 'authenticated->unauthenticated'
