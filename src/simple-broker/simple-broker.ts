@@ -6,18 +6,18 @@ import { TGServerChannelOptions } from '../server';
 export class SimpleBroker extends AsyncStreamEmitter<any>
 {
     isReady: boolean;
-    private readonly _exchangeClient: SimpleExchange;
-    private readonly _clientSubscribers: {
+    protected readonly _exchangeClient: SimpleExchange;
+    protected readonly _clientSubscribers: {
         [channelName: string]: {
             [socketId: string]: SimpleSocket
         }
     };
-    private readonly _clientSubscribersOptions: {
+    protected readonly _clientSubscribersOptions: {
         [channelName: string]: {
             [socketId: string]: TGServerChannelOptions
         }
     };
-    private readonly _clientSubscribersCounter: {
+    protected readonly _clientSubscribersCounter: {
         [channelName: string]: number
     };
 

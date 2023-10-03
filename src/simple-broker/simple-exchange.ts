@@ -7,12 +7,12 @@ import { ChannelState } from '../channel/types';
 /* eslint-disable @typescript-eslint/no-unused-vars */
 export class SimpleExchange extends AsyncStreamEmitter<any>
 {
-    private readonly _broker: SimpleBroker;
-    private readonly _channelMap: {
+    protected readonly _broker: SimpleBroker;
+    protected readonly _channelMap: {
         [key: string]: SimpleChannel
     };
-    private readonly _channelEventDemux: StreamDemux<any>;
-    private readonly _channelDataDemux: StreamDemux<any>;
+    protected readonly _channelEventDemux: StreamDemux<any>;
+    protected readonly _channelDataDemux: StreamDemux<any>;
 
     /**
      * Constructor
@@ -139,7 +139,7 @@ export class SimpleExchange extends AsyncStreamEmitter<any>
     // @ Private methods
     // -----------------------------------------------------------------------------------------------------
 
-    private _triggerChannelSubscribe(channel: SimpleChannel): void
+    protected _triggerChannelSubscribe(channel: SimpleChannel): void
     {
         const channelName = channel.name;
 
@@ -149,7 +149,7 @@ export class SimpleExchange extends AsyncStreamEmitter<any>
         this.emit('subscribe', { channel: channelName });
     }
 
-    private _triggerChannelUnsubscribe(channel: SimpleChannel)
+    protected _triggerChannelUnsubscribe(channel: SimpleChannel)
     {
         const channelName = channel.name;
 
