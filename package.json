@@ -12,7 +12,7 @@
         "test": "jest",
         "lint": "eslint \"src/**/*.ts\" --fix",
         "prepare": "simple-git-hooks",
-        "release": "release-it",
+        "release": "dotenv release-it --",
         "tarball": "rimraf tar && pnpm pack --pack-destination ./tar"
     },
     "browser": "./dist/client.global.js",
@@ -156,6 +156,7 @@
         "@types/ws": "^8.5.4",
         "@typescript-eslint/eslint-plugin": "^5.58.0",
         "@typescript-eslint/parser": "^5.58.0",
+        "dotenv-cli": "^7.3.0",
         "eslint": "^8.38.0",
         "eslint-config-prettier": "^8.8.0",
         "eslint-plugin-import": "^2.27.5",
