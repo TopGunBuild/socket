@@ -7,12 +7,12 @@ import { ChannelState } from '../channel/types';
 /* eslint-disable @typescript-eslint/no-unused-vars */
 export class SimpleExchange extends AsyncStreamEmitter<any>
 {
-    protected readonly _broker: SimpleBroker;
-    protected readonly _channelMap: {
+    protected _broker: SimpleBroker;
+    protected _channelMap: {
         [key: string]: SimpleChannel
     };
-    protected readonly _channelEventDemux: StreamDemux<any>;
-    protected readonly _channelDataDemux: StreamDemux<any>;
+    protected _channelEventDemux: StreamDemux<any>;
+    protected _channelDataDemux: StreamDemux<any>;
 
     /**
      * Constructor
