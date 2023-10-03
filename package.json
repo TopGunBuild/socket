@@ -135,15 +135,15 @@
     ],
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/topgunjs/socket.git"
+        "url": "git+https://github.com/TopGunBuild/socket.git"
     },
     "readmeFilename": "README.md",
     "license": "MIT",
     "author": "ivan@topgun.build",
     "bugs": {
-        "url": "https://github.com/topgunjs/socket/issues"
+        "url": "https://github.com/TopGunBuild/socket/issues"
     },
-    "homepage": "https://github.com/topgunjs/socket#readme",
+    "homepage": "https://github.com/TopGunBuild/socket#readme",
     "dependencies": {
         "@topgunbuild/async-stream-emitter": "^0.0.1",
         "@topgunbuild/buffer": "^0.0.1",
