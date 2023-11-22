@@ -146,7 +146,7 @@
     "homepage": "https://github.com/TopGunBuild/socket#readme",
     "dependencies": {
         "@topgunbuild/async-stream-emitter": "^0.0.1",
-        "@topgunbuild/buffer": "^0.0.1",
+        "@topgunbuild/buffer": "^0.0.2",
         "@topgunbuild/jsonwebtoken": "^0.0.3",
         "ws": "^8.9.0"
     },
