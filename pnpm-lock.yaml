@@ -9,8 +9,8 @@ dependencies:
     specifier: ^0.0.1
     version: 0.0.1
   '@topgunbuild/buffer':
-    specifier: ^0.0.1
-    version: 0.0.1
+    specifier: ^0.0.2
+    version: 0.0.2
   '@topgunbuild/jsonwebtoken':
     specifier: ^0.0.3
     version: 0.0.3
@@ -1089,8 +1089,8 @@ packages:
     resolution: {integrity: sha512-pJuvS9TuH5k164UC8qxU2iJfPQjakGOsIJhvsxTGjGJocaIlKoDsY4gwfPMZyOU5bZm60pi0BlM9QVfh94evEw==}
     dev: false
 
-  /@topgunbuild/buffer@0.0.1:
-    resolution: {integrity: sha512-5t0A8OG3TnYITWsnNivkX793gJ1r+0u3d+UV5gIQFMoXp2hJ7e+CNOLO5Pw1T5vnzE58YZwYCifEhKNjQ1e+Sw==}
+  /@topgunbuild/buffer@0.0.2:
+    resolution: {integrity: sha512-wd1s4kxkAmFnfHNB7lNpzcXBi3CxS0Y7vuSgQiJj3NyjGcUzvv95uEIK04n9TvbRHz/Fje772P50+f1+mWk/Lw==}
     dev: false
 
   /@topgunbuild/jsonwebtoken@0.0.3:
